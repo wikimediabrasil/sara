@@ -133,6 +133,17 @@ class EventViewTests(TestCase):
         self.client.post(url, data=data)
         self.assertFalse(Event.objects.filter(name="").exists())
 
+    def test_detail_event_view_success(self):
+        response = self.client.get(reverse('agenda:detail_event', args=[self.event.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'agenda/detail_event.html')
+        self.assertContains(response, self.event.name)
+
+    def test_detail_event_view_context(self):
+        response = self.client.get(reverse('agenda:detail_event', args=[self.event.id]))
+        self.assertIn('event', response.context)
+        self.assertEqual(response.context['event'], self.event)
+
     def test_list_events(self):
         self.client.login(username=self.username, password=self.password)
         url = reverse("agenda:list_events")

@@ -267,24 +267,19 @@ def export_report(request, report_id=None, year=None):
 
 def export_report_instance(report_id=None, custom_query=Q()):
     header = [_('ID'), _('Created by'), _('Created at'), _('Modified by'), _('Modified at'), _('Activity associated'),
-              _('Name of the activity'), _('Area responsible'), _('Area activated'), _('Initial date'), _('End date'),
-              _('Description'), _('Funding associated'), _('Links'), _('Public communication'),
-              _('Number of participants'), _('Number of feedbacks'), _('Editors'), _('Organizers'),
-              _('Partnerships activated'), _('Technologies used'),
-              _('# Wikipedia created'), _('# Wikipedia edited'),
-              _('# Commons created'), _('# Commons edited'),
-              _('# Wikidata created'), _('# Wikidata edited'),
-              _('# Wikiversity created'), _('# Wikiversity edited'),
-              _('# Wikibooks created'), _('# Wikibooks edited'),
-              _('# Wikisource created'), _('# Wikisource edited'),
-              _('# Wikinews created'), _('# Wikinews edited'),
-              _('# Wikiquote created'), _('# Wikiquote edited'),
-              _('# Wiktionary created'), _('# Wiktionary edited'),
-              _('# Wikivoyage created'), _('# Wikivoyage edited'),
-              _('# Wikispecies created'), _('# Wikispecies edited'),
-              _('# Metawiki created'), _('# Metawiki edited'),
-              _('# MediaWiki created'), _('# MediaWiki edited'),
-              _('Directions related'), _('Learning'), _('Learning questions related'), _('Metrics related')]
+              _('Partial report?'), _('Name of the activity'), _('Reference Text'), _('Area responsible'),
+              _('Area activated'), _('Initial date'), _('End date'), _('Description'), _('Funding associated'),
+              _('Links'), _('Are there private links?'), _('Public communication'), _('Number of participants'),
+              _('Number of feedbacks'), _('Editors'), _('# Editors'), _('Organizers'), _('# Organizers'),
+              _('Partnerships activated'), _('# Partnerships activated'), _('Technologies used'), _('# Donors'),
+              _('# Submissions'), _('# Wikipedia created'), _('# Wikipedia edited'), _('# Commons created'),
+              _('# Commons edited'), _('# Wikidata created'), _('# Wikidata edited'), _('# Wikiversity created'),
+              _('# Wikiversity edited'), _('# Wikibooks created'), _('# Wikibooks edited'), _('# Wikisource created'),
+              _('# Wikisource edited'), _('# Wikinews created'), _('# Wikinews edited'), _('# Wikiquote created'),
+              _('# Wikiquote edited'), _('# Wiktionary created'), _('# Wiktionary edited'), _('# Wikivoyage created'),
+              _('# Wikivoyage edited'), _('# Wikispecies created'), _('# Wikispecies edited'), _('# Metawiki created'),
+              _('# Metawiki edited'), _('# MediaWiki created'), _('# MediaWiki edited'), _('Directions related'),
+              _('Learning'), _('Learning questions related'), _('Metrics related')]
 
     if report_id:
         reports = Report.objects.filter(pk=report_id)
@@ -299,6 +294,9 @@ def export_report_instance(report_id=None, custom_query=Q()):
         created_at = report.created_at
         modified_by = report.modified_by.id
         modified_at = report.modified_at
+        partial_report = report.partial_report
+        reference_text = report.reference_text
+        private_links = report.private_links
 
         # Administrative
         activity_associated = report.activity_associated.id
@@ -320,20 +318,31 @@ def export_report_instance(report_id=None, custom_query=Q()):
 
         # Quantitative
         participants = report.participants
+        donors = report.donors
+        submissions = report.submissions
         # resources = report.resources
         feedbacks = report.feedbacks
         if report.editors.exists():
-            editors = "; ".join(map(str, report.editors.values_list("id", flat=True)))
+            editors_list = list(map(str, report.editors.values_list("id", flat=True)))
+            editors = "; ".join(editors_list)
+            num_editors = len(editors_list)
         else:
             editors = ""
+            num_editors = 0
         if report.organizers.exists():
-            organizers = "; ".join(map(str, report.organizers.values_list("id", flat=True)))
+            organizers_list = list(map(str, report.organizers.values_list("id", flat=True)))
+            organizers = "; ".join(organizers_list)
+            num_organizers = len(organizers_list)
         else:
             organizers = ""
+            num_organizers = 0
         if report.partners_activated.exists():
-            partners_activated = "; ".join(map(str, report.partners_activated.values_list("id", flat=True)))
+            partners_list = list(map(str, report.partners_activated.values_list("id", flat=True)))
+            partners_activated = "; ".join(partners_list)
+            num_partners_activated = len(partners_list)
         else:
             partners_activated = ""
+            num_partners_activated = 0
         if report.technologies_used.exists():
             technologies_used = "; ".join(map(str, report.technologies_used.values_list("id", flat=True)))
         else:
@@ -386,16 +395,17 @@ def export_report_instance(report_id=None, custom_query=Q()):
         else:
             metrics_related = ""
 
-        rows.append([id_, created_by, created_at, modified_by, modified_at, activity_associated, activity_name,
-                     area_responsible, area_activated, initial_date, end_date, description, funding_associated, links,
-                     public_communication, participants, feedbacks, editors, organizers, partners_activated,
-                     technologies_used, wikipedia_created, wikipedia_edited, commons_created, commons_edited,
-                     wikidata_created, wikidata_edited, wikiversity_created, wikiversity_edited, wikibooks_created,
-                     wikibooks_edited, wikisource_created, wikisource_edited, wikinews_created, wikinews_edited,
-                     wikiquote_created, wikiquote_edited, wiktionary_created, wiktionary_edited, wikivoyage_created,
-                     wikivoyage_edited, wikispecies_created, wikispecies_edited, metawiki_created, metawiki_edited,
-                     mediawiki_created, mediawiki_edited, directions_related, learning, learning_questions_related,
-                     metrics_related])
+        rows.append([id_, created_by, created_at, modified_by, modified_at, activity_associated, partial_report,
+                     activity_name, reference_text, area_responsible, area_activated, initial_date, end_date,
+                     description, funding_associated, links, private_links, public_communication, participants,
+                     feedbacks, editors, num_editors, organizers, num_organizers, partners_activated,
+                     num_partners_activated, technologies_used, donors, submissions, wikipedia_created,
+                     wikipedia_edited, commons_created, commons_edited, wikidata_created, wikidata_edited,
+                     wikiversity_created, wikiversity_edited, wikibooks_created, wikibooks_edited, wikisource_created,
+                     wikisource_edited, wikinews_created, wikinews_edited, wikiquote_created, wikiquote_edited,
+                     wiktionary_created, wiktionary_edited, wikivoyage_created, wikivoyage_edited, wikispecies_created,
+                     wikispecies_edited, metawiki_created, metawiki_edited, mediawiki_created, mediawiki_edited,
+                     directions_related, learning, learning_questions_related, metrics_related])
 
     df = pd.DataFrame(rows, columns=header).drop_duplicates().reset_index(drop=True)
 

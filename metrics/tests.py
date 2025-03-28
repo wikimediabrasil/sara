@@ -11,6 +11,7 @@ from django.contrib.auth.models import Permission
 from datetime import datetime, timedelta, date
 from metrics.templatetags.metricstags import categorize, perc, bool_yesno, is_yesno
 from django.utils.translation import gettext_lazy as _
+from unittest.mock import patch
 
 
 class AreaModelTests(TestCase):
@@ -141,7 +142,7 @@ class MetricViewsTests(TestCase):
         url = reverse("metrics:show_activities")
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, "https://meta.wikimedia.org/wiki/Wiki_Movement_Brazil_User_Group/Plan_of_Activities")
+        self.assertEqual(response.url, "https://meta.wikimedia.org/wiki/Wikimedia_Brasil/Plan_of_Activities")
 
     def test_show_metrics_per_project(self):
         self.client.login(username=self.username, password=self.password)
@@ -180,10 +181,10 @@ class MetricViewsTests(TestCase):
         area.project.add(project)
         area.save()
         activity = Activity.objects.create(text="Activity", area=area)
-        metric_1 = Metric.objects.create(text="Metric 1", boolean_type=True, activity=activity)
+        metric_1 = Metric.objects.create(text="Metric 1", text_en="Metric 1", boolean_type=True, activity=activity)
         metric_1.project.add(project)
         metric_1.save()
-        metric_2 = Metric.objects.create(text="Metric 2", is_operation=True, activity=activity)
+        metric_2 = Metric.objects.create(text="Metric 2", text_en="Metric 2", is_operation=True, activity=activity)
         metric_2.project.add(project)
         metric_2.save()
 
@@ -299,6 +300,33 @@ class MetricViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('metrics:per_project')}")
+
+
+class PreparePDFViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='password')
+        self.permission = Permission.objects.get(codename='view_metric')
+        self.user.user_permissions.add(self.permission)
+        self.client.login(username='testuser', password='password')
+        self.project = Project.objects.create(text='Main Project', main_funding=True)
+
+    @patch('metrics.views.get_results_for_timespan')
+    @patch('metrics.views.process_all_references')
+    def test_prepare_pdf_view_success(self, mock_process_refs, mock_get_results):
+        mock_get_results.return_value = [
+            {"metric": "Test Metric", "done": [1, 2, 3, 4, 10, "sara-123 sara-456", 20]}
+        ]
+        mock_process_refs.return_value = ["Reference 1", "Reference 2"]
+        response = self.client.get(reverse('metrics:wmf_report'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'metrics/wmf_report.html')
+        self.assertIn('metrics', response.context)
+
+    def test_prepare_pdf_view_no_permission(self):
+        self.user.user_permissions.remove(self.permission)
+        response = self.client.get(reverse('metrics:wmf_report'))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('metrics:wmf_report')}")
 
 
 class MetricFunctionsTests(TestCase):

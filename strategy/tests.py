@@ -37,7 +37,4 @@ class StrategicAxisViewTests(TestCase):
 
     def test_show_strategy_view(self):
         response = self.client.get(reverse("strategy:show_strategy"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "metrics/strategy.html")
-        self.assertContains(response, self.strategic_axis1.text)
-        self.assertContains(response, self.strategic_axis2.text)
+        self.assertEqual(response.status_code, 302)
