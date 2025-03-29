@@ -1,20 +1,21 @@
+import re
 import calendar
 import datetime
+from io import StringIO
+from django import template
+from django.conf import settings
+from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render, redirect, reverse, HttpResponse
 from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q, Sum, F
-from metrics.models import Activity, Metric
-from metrics.utils import render_to_pdf
+
 from report.models import Report, Editor, Organizer, Partner, Project, OperationReport
 from users.models import TeamArea
-from django import template
-from django.conf import settings
-from django.contrib.auth.decorators import login_required, permission_required
-from io import StringIO
-import re
-import urllib.parse as ur
+from metrics.utils import render_to_pdf
+from metrics.models import Activity, Metric
+from metrics.link_utils import process_all_references, wikify_link
 
 register = template.Library()
 calendar.setfirstweekday(calendar.SUNDAY)
@@ -91,109 +92,6 @@ def prepare_pdf(request, *args, **kwargs):
     context = {"project":str(main_project), "metrics": metrics, "references": refs}
 
     return render_to_pdf('metrics/wmf_report.html', context)
-
-
-def process_all_references(input_string):
-    updated_references = []
-    re.sub(r'<ref name="sara-\d+">.*?</ref>',
-           lambda match: unwikify_link(match, updated_references),
-           input_string)
-    return updated_references
-
-
-def unwikify_link(match, updated_references):
-    link = match.group(0)
-
-    # Get the Reference ID
-    match_ref = re.search(r'<ref name="sara-(\d+)">(.*)</ref>', link)
-    if match_ref:
-        ref_id = match_ref.group(1)
-        ref_content = match_ref.group(2)
-        updated_content = replace_with_links(ref_content)
-        if "bulleted list" in updated_content:
-            match = re.match(r"(.*)\{\{bulleted list\|(.*)\}\}(.*)", updated_content)
-            if match:
-                bullet_items = match.group(2).split("|")
-                updated_content = match.group(1) + "<ul>\n" + "\n".join(f"<li>{item}</li>" for item in bullet_items) + "\n</ul>" + match.group(3)
-        updated_link = f'<li id="sara-{ref_id}">{ref_id}. {updated_content}</li>'
-
-        updated_references.append(updated_link)
-        return updated_link
-    return link
-
-
-def replace_with_links(input_string):
-    def replace(match):
-        substring = match.group(0)
-        if substring.startswith('[[') and substring.endswith(']]'):
-            content = substring[2:-2]
-            meta = False
-            if "|" in content:
-                link, friendly = content.split("|", 1)
-                if ":" not in link:
-                    meta = True
-            else:
-                link = friendly = content
-
-            link = ur.quote(dewikify_url(link, meta), safe=":/")
-            return f'<a target="_blank" href="{link}">{friendly}</a>'
-        elif substring.startswith('[') and substring.endswith(']'):
-            content = substring[1:-1]
-            if " " in content:
-                link, friendly = content.split(" ", 1)
-            else:
-                link = friendly = content
-            return f'<a target="_blank" href="{link}">{friendly}</a>'
-        return substring
-
-    result = re.sub(r'(\[\[.*?\]\]|\[.*?\])', replace, input_string)
-    return result
-
-
-INVERTED_PATTERNS = {
-    r"^toolforge:([^\/]+)\/(.+)": "https://$1.toolforge.org/$2",
-    r"^b:(.*):(.*)":    "https://$1.wikibooks.org/wiki/$2",
-    r"^n:(.*):(.*)":    "https://$1.wikinews.org/wiki/$2",
-    r"^w:(.*):(.*)":    "https://$1.wikipedia.org/wiki/$2",
-    r"^q:(.*):(.*)":    "https://$1.wikiquote.org/wiki/$2",
-    r"^s:(.*):(.*)":    "https://$1.wikisource.org/wiki/$2",
-    r"^v:(.*):(.*)":    "https://$1.wikiversity.org/wiki/$2",
-    r"^voy:(.*):(.*)":  "https://$1.wikivoyage.org/wiki/$2",
-    r"^wikt:(.*):(.*)": "https://$1.wiktionary.org/wiki/$2",
-    r"^c:(.*)":         "https://commons.wikimedia.org/wiki/$2",
-    r"^outreach:(.*)":  "https://outreach.wikimedia.org/wiki/$2",
-    r"^species:(.*)":   "https://species.wikimedia.org/wiki/$2",
-    r"^wikitech:(.*)":  "https://wikitech.wikimedia.org/wiki/$2",
-    r"^mw:(.*)":        "https://www.mediawiki.org/wiki/$2",
-    r"^d:(.*)":         "https://www.wikidata.org/wiki/$2",
-    r"^wmbr:(.*)":      "https://br.wikimedia.org/wiki/$2",
-    r"^phab:(.*)":      "https://phabricator.wikimedia.org/$2",
-}
-
-
-def dewikify_url(link, meta=False):
-    for pattern, prefix in INVERTED_PATTERNS.items():
-        match = re.match(pattern, link)
-        if match:
-            number_of_groups = len(match.groups())
-            lang = ""
-            if number_of_groups == 2:
-                lang = match.group(1)
-                page = match.group(2)
-            else:
-                page = match.group(1)
-
-            page = ur.unquote(page)
-            clean_page = page.replace("_", " ")
-            clean_page = clean_page[:-1] if clean_page.endswith("/") else clean_page
-
-            return prefix.replace("$1",f"{lang}").replace("$2",f"{clean_page}")
-
-    # The link is a meta link, so no prefix
-    if meta:
-        return f"https://meta.wikimedia.org/wiki/{link}"
-    else: # The link is not a proper Wiki link
-        return f"{link}" if link != "-" else ""
 
 
 @login_required
@@ -361,6 +259,7 @@ def get_results_for_timespan(timespan_array, metric_query=Q(), report_query=Q(),
         done_row = []
         refs = []
         goal_value = 0
+        supplementary_query = Q()
         for time_ini, time_end in timespan_array:
             supplementary_query = Q(end_date__gte=time_ini) & Q(end_date__lte=time_end) & report_query
             goal, done, final = get_goal_and_done_for_metric(metric, supplementary_query=supplementary_query)
@@ -510,32 +409,6 @@ def get_goal_for_metric(metric):
     }
 
 
-def wikifi_link(link):
-    for pattern, prefix in PATTERNS.items():
-        match = re.match(pattern, link)
-        if match:
-            number_of_groups = len(match.groups())
-            project = ""
-            lang = ""
-            if number_of_groups == 3:
-                project = match.group(1)
-                page = match.group(3)
-            elif number_of_groups == 2:
-                lang = match.group(1)
-                page = match.group(2)
-            else:
-                page = match.group(1)
-
-            page = ur.unquote(page)
-            clean_page = page.replace("_", " ")
-            clean_page = clean_page[:-1] if clean_page.endswith("/") else clean_page
-
-            return f"[[{prefix}{project}/{page}|{clean_page}]]" if project\
-                else f"[[{prefix}{lang}:{page}|{clean_page}]]"
-    # The link is not a proper Wiki link
-    return f"[{link}]" if link != "-" else ""
-
-
 def build_wiki_ref_for_reports(metric, supplementary_query=Q()):
     query = Q(metrics_related__in=[metric]) & supplementary_query
     reports = Report.objects.filter(query)
@@ -545,7 +418,7 @@ def build_wiki_ref_for_reports(metric, supplementary_query=Q()):
             links = report.links.replace("\\r\\n", "\r\n").splitlines()
             formatted_links = []
             for link in links:
-                formatted_links.append(wikifi_link(link))
+                formatted_links.append(wikify_link(link))
 
             ref_content = ", ".join(formatted_links)
             if ref_content:

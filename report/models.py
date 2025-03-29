@@ -3,8 +3,8 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from django.dispatch import receiver
 from django.db.models.signals import post_save
-from django.core.validators import MinLengthValidator
 
+from metrics.link_utils import build_wikiref
 from metrics.models import Activity, Project, Metric
 from users.models import TeamArea, UserProfile
 from strategy.models import StrategicAxis, Direction
@@ -226,6 +226,8 @@ class Report(models.Model):
         super(Report, self).save(*args, **kwargs)
         if not self.end_date:
             self.end_date = self.initial_date
+        if not self.reference_text:
+            self.reference_text = build_wikiref(self.links, self.pk)
 
     def __str__(self):
         return self.description
