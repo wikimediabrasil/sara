@@ -4,6 +4,8 @@
 {% block title %}{{ title }}{% endblock %}
 {% block styles %}<link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">{% endblock %}
 
+{% block banner %}{% endblock %}
+{% block footer %}{% endblock %}
 {% block content %}
     <div class="w3-container userform">
         <h2>{% blocktrans with id_=report.id %}Delete Report nº "{{ id_ }}"{% endblocktrans %}{% if data.partial_report %} {% translate "(Partial)" %}{% endif %}?</h2>

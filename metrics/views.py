@@ -453,35 +453,19 @@ def get_done_for_report(reports, metric):
         # Community metrics
         "Number of editors": Editor.objects.filter(editors__in=reports).distinct().count() or 0,
         "Number of editors retained": Editor.objects.filter(retained=True, editors__in=reports).distinct().count() or 0,
-        "Number of new editors": Editor.objects.filter(editors__in=reports, account_creation_date__gte=F(
-            'editors__initial_date')).count() or 0,
+        "Number of new editors": Editor.objects.filter(editors__in=reports, account_creation_date__gte=F('editors__initial_date')).count() or 0,
         "Number of participants": reports.aggregate(total=Sum("participants"))["total"] or 0,
         "Number of partnerships activated": Partner.objects.filter(partners__in=reports).distinct().count() or 0,
-        "Number of new partnerships": operation_reports.aggregate(total=Sum("number_of_new_partnerships"))[
-                                          "total"] or 0,
+        "Number of new partnerships": operation_reports.aggregate(total=Sum("number_of_new_partnerships"))["total"] or 0,
         "Number of organizers": Organizer.objects.filter(organizers__in=reports).distinct().count() or 0,
-        "Number of organizers retained": Organizer.objects.filter(retained=True,
-                                                                  organizers__in=reports).distinct().count() or 0,
-        "Number of resources": operation_reports.aggregate(
-            total=Sum("number_of_resources"))["total"] or alt_operation_reports.aggregate(
-            total=Sum("number_of_resources"))["total"] or 0,
-        "Number of feedbacks": reports.aggregate(total=Sum("feedbacks"))["total"] or 0,
-        "Number of events": operation_reports.aggregate(
-            total=Sum("number_of_events"))["total"] or alt_operation_reports.aggregate(
-            total=Sum("number_of_events"))["total"] or 0,
+        "Number of organizers retained": Organizer.objects.filter(retained=True,organizers__in=reports).distinct().count() or 0,
+        "Number of resources": operation_reports.aggregate(total=Sum("number_of_resources"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_resources"))["total"] or 0,
+        "Number of feedbacks": reports.aggregate(total=Sum("feedbacks"))["total"] or 0,"Number of events": operation_reports.aggregate(total=Sum("number_of_events"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_events"))["total"] or 0,
         # Communication metrics
-        "Number of new followers": operation_reports.aggregate(
-            total=Sum("number_of_new_followers"))["total"] or alt_operation_reports.aggregate(
-            total=Sum("number_of_new_followers"))["total"] or 0,
-        "Number of mentions": operation_reports.aggregate(
-            total=Sum("number_of_mentions"))["total"] or alt_operation_reports.aggregate(
-            total=Sum("number_of_mentions"))["total"] or 0,
-        "Number of community communications": operation_reports.aggregate(
-            total=Sum("number_of_community_communications"))["total"] or alt_operation_reports.aggregate(
-            total=Sum("number_of_community_communications"))["total"] or 0,
-        "Number of people reached through social media": operation_reports.aggregate(
-            total=Sum("number_of_people_reached_through_social_media"))["total"] or alt_operation_reports.aggregate(
-            total=Sum("number_of_people_reached_through_social_media"))["total"] or 0,
+        "Number of new followers": operation_reports.aggregate(total=Sum("number_of_new_followers"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_new_followers"))["total"] or 0,
+        "Number of mentions": operation_reports.aggregate(total=Sum("number_of_mentions"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_mentions"))["total"] or 0,
+        "Number of community communications": operation_reports.aggregate(total=Sum("number_of_community_communications"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_community_communications"))["total"] or 0,
+        "Number of people reached through social media": operation_reports.aggregate(total=Sum("number_of_people_reached_through_social_media"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_people_reached_through_social_media"))["total"] or 0,
         # Other metrics
         "Occurrence": reports.filter(metrics_related__boolean_type=True).exists() or False,
     }

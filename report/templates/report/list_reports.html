@@ -14,16 +14,20 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">
 {% endblock %}
 
+{% block banner %}{% endblock %}
+{% block footer %}{% endblock %}
+
 {% block content %}
     <div class="userform">
         <div class="w3-row">
             <div class="w3-row">
                 <div class="w3-twothird" style="text-align: center">
-                    {% if perms.admin.delete_logentry %}
-                        <a title="{% trans 'Track metrics by management' %}" href="{% url 'metrics:detailed_per_project' %}"><button type="button" class="btn100 btn-round btn-update"><i class="fa-solid fa-chart-column"></i> {% trans 'Track metrics by management' %}</button></a>
-                    {% endif %}
+{#                    {% if perms.admin.delete_logentry %}#}
+{#                        <a title="{% trans 'Track metrics by management' %}" href="{% url 'metrics:detailed_per_project' %}"><button type="button" class="btn100 btn-round btn-update"><i class="fa-solid fa-chart-column"></i> {% trans 'Track metrics by management' %}</button></a>#}
+{#                    {% endif %}#}
                     <a title="{% trans 'Track metrics by project' %}" href="{% url 'metrics:per_project' %}"><button type="button" class="btn100 btn-round btn-view"><i class="fa-solid fa-bullseye"></i> {% trans 'Track metrics by project' %}</button></a>
                     <a title="{% trans 'Export all reports' %}" href="{% url 'report:export_year_reports' year=year %}"><button type="button" class="btn100 btn-round btn-export"><i class="fa-solid fa-file-export"></i> {% trans 'Export all reports' %}</button></a>
+                    <a title='{% trans "Last year's reports" %}' href="{% url 'report:list_reports_of_year' year=previous_year %}"><button type="button" class="btn100 btn-round btn-update"><i class="fa-solid fa-backward"></i> {% trans 'Previous year reports' %}</button></a>
                 </div>
                 <div class="w3-third formfield"><input id="customSearch" type="search" placeholder="{% trans 'Search' %}" aria-label="{% trans 'Search' %}" autocomplete="off" ></div>
             </div>

@@ -2,7 +2,7 @@
 {% load i18n %}
 
 <nav class="navbar_wrapper">
-    <div class="nav_section">
+    <div class="nav_top">
         <div class="logo_nav">
             <a href="{% url 'metrics:index' %}" aria-label="{% translate 'Homepage' %}">
                 <svg id="nav_logo" viewBox="0 0 95.5 50">
@@ -17,83 +17,88 @@
                 </svg>
             </a>
         </div>
-        <div class="nav_separator"></div>
-        {% if user.is_authenticated %}
-            <div class="nav_block">
-                <a href="{% url 'report:add_report' %}" aria-label="{% translate 'Add report of activity' %}">
-                    <i class="nav_icon fa-solid fa-circle-plus"></i>
-                    <span class="nav_btn_title">{% translate "Add Report" %}</span>
-                </a>
-            </div>
-            <div class="nav_separator"></div>
-        {% endif %}
-        {% if user.is_authenticated %}
-            <div class="nav_block">
-                <a href="{% url 'report:list_reports' %}" aria-label="{% translate 'Reports of activities' %}">
-                    <i class="nav_icon fa-solid fa-chart-pie"></i>
-                    <span class="nav_btn_title">{% translate "Reports" %}</span>
-                </a>
-            </div>
-            <div class="nav_separator"></div>
-            <div class="nav_block">
-                <a href="{% url 'metrics:per_project' %}" aria-label="{% translate 'Track metrics' %}">
-                    <i class="nav_icon fa-solid fa-bullseye"></i>
-                    <span class="nav_btn_title">{% translate "Track metrics" %}</span>
-                </a>
-            </div>
-            <div class="nav_separator"></div>
-        {% endif %}
-        <div class="nav_block">
-            <a href="{% url 'agenda:show_calendar' %}" aria-label="{% translate 'Calendar of activities' %}">
-                <i class="nav_icon fa-solid fa-calendar-check"></i>
-                <span class="nav_btn_title">{% translate "Calendar" %}</span>
-            </a>
-        </div>
-        <div class="nav_separator"></div>
-        <div class="nav_block">
-            <a href="{% url 'metrics:show_activities' %}" aria-label="{% translate 'Activities plan' %}">
-                <i class="nav_icon fa-solid fa-table-list"></i>
-                <span class="nav_btn_title">{% translate "Activities" %}</span>
-            </a>
-        </div>
-        <div class="nav_separator"></div>
-        <div class="nav_block">
-            <a href="{% url 'strategy:show_strategy' %}" aria-label="{% translate 'Strategy page' %}">
-                <i class="nav_icon fa-solid fa-cogs"></i>
-                <span class="nav_btn_title">{% translate "Strategy" %}</span>
-            </a>
-        </div>
-        <div class="nav_separator"></div>
-        <div class="nav_block">
-            {% include 'i18n.html' %}
-        </div>
-        <div class="nav_separator"></div>
+        <a href="javascript:void(0);" class="menu_icon" onclick="toggleMenu(this)"><i class="nav_icon fa fa-bars"></i></a>
     </div>
-    <div class="nav_section nav_bottom">
-        {% if user.is_authenticated %}
-            <div class="nav_block nav_bottom">
-                <a href="{% url 'user:profile' user_id=user.id %}" aria-label="{% translate 'User profile' %}">
-                    <i class="nav_icon fa-solid fa-user-gear"></i>
-                    <span class="nav_btn_title">{% translate "Profile" %}<br>{{ user.professional_wiki_handle }}</span>
+    <div class="nav_section">
+        <div class="nav_middle">
+            <div class="nav_separator"></div>
+            {% if user.is_authenticated %}
+                <div class="nav_block">
+                    <a href="{% url 'report:add_report' %}" aria-label="{% translate 'Add report of activity' %}">
+                        <i class="nav_icon fa-solid fa-circle-plus"></i>
+                        <span class="nav_btn_title">{% translate "Add Report" %}</span>
+                    </a>
+                </div>
+                <div class="nav_separator"></div>
+            {% endif %}
+            {% if user.is_authenticated %}
+                <div class="nav_block">
+                    <a href="{% url 'report:list_reports' %}" aria-label="{% translate 'Reports of activities' %}">
+                        <i class="nav_icon fa-solid fa-chart-pie"></i>
+                        <span class="nav_btn_title">{% translate "Reports" %}</span>
+                    </a>
+                </div>
+                <div class="nav_separator"></div>
+                <div class="nav_block">
+                    <a href="{% url 'metrics:per_project' %}" aria-label="{% translate 'Track metrics' %}">
+                        <i class="nav_icon fa-solid fa-bullseye"></i>
+                        <span class="nav_btn_title">{% translate "Track metrics" %}</span>
+                    </a>
+                </div>
+                <div class="nav_separator"></div>
+            {% endif %}
+            <div class="nav_block">
+                <a href="{% url 'agenda:show_calendar' %}" aria-label="{% translate 'Calendar of activities' %}">
+                    <i class="nav_icon fa-solid fa-calendar-check"></i>
+                    <span class="nav_btn_title">{% translate "Calendar" %}</span>
                 </a>
             </div>
-        {% endif %}
-        <div class="nav_separator"></div>
-        <div class="nav_block nav_bottom">
-            {% if user.is_authenticated %}
-                <form action="{% url 'logout' %}" method="post">
-                    {% csrf_token %}
-                    <button class="link-button" type="submit">
-                        <i class="nav_icon fa-solid fa-right-from-bracket"></i>
-                        <span class="nav_btn_title">{% translate "Logout" %}</span>
-                    </button>
-                </form>
-            {% else %}
-                <a href="{% url 'login' %}" aria-label="{% translate 'Login' %}">
-                    <i class="nav_icon fa-solid fa-right-to-bracket"></i>
-                    <span class="nav_btn_title">{% translate "Login" %}</span>
+            <div class="nav_separator"></div>
+            <div class="nav_block">
+                <a href="{% url 'metrics:show_activities' %}" aria-label="{% translate 'Activities plan' %}">
+                    <i class="nav_icon fa-solid fa-table-list"></i>
+                    <span class="nav_btn_title">{% translate "Activities" %}</span>
                 </a>
+            </div>
+            <div class="nav_separator"></div>
+            <div class="nav_block">
+                <a href="{% url 'strategy:show_strategy' %}" aria-label="{% translate 'Strategy page' %}">
+                    <i class="nav_icon fa-solid fa-cogs"></i>
+                    <span class="nav_btn_title">{% translate "Strategy" %}</span>
+                </a>
+            </div>
+            <div class="nav_separator"></div>
+            <div class="nav_block">
+                {% include 'i18n.html' %}
+            </div>
+            <div class="nav_separator"></div>
+        </div>
+        <div class="nav_bottom">
+            {% if user.is_authenticated %}
+                <div class="nav_block">
+                    <a href="{% url 'user:profile' user_id=user.id %}" aria-label="{% translate 'User profile' %}">
+                        <i class="nav_icon fa-solid fa-user-gear"></i>
+                        <span class="nav_btn_title">{% translate "Profile" %}<br>{{ user.professional_wiki_handle }}</span>
+                    </a>
+                </div>
             {% endif %}
+            <div class="nav_separator"></div>
+            <div class="nav_block">
+                {% if user.is_authenticated %}
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button class="link-button" type="submit">
+                            <i class="nav_icon fa-solid fa-right-from-bracket"></i>
+                            <span class="nav_btn_title">{% translate "Logout" %}</span>
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" aria-label="{% translate 'Login' %}">
+                        <i class="nav_icon fa-solid fa-right-to-bracket"></i>
+                        <span class="nav_btn_title">{% translate "Login" %}</span>
+                    </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </nav>

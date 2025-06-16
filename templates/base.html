@@ -19,20 +19,45 @@
     <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
     <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/popper.js/2.11.6/umd/popper.js"></script>
     <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"></script>
+    <script>
+      function toggleMenu(iconElement) {
+        const section = document.querySelector('.nav_section');
+        if (section) section.classList.toggle('open');
+        const icon = iconElement.querySelector('i');
+        if (icon.classList.contains('fa-bars')) {
+          icon.classList.remove('fa-bars');
+          icon.classList.add('fa-times');
+        } else {
+          icon.classList.remove('fa-times');
+          icon.classList.add('fa-bars');
+        }
+      }
+    </script>
 </head>
 <body>
 <div class="wrapper">
     {% block navbar %}{% include 'navbar.html' %}{% endblock %}
-    <main class="w3-container">
-        {% include "messages.html" %}
-        {% block banner %}
-            <div class="w3-row">
-                <div class="w3-third disappear">&nbsp;</div>
-                <div class="w3-third logo"><h1><img src="{% static 'images/sara-logo.svg' %}" alt="{% translate "Logo of the Apprenticeships and Results Evaluation System" %}"></h1></div>
-            </div>
+    <div class="w3-container main-container">
+        <main class="w3-container">
+            {% include "messages.html" %}
+            {% block banner %}
+                <div class="w3-row">
+                    <div class="w3-third disappear">&nbsp;</div>
+                    <div class="w3-third logo"><h1><img src="{% static 'images/sara-logo.svg' %}" alt="{% translate "Logo of the Apprenticeships and Results Evaluation System" %}"></h1></div>
+                </div>
+            {% endblock %}
+            {% block content %}{% endblock %}
+        </main>
+        {% block footer %}
+            <footer id="footer" class="w3-row">
+                <hr>
+                <div class="w3-row block-section" style="text-align: center;">
+                    <img src="{% static 'images/logo.svg' %}" alt="{% translate "Logo of the Wikimedia Brasil" %}" style="height:3em; text-align: center">
+                </div>
+                <div class="w3-row userform" style="text-align: center;">{% blocktrans %}This application was developed by <i>Wikimedia Brasil</i>.{% endblocktrans %}</div>
+            </footer>
         {% endblock %}
-        {% block content %}{% endblock %}
-    </main>
+    </div>
     {% block scripts %}{% endblock %}
 </div>
 </body>

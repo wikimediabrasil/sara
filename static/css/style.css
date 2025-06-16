@@ -54,12 +54,14 @@ body {
     color: var(--light-grey-color);
     font-family: var(--main-font), sans-serif;
 }
-main {
+main, .main-container {
     overflow-y: auto;
     flex: 1 0;
     transition: margin-left .5s;
     background-color: var(--dark-grey-color);
 }
+.main-container { display: flex; flex-direction: column; }
+main { flex: 1; }
 a { text-decoration: none; color:inherit; }
 p, footer, .block-section { margin:1em 0; }
 svg { vertical-align:unset !important; }

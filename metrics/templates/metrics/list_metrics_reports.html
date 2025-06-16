@@ -4,6 +4,7 @@
 {% block title %}{{ title }}{% endblock %}
 {% load metricstags %}
 
+
 {% block scripts %}
     <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/bootstrap-table.min.js"></script>
     <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/extensions/mobile/bootstrap-table-mobile.min.js"></script>
@@ -15,6 +16,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">
 {% endblock %}
 {% block banner %}{% endblock %}
+{% block footer %}{% endblock %}
 {% block content %}
     <div class="w3-row">
         <div class="w3-container userform" style="background-color: var(--light-color); color:black;">

@@ -4,7 +4,7 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block styles %}<link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">{% endblock %}
-
+{% block footer %}{% endblock %}
 {% block banner %}
     <div class="w3-row">
     <div class="w3-quarter disappear">&nbsp;</div>
@@ -72,5 +72,4 @@
             </div>
         </div>
     </div>
-    {% include 'footer.html' %}
 {% endblock %}

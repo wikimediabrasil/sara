@@ -4,7 +4,7 @@
     flex-direction: column;
     flex-basis: 9em;
     flex-shrink: 0;
-    justify-content: space-between;
+    justify-content: flex-start;
     padding: 2em 0;
     text-align: center;
     background-color: var(--dark-color);
@@ -16,11 +16,19 @@
     opacity: 0.25;
 }
 .nav_block { padding:0.25em; }
+.nav_bottom { margin-top: auto; }
+.nav_section {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: space-between;
+}
 .nav_icon {
     height: 1.5em;
     display: block;
     color: var(--main-color);
 }
+.menu_icon { display: none; }
 .nav_btn_title {
     color: var(--main-color);
     width: 100%;
@@ -43,13 +51,38 @@
 #nav_logo:hover path { fill: var(--light-color); }
 
 @media screen and (max-width: 600px) {
-    .navbar_wrapper { flex-basis: 1.5em; }
-    .nav_block span { display: none; }
-    .nav_separator { width: 1.5em; }
-
-    #logo_s { transform: translateX(-100%); opacity: 0; }
-    #logo_r { transform: translateX(-100%); opacity: 0; }
-    #logo_a1 { transform: translateX(-2%); }
-    #logo_a2 { transform: translateX(-26%); }
-    .logo_nav svg { height: 1.5em !important; }
+    #nav_logo { height: 2em; }
+    .wrapper { flex-direction: column; }
+    .navbar_wrapper { position: sticky; top: 0; left: 0; flex-direction: row; padding: 1em; flex-basis: unset; flex-wrap: wrap; }
+    .menu_icon { align-self: center; display:block; cursor: pointer; }
+    .nav_section {
+        width: 100%;
+        overflow: hidden;
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out, transform 0.3s ease-in-out;
+        position: absolute;
+        top: 100%; left: 0; z-index: 1000;
+        display: flex;
+        flex: 1;
+        justify-content: space-between;
+        flex-direction: column;
+    }
+    .nav_section .nav_block { transform: translateY(-10px); transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; }
+    .nav_section.open {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        max-height: 100vh;
+        opacity: 1;
+        transform: translateY(0);
+        background-color: var(--dark-color);
+        height: calc(100vh - 4.25em);
+    }
+    .nav_section.open .nav_block { transform: translateY(0); }
+    .nav_separator { display: none; }
+    .nav_icon { display: inline-block; }
+    .nav_block { padding: 0.5em 1em; text-align: right; }
+    .nav_top { display: flex; flex: 1; justify-content: space-between; width: 100%; flex-basis: auto; }
 }

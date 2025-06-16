@@ -169,7 +169,7 @@ def list_reports(request):
 @permission_required("report.view_report")
 def list_reports_of_year(request, year):
     custom_filter = Q(initial_date__year=year) | Q(end_date__year=year)
-    context = {"dataset": Report.objects.filter(custom_filter).order_by('-created_at'), "mine": False, "title": _("List reports of %(year)s") % {"year": year}, "year": year}
+    context = {"dataset": Report.objects.filter(custom_filter).order_by('-created_at'), "mine": False, "title": _("List reports of %(year)s") % {"year": year}, "year": year, "previous_year": int(year)-1}
 
     return render(request, "report/list_reports.html", context)
 
