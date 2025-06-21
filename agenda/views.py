@@ -115,8 +115,6 @@ def add_event(request):
 
 
 # READ
-@login_required
-@transaction.atomic
 def list_events(request):
     events = Event.objects.all().order_by("-initial_date__year")
     context = {"dataset": events, "title": _("List events")}

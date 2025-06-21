@@ -16,8 +16,7 @@ from metrics.models import Metric, Project
 from report.models import Editor, Organizer, Partner, \
     Funding, Technology, Report, AreaActivated, Activity, OperationReport
 from users.models import UserProfile
-from report.forms import NewReportForm, AreaActivatedForm, FundingForm, PartnerForm, TechnologyForm, OperationForm,\
-    OperationUpdateFormSet
+from report.forms import NewReportForm, OperationForm, OperationUpdateFormSet
 
 
 # CREATE
@@ -95,67 +94,6 @@ def get_operation_formset():
                 'number_of_partnerships_activated',
                 'number_of_new_partnerships'), extra=Metric.objects.filter(is_operation=True).count(),
         can_delete=False)
-
-
-@login_required
-@permission_required("report.add_areaactivated")
-def add_area_activated(request):
-    area_form = AreaActivatedForm(request.POST or None)
-    if request.method == "POST":
-        if area_form.is_valid():
-            area, created = AreaActivated.objects.get_or_create(text=area_form.cleaned_data['text'])
-            return JsonResponse({"id": area.id, "text": area.text})
-        else:
-            return JsonResponse({"id": None})
-    else:
-        context = {"area_form": area_form, "title": _("Add area")}
-        return render(request, "area_activated/add_area.html", context)
-
-
-@login_required
-@permission_required("report.add_funding")
-def add_funding(request):
-    funding_associated_form = FundingForm(request.POST or None)
-    if request.method == "POST":
-        if funding_associated_form.is_valid():
-            funding, created = Funding.objects.get_or_create(name=funding_associated_form.cleaned_data["name"], value=funding_associated_form.cleaned_data["value"], project=funding_associated_form.cleaned_data["project"])
-            return JsonResponse({"id": funding.id, "text": funding.name})
-        else:
-            return JsonResponse({"id": None, "text": None})
-    else:
-        context = {"funding_form": funding_associated_form, "title": _("Add funding")}
-        return render(request, "funding/add_funding.html", context)
-
-
-@login_required
-@permission_required("report.add_partner")
-def add_partner(request):
-    partner_form = PartnerForm(request.POST or None)
-    if request.method == "POST":
-        if partner_form.is_valid():
-            partner, created = Partner.objects.get_or_create(name=partner_form.cleaned_data["name"])
-            return JsonResponse({"id": partner.id, "text": partner.name})
-        else:
-            return JsonResponse({"id": None, "text": None})
-    else:
-        context = {"partner_form": partner_form, "title": _("Add partnership")}
-        return render(request, "partners/add_partner.html", context)
-
-
-@login_required
-@permission_required("report.add_technology")
-def add_technology(request):
-    technology_form = TechnologyForm(request.POST or None)
-    if request.method == "POST":
-        if technology_form.is_valid():
-            technology, created = Technology.objects.get_or_create(name=technology_form.cleaned_data["name"])
-            return JsonResponse({"id": technology.id, "text": technology.name})
-        else:
-            return JsonResponse({"id": None, "text": None})
-    else:
-        context = {"technology_form": technology_form, "title": _("Add technology")}
-        return render(request, "technologies/add_technology.html", context)
-
 
 # REVIEW
 @login_required

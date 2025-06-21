@@ -1,24 +1,20 @@
-import json
 import zipfile
-
 import pandas as pd
 from io import BytesIO
-from django.test import TestCase
-from django.http import JsonResponse
-from django.urls import reverse
+from datetime import datetime
 from unittest.mock import patch
+from django.test import TestCase
+from django.urls import reverse
+from django.contrib.auth.models import Permission
 from django.utils.translation import gettext as _
-from .models import Funding, Partner, Technology, AreaActivated, StrategicLearningQuestion, Report, Editor, \
-    LearningArea, Organizer, Project, OperationReport
+
 from metrics.models import Metric, StrategicAxis
 from users.models import TeamArea, UserProfile, User
 from metrics.models import Activity, Area
 from strategy.models import Direction
-from datetime import datetime
-from django.contrib.auth.models import Permission
-from .forms import NewReportForm, AreaActivatedForm, FundingForm, PartnerForm, TechnologyForm, activities_associated_as_choices, learning_areas_as_choices
-from .views import export_report_instance, export_metrics, export_user_profile, export_area_activated, export_directions_related, export_editors, export_learning_questions_related, export_organizers, export_partners_activated, export_technologies_used, get_or_create_editors, get_or_create_organizers, export_operation_report, export_funding
-from django.core.exceptions import ValidationError
+from report.models import Funding, Partner, Technology, AreaActivated, StrategicLearningQuestion, Report, Editor, LearningArea, Organizer, Project, OperationReport
+from report.forms import NewReportForm, activities_associated_as_choices, learning_areas_as_choices
+from report.views import export_report_instance, export_metrics, export_user_profile, export_area_activated, export_directions_related, export_editors, export_learning_questions_related, export_organizers, export_partners_activated, export_technologies_used, get_or_create_editors, get_or_create_organizers, export_operation_report, export_funding
 
 
 class ReportAddViewTest(TestCase):
@@ -1781,165 +1777,6 @@ class ReportExportViewTest(TestCase):
         self.assertRedirects(response,f"{reverse('report:list_reports')}")
 
 
-
-
-class OtherViewsTest(TestCase):
-    def setUp(self):
-        self.username = "testuser"
-        self.password = "testpass"
-        self.user = User.objects.create_user(username=self.username, password=self.password)
-        self.user_profile = UserProfile.objects.filter(user=self.user).first()
-        self.add_areaactivated_permission = Permission.objects.get(codename="add_areaactivated")
-        self.add_funding_permission = Permission.objects.get(codename="add_funding")
-        self.add_partner_permission = Permission.objects.get(codename="add_partner")
-        self.add_technology_permission = Permission.objects.get(codename="add_technology")
-        self.user.user_permissions.add(self.add_areaactivated_permission)
-        self.user.user_permissions.add(self.add_funding_permission)
-        self.user.user_permissions.add(self.add_partner_permission)
-        self.user.user_permissions.add(self.add_technology_permission)
-
-    def test_add_area_activated_is_only_accessible_by_users_with_permission(self):
-        self.user.user_permissions.remove(self.add_areaactivated_permission)
-        self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("report:add_area_activated"))
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('report:add_area_activated')}")
-
-    def test_add_area_activated_get(self):
-        self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("report:add_area_activated"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "area_activated/add_area.html")
-        self.assertIsInstance(response.context["area_form"], AreaActivatedForm)
-
-    def test_add_area_activated_view_post_with_valid_data(self):
-        self.client.login(username=self.username, password=self.password)
-        data = {"text": "Area activated"}
-        response = self.client.post(reverse("report:add_area_activated"), data=data)
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response, JsonResponse)
-        response_data = json.loads(response.content.decode("utf-8"))
-        self.assertIsNotNone(response_data.get("id"))
-        self.assertEqual(response_data.get("text"), "Area activated")
-        self.assertTrue(AreaActivated.objects.filter(text=data["text"]).exists())
-
-    def test_add_area_activated_view_post_with_invalid_data(self):
-        self.client.login(username=self.username, password=self.password)
-        data = {"text": ""}
-        response = self.client.post(reverse("report:add_area_activated"), data=data)
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response, JsonResponse)
-        response_data = json.loads(response.content.decode("utf-8"))
-        self.assertIsNone(response_data.get("id"))
-        self.assertFalse(AreaActivated.objects.filter(text=data["text"]).exists())
-
-    def test_funding_is_only_accessible_by_users_with_permission(self):
-        self.user.user_permissions.remove(self.add_funding_permission)
-        self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("report:add_funding"))
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('report:add_funding')}")
-
-    def test_funding_get(self):
-        self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("report:add_funding"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "funding/add_funding.html")
-        self.assertIsInstance(response.context["funding_form"], FundingForm)
-
-    def test_funding_view_post_with_valid_data(self):
-        self.client.login(username=self.username, password=self.password)
-        project = Project.objects.create(text="Project")
-        data = {"name": "Funding", "project": project.id}
-        response = self.client.post(reverse("report:add_funding"), data=data)
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response, JsonResponse)
-        response_data = json.loads(response.content.decode("utf-8"))
-        self.assertIsNotNone(response_data.get("id"))
-        self.assertEqual(response_data.get("text"), "Funding")
-        self.assertTrue(Funding.objects.filter(name=data["name"]).exists())
-
-    def test_funding_view_post_with_invalid_data(self):
-        self.client.login(username=self.username, password=self.password)
-        data = {"name": ""}
-        response = self.client.post(reverse("report:add_funding"), data=data)
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response, JsonResponse)
-        response_data = json.loads(response.content.decode("utf-8"))
-        self.assertIsNone(response_data.get("id"))
-        self.assertFalse(Funding.objects.filter(name=data["name"]).exists())
-
-    def test_partner_is_only_accessible_by_users_with_permission(self):
-        self.user.user_permissions.remove(self.add_partner_permission)
-        self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("report:add_partner"))
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('report:add_partner')}")
-
-    def test_partner_get(self):
-        self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("report:add_partner"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "partners/add_partner.html")
-        self.assertIsInstance(response.context["partner_form"], PartnerForm)
-
-    def test_partner_view_post_with_valid_data(self):
-        self.client.login(username=self.username, password=self.password)
-        data = {"name": "Partner"}
-        response = self.client.post(reverse("report:add_partner"), data=data)
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response, JsonResponse)
-        response_data = json.loads(response.content.decode("utf-8"))
-        self.assertIsNotNone(response_data.get("id"))
-        self.assertEqual(response_data.get("text"), "Partner")
-        self.assertTrue(Partner.objects.filter(name=data["name"]).exists())
-
-    def test_partner_view_post_with_invalid_data(self):
-        self.client.login(username=self.username, password=self.password)
-        data = {"name": ""}
-        response = self.client.post(reverse("report:add_partner"), data=data)
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response, JsonResponse)
-        response_data = json.loads(response.content.decode("utf-8"))
-        self.assertIsNone(response_data.get("id"))
-        self.assertFalse(Partner.objects.filter(name=data["name"]).exists())
-
-    def test_technology_is_only_accessible_by_users_with_permission(self):
-        self.user.user_permissions.remove(self.add_technology_permission)
-        self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("report:add_technology"))
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('report:add_technology')}")
-
-    def test_technology_get(self):
-        self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("report:add_technology"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "technologies/add_technology.html")
-        self.assertIsInstance(response.context["technology_form"], TechnologyForm)
-
-    def test_technology_view_post_with_valid_data(self):
-        self.client.login(username=self.username, password=self.password)
-        data = {"name": "Technology"}
-        response = self.client.post(reverse("report:add_technology"), data=data)
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response, JsonResponse)
-        response_data = json.loads(response.content.decode("utf-8"))
-        self.assertIsNotNone(response_data.get("id"))
-        self.assertEqual(response_data.get("text"), "Technology")
-        self.assertTrue(Technology.objects.filter(name=data["name"]).exists())
-
-    def test_technology_view_post_with_invalid_data(self):
-        self.client.login(username=self.username, password=self.password)
-        data = {"name": ""}
-        response = self.client.post(reverse("report:add_technology"), data=data)
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response, JsonResponse)
-        response_data = json.loads(response.content.decode("utf-8"))
-        self.assertIsNone(response_data.get("id"))
-        self.assertFalse(Technology.objects.filter(name=data["name"]).exists())
-
-
 class ReportFormTest(TestCase):
     def setUp(self):
         self.username = "testuser"
@@ -2082,37 +1919,3 @@ class ReportFormTest(TestCase):
         expected_result = [["Learning area 1", [[1, "SLQ 1"], [2, "SLQ 2"]]],["Learning area 2", [[3, "SLQ 3"]]]]
         result = learning_areas_as_choices()
         self.assertEqual(expected_result, result)
-
-
-class ParterFormTest(TestCase):
-    def test_valid_partner_form(self):
-        data = {
-            "name": "Partner",
-            "website": "https://example.com"
-        }
-
-        form = PartnerForm(data=data)
-        self.assertTrue(form.is_valid())
-
-    def test_name_is_required(self):
-        data = {"website": "https://example.com"}
-        form = PartnerForm(data=data)
-        self.assertFalse(form.is_valid())
-        self.assertIn("name", form.errors)
-
-    def test_name_is_required_and_not_empty(self):
-        data = {
-            "name": "",
-            "website": "https://example.com"
-        }
-        form = PartnerForm(data=data)
-        self.assertFalse(form.is_valid())
-        self.assertIn("name", form.errors)
-    def test_website_is_a_url(self):
-        data = {
-            "name": "Partner",
-            "website": "Example"
-        }
-        form = PartnerForm(data=data)
-        self.assertFalse(form.is_valid())
-        self.assertIn("website", form.errors)

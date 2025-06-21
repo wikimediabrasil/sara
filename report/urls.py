@@ -13,9 +13,5 @@ urlpatterns = [
     path("all/export", views.export_report, name="export_all_reports"),
     path("<int:report_id>/update", views.update_report, name="update_report"),
     path("<int:report_id>/delete", views.delete_report, name="delete_report"),
-    path("add/area_activated", views.add_area_activated, name="add_area_activated"),
-    path("add/funding", views.add_funding, name="add_funding"),
-    path("add/partner", views.add_partner, name="add_partner"),
-    path("add/technology", views.add_technology, name="add_technology"),
     path("get/metrics", views.get_metrics, name="get_metrics"),
 ]
