@@ -43,7 +43,7 @@ class NewReportForm(forms.ModelForm):
 
     def clean_editors(self):
         editors_string = self.data.get("editors_string", "")
-        editors_list = editors_string.split("\r\n") if editors_string else []
+        editors_list = remove_domain(editors_string).split("\r\n") if editors_string else []
         editors = []
         for editor in editors_list:
             editor_object, created = Editor.objects.get_or_create(username=editor)
@@ -64,7 +64,7 @@ class NewReportForm(forms.ModelForm):
 
     def clean_organizers(self):
         organizers_string = self.data.get("organizers_string", "")
-        organizers_list = organizers_string.split("\r\n") if organizers_string else []
+        organizers_list = remove_domain(organizers_string).split("\r\n") if organizers_string else []
         organizers = []
         for organizer in organizers_list:
             organizer_name, institution_name = (organizer + ";").split(";", maxsplit=1)
@@ -192,6 +192,13 @@ class NewReportForm(forms.ModelForm):
             report.learning_questions_related.set(self.cleaned_data['learning_questions_related'])
             report.metrics_related.set(self.add_metrics_related_depending_on_values())
         return report
+
+
+def remove_domain(users_string):
+    user_domains = ["User:", "Usuário (a):", "Usuário:", "Usuária:", "Utilizador(a):", "Utilizadora:", "Utilizador:"]
+    for domain in user_domains:
+        users_string = users_string.replace(domain, "")
+    return users_string
 
 
 def area_responsible_of_user(user):
