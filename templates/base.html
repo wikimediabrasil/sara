@@ -38,6 +38,11 @@
 <div class="wrapper">
     {% block navbar %}{% include 'navbar.html' %}{% endblock %}
     <div class="w3-container main-container">
+        {% if user.is_authenticated and not perms.report.add_report %}
+            <div class="banner-message">
+                {% blocktrans %}<span>S.A.R.A. is on a short vacation while we write the <a href="https://meta.wikimedia.org/wiki/Wikimedia_Brasil/Report" title="link to the current report">most recent report</a>.</span>{% endblocktrans %}
+            </div>
+        {% endif %}
         <main class="w3-container">
             {% include "messages.html" %}
             {% block banner %}

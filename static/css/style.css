@@ -66,6 +66,16 @@ a { text-decoration: none; color:inherit; }
 p, footer, .block-section { margin:1em 0; }
 svg { vertical-align:unset !important; }
 button { font-family: var(--main-font) !important; font-weight: bold; }
+.banner-message {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    height: 4em;
+    background-color: var(--main-color);
+    justify-content: center;
+    font-size: 1.25em;
+}
+.banner-message a { text-decoration: underline; }
 
 /* SCROLLBAR ELEMENTS */
 ::-webkit-scrollbar { width: 1em; }
