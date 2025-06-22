@@ -11,7 +11,7 @@ from django.db.models import Q
 from django.conf import settings
 from agenda.forms import EventForm
 from agenda.models import Event
-from users.models import TeamArea, UserProfile
+from users.models import TeamArea, UserProfile, Position
 
 
 # MONTH CALENDAR
@@ -208,9 +208,38 @@ def send_email(request):
     return redirect(reverse("metrics:index"))
 
 
-def get_activities_soon_to_be_finished(area):
+def show_list_of_reports_of_specific_area(request, area_id=None):
+    if not area_id:
+        user = request.user
+        area = TeamArea.objects.get(team_area_of_position__user_position__user=user)
+        manager = user.first_name
+    else:
+        area = TeamArea.objects.get(pk=area_id)
+        manager = UserProfile.objects.filter(user__is_active=True, position__area_associated=area, position__type__name="Manager").first()
+
+    today_boy = (datetime.date.today() - datetime.date(datetime.date.today().year, 1, 1)).days
+    today_eoy = (datetime.date(datetime.date.today().year, 12, 31) - datetime.date.today()).days
+    no_report = Q()
+    past_activities = get_activities_already_finished(area, delta=today_boy, no_report=no_report)
+    future_activities = get_activities_soon_to_be_finished(area, delta=today_eoy)
+
+    context = {
+        "past_activities": build_message_about_reports(past_activities),
+        "future_activities": build_message_about_reports(future_activities),
+        "manager": manager,
+        "area": area
+    }
+
+    return render(request, "agenda/area_activities.html", context)
+
+
+def show_list_of_reports_of_area(request):
+    return redirect(reverse("agenda:specific_area_activities"))
+
+
+def get_activities_soon_to_be_finished(area, delta=14):
     today = datetime.date.today()
-    interval = min(today + datetime.timedelta(14), datetime.date(today.year, 12, 31))
+    interval = min(today + datetime.timedelta(delta), datetime.date(today.year, 12, 31))
     query = Q(end_date__lte=interval, # Before the interval
               end_date__gte=today, # After today
               area_responsible=area, # Under a specific manager responsability
@@ -219,21 +248,20 @@ def get_activities_soon_to_be_finished(area):
     return events
 
 
-def get_activities_already_finished(area):
+def get_activities_already_finished(area, delta=28, no_report=Q(activity_associated__report_activity__isnull=True)):
     today = datetime.date.today()
-    interval = max(today - datetime.timedelta(28), datetime.date(today.year, 1, 1))
+    interval = max(today - datetime.timedelta(delta), datetime.date(today.year, 1, 1))
     query = Q(end_date__lte=today - datetime.timedelta(1), # Before today
               end_date__gte=interval, # After the interval
               area_responsible=area, # Under a specific manager responsability
-              activity_associated__report_activity__isnull=True, # Does not have any report about it
-              )
+              ) & no_report
     events = Event.objects.filter(query).distinct()
     return events
 
 
-def get_activities_about_to_kickoff(area):
+def get_activities_about_to_kickoff(area, delta=14):
     today = datetime.date.today()
-    interval = min(today + datetime.timedelta(14), datetime.date(today.year, 12, 31))
+    interval = min(today + datetime.timedelta(delta), datetime.date(today.year, 12, 31))
     query = Q(initial_date__gte=today, # Begining after today
               initial_date__lte=interval, # Begining before interval
               area_responsible=area # Under a specific manager responsability

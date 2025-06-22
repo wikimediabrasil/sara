@@ -54,6 +54,15 @@
                 </a>
             </div>
             <div class="nav_separator"></div>
+            {% if user.is_authenticated %}
+                <div class="nav_block">
+                    <a href="{% url 'agenda:area_activities' %}" aria-label="{% translate 'Area activities' %}">
+                        <i class="nav_icon fa-solid fa-calendar-check"></i>
+                        <span class="nav_btn_title">{% translate "Your activities" %}</span>
+                    </a>
+                </div>
+                <div class="nav_separator"></div>
+            {% endif %}
             <div class="nav_block">
                 <a href="{% url 'metrics:show_activities' %}" aria-label="{% translate 'Activities plan' %}">
                     <i class="nav_icon fa-solid fa-table-list"></i>

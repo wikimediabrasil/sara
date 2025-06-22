@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "Area activities" %} - {{ area }}{% endblock %}
+
+{% block banner %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+    <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; ">
+        <div style="display: flex; flex-direction: column; text-align: center; padding: 1em; background-color: #3267FF; color: #F1F1F1; font-family: Montserrat, sans-serif; ">
+            <h1>◂◂ {{ area }} ◂◂</h1>
+        </div>
+        <div style="padding: 1em; font-family: Montserrat, sans-serif; flex: 1; ">
+            {% blocktrans with manager=manager %}Dear {{ manager }},<br><br>Below you will find the reports and activities under your responsibility that must be reported into SARA.<br><br>Please, look into the following activities:{% endblocktrans %}
+            {% if past_activities %}
+                <h2 style="color: #3267FF; ">{% trans "◂ Past activities" %}</h2>
+                {% autoescape off %}{{ past_activities }}{% endautoescape %}
+            {% endif %}
+            {% if future_activities %}
+                <h2 style="color: #3267FF; ">{% trans "▸ Future activities" %}</h2>
+                {% autoescape off %}{{ future_activities }}{% endautoescape %}
+            {% endif %}
+        </div>
+            <div style="display: flex; flex-direction: column; text-align: center; padding: 1em; background-color: #3267FF; color: #F1F1F1; font-size: 85%; font-family: Montserrat, sans-serif; ">
+            <span>{% blocktranslate %}The information in this message is based on the <a href="https://sara-wmb.toolforge.org/calendar" title="WMB calendar" style="color:#FFFFFF;">Wikimedia Brasil activity calendar</a>.<br>In case of a change in the activity planning, contact the Executive Director with a justification.<br>Revisions to the calendar are the sole responsibility of the Products and Technology team, under the supervision of the Executive Director.<br><br>For any other inquiries or assistance, please do not hesitate to reach out to our Products and Technology team.{% endblocktranslate %}</span>
+        </div>
+    </div>
+{% endblock %}

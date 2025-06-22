@@ -15,8 +15,8 @@
 }
 .formfieldtitle { font-family: var(--main-font); font-weight: bold; }
 .form-legend { font-size: small; color: var(--grey-color); }
-.form-left { padding-right: 1em; }
-.form-right { padding-left: 1em; }
+#homepage_buttons div:nth-child(odd) { padding-right: 1em; }
+#homepage_buttons div:nth-child(even) { padding-left: 1em; }
 .view-field {
     color: var(--dark-color);
     border: none;

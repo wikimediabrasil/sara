@@ -18,15 +18,16 @@
         </div>
         <div class="w3-row block-section">
             <div class="w3-quarter disappear">&nbsp;</div>
-            <div class="w3-half">
-                {% if user.is_authenticated %}<div class="w3-half form-left"><a href="{% url 'report:add_report' %}"><button class="custombutton" type="button">{% translate "Add report" %}</button></a></div>{% endif %}
-                {% if user.is_authenticated %}<div class="w3-half form-right"><a href="{% url 'report:list_reports' %}"><button class="custombutton" type="button">{% translate "List reports" %}</button></a></div>{% endif %}
-                {% if user.is_authenticated %}<div class="w3-half form-left"><a href="{% url 'agenda:show_calendar' %}"><button class="custombutton" type="button">{% translate "Show calendar" %}</button></a></div>{% endif %}
-                <div class="w3-half form-{% if user.is_authenticated %}right{% else %}left{% endif %}"><a href="{% url 'metrics:show_activities' %}"><button class="custombutton" type="button">{% translate "See activities plan" %}</button></a></div>
-                <div class="w3-half form-{% if user.is_authenticated %}left{% else %}right{% endif %}"><a href="{% url 'strategy:show_strategy' %}"><button class="custombutton" type="button">{% translate "See strategy" %}</button></a></div>
-                {% if user.is_authenticated %}<div class="w3-half form-right"><a href="{% url 'user:profile' user_id=user.id %}"><button class="custombutton" type="button">{% translate "Edit your profile" %}</button></a></div>{% endif %}
-                {% if perms.auth.add_user %}<div class="w3-half form-left"><a href="{% url 'user:register' %}"><button class="custombutton" type="button">{% translate "Register new user" %}</button></a></div>{% endif %}
-                {% if user.is_authenticated %}<div class="w3-half form-{% if perms.auth.add_user %}right{% else %}left{% endif %}"><a href="{% url 'bug:list_bugs' %}"><button class="custombutton" type="button">{% translate "Register bugs" %}</button></a></div>{% endif %}
+            <div class="w3-half" id="homepage_buttons">
+                {% if user.is_authenticated %}<div class="w3-half"><a href="{% url 'report:add_report' %}"><button class="custombutton" type="button">{% translate "Add report" %}</button></a></div>{% endif %}
+                {% if user.is_authenticated %}<div class="w3-half"><a href="{% url 'report:list_reports' %}"><button class="custombutton" type="button">{% translate "List reports" %}</button></a></div>{% endif %}
+                {% if user.is_authenticated %}<div class="w3-half"><a href="{% url 'agenda:show_calendar' %}"><button class="custombutton" type="button">{% translate "Show calendar" %}</button></a></div>{% endif %}
+                {% if user.is_authenticated %}<div class="w3-half"><a href="{% url 'agenda:area_activities' %}"><button class="custombutton" type="button">{% translate "Area activities" %}</button></a></div>{% endif %}
+                <div class="w3-half"><a href="{% url 'metrics:show_activities' %}"><button class="custombutton" type="button">{% translate "See activities plan" %}</button></a></div>
+                <div class="w3-half"><a href="{% url 'strategy:show_strategy' %}"><button class="custombutton" type="button">{% translate "See strategy" %}</button></a></div>
+                {% if user.is_authenticated %}<div class="w3-half"><a href="{% url 'user:profile' user_id=user.id %}"><button class="custombutton" type="button">{% translate "Edit your profile" %}</button></a></div>{% endif %}
+                {% if perms.auth.add_user %}<div class="w3-half"><a href="{% url 'user:register' %}"><button class="custombutton" type="button">{% translate "Register new user" %}</button></a></div>{% endif %}
+                {% if user.is_authenticated %}<div class="w3-half"><a href="{% url 'bug:list_bugs' %}"><button class="custombutton" type="button">{% translate "Register bugs" %}</button></a></div>{% endif %}
             </div>
         </div>
         <div class="w3-row block-section">
