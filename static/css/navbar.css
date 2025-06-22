@@ -8,6 +8,7 @@
     padding: 2em 0;
     text-align: center;
     background-color: var(--dark-color);
+    z-index: 5;
 }
 .nav_separator {
     border: 1px dashed var(--main-color);
