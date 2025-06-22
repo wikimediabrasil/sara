@@ -1981,7 +1981,7 @@ msgid ""
 msgstr ""
 "<span>S.A.R.A. está de férias curtas enquanto escrevemos o <a href=\"https://"
 "meta.wikimedia.org/wiki/Wikimedia_Brasil/Report\" title=\"link para o relatório "
-"atual\">relatório mais atual</a>.</span>"
+"atual\">relatório semestral</a>.</span>"
 
 #: .\templates\base.html:51
 msgid "Logo of the Apprenticeships and Results Evaluation System"
