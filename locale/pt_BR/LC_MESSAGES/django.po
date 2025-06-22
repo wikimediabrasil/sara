@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-22 05:53-0300\n"
+"POT-Creation-Date: 2025-06-22 06:53-0300\n"
 "PO-Revision-Date: 2024-02-09 16:44-0300\n"
 "Last-Translator: Éder Porto <eder.porto@wmnobrasil.org>\n"
 "Language-Team: PT_BR <LL@li.org>\n"
@@ -1973,15 +1973,25 @@ msgstr "Direção"
 msgid "Directions"
 msgstr "Direções"
 
-#: .\templates\base.html:46
+#: .\templates\base.html:43
+msgid ""
+"<span>S.A.R.A. is on a short vacation while we write the <a href=\"https://"
+"meta.wikimedia.org/wiki/Wikimedia_Brasil/Report\" title=\"link to the "
+"current report\">most recent report</a>.</span>"
+msgstr ""
+"<span>S.A.R.A. está de férias curtas enquanto escrevemos o <a href=\"https://"
+"meta.wikimedia.org/wiki/Wikimedia_Brasil/Report\" title=\"link para o relatório "
+"atual\">relatório mais atual</a>.</span>"
+
+#: .\templates\base.html:51
 msgid "Logo of the Apprenticeships and Results Evaluation System"
 msgstr "Logo do Sistema de Avaliação de Resultados e Aprendizagem"
 
-#: .\templates\base.html:55
+#: .\templates\base.html:60
 msgid "Logo of the Wikimedia Brasil"
 msgstr "Logo da Wikimedia Brasil"
 
-#: .\templates\base.html:57
+#: .\templates\base.html:62
 msgid "This application was developed by <i>Wikimedia Brasil</i>."
 msgstr "Esta aplicação foi desenvolvida pela <i>Wikimedia Brasil</i>."
 
