@@ -56,9 +56,9 @@
                         <td style="white-space: nowrap;">
                             <a title="{% trans 'View' %}" href="{% url 'report:detail_report' report_id=data.id %}"><button title="{% trans 'View' %}" type="button" class="btn-circle btn-view"><i class="fa-solid fa-eye"></i></button></a>
                             {% if data.locked and not perms.report.can_edit_locked_report %}
-                                <a title="{% trans 'Update' %}" href="{% url 'report:update_report' report_id=data.id %}"><button title="{% trans 'Update' %}" type="button" class="btn-circle btn-update"><i class="fa-solid fa-pen"></i></button></a>
-                            {% else %}
                                 <a title="{% trans 'Update' %}" href="{% url 'report:update_report' report_id=data.id %}"><button title="{% trans 'Update' %}" type="button" class="btn-circle btn-readonly"><i class="fa-solid fa-lock"></i></button></a>
+                            {% else %}
+                                <a title="{% trans 'Update' %}" href="{% url 'report:update_report' report_id=data.id %}"><button title="{% trans 'Update' %}" type="button" class="btn-circle btn-update"><i class="fa-solid fa-pen"></i></button></a>
                             {% endif %}
                             <br class="appear">
                             <a title="{% trans 'Delete' %}" href="{% url 'report:delete_report' report_id=data.id %}"><button title="{% trans 'Delete' %}" type="button" class="btn-circle btn-delete"><i class="fa-solid fa-times"></i></button></a>
