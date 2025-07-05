@@ -135,79 +135,79 @@ TOOLFORGE = {
 }
 
 INVERTED_AFFILIATES = {
-    r"^wmam:(.*)": "https://am.wikimedia.org/wiki/$1",
-    r"^wmbd:(.*)": "https://bd.wikimedia.org/wiki/$1",
-    r"^wmbe:(.*)": "https://be.wikimedia.org/wiki/$1",
-    r"^wmbr:(.*)": "https://br.wikimedia.org/wiki/$1",
-    r"^wmca:(.*)": "https://ca.wikimedia.org/wiki/$1",
-    r"^wmcn:(.*)": "https://cn.wikimedia.org/wiki/$1",
-    r"^wmco:(.*)": "https://co.wikimedia.org/wiki/$1",
-    r"^wmdk:(.*)": "https://dk.wikimedia.org/wiki/$1",
-    r"^wmec:(.*)": "https://ec.wikimedia.org/wiki/$1",
-    r"^wmee:(.*)": "https://ee.wikimedia.org/wiki/$1",
-    r"^wmfi:(.*)": "https://fi.wikimedia.org/wiki/$1",
-    r"^wmge:(.*)": "https://ge.wikimedia.org/wiki/$1",
-    r"^wmhi:(.*)": "https://hi.wikimedia.org/wiki/$1",
-    r"^wmid:(.*)": "https://id.wikimedia.org/wiki/$1",
-    r"^wmat:(.*)": "https://mitglieder.wikimedia.at/$1",
-    r"^wmmk:(.*)": "https://mk.wikimedia.org/wiki/$1",
-    r"^wmmx:(.*)": "https://mx.wikimedia.org/wiki/$1",
-    r"^wmnl:(.*)": "https://nl.wikimedia.org/wiki/$1",
-    r"^wmno:(.*)": "https://no.wikimedia.org/wiki/$1",
-    r"^wmnyc:(.*)": "https://nyc.wikimedia.org/wiki/$1",
-    r"^wmpa-us:(.*)": "https://pa-us.wikimedia.org/wiki/$1",
-    r"^wmpl:(.*)": "https://pl.wikimedia.org/wiki/$1",
-    r"^wmpt:(.*)": "https://pt.wikimedia.org/wiki/$1",
-    r"^wmpunjabi:(.*)": "https://punjabi.wikimedia.org/wiki/$1",
-    r"^wmromd:(.*)": "https://romd.wikimedia.org/wiki/$1",
-    r"^wmrs:(.*)": "https://rs.wikimedia.org/wiki/$1",
-    r"^wmru:(.*)": "https://ru.wikimedia.org/wiki/$1",
-    r"^wmse:(.*)": "https://se.wikimedia.org/wiki/$1",
-    r"^wmtr:(.*)": "https://tr.wikimedia.org/wiki/$1",
-    r"^wmua:(.*)": "https://ua.wikimedia.org/wiki/$1",
-    r"^wmve:(.*)": "https://ve.wikimedia.org/wiki/$1",
-    r"^wmit:(.*)": "https://wiki.wikimedia.it/wiki/$1",
-    r"^wmcl:(.*)": "https://wikimedia.cl/$1",
-    r"^wmde:(.*)": "https://wikimedia.de/$1",
-    r"^wmfr:(.*)": "https://wikimedia.fr/$1",
-    r"^wmhu:(.*)": "https://wikimedia.hu/wiki/$1",
-    r"^wmau:(.*)": "https://wikimedia.org.au/wiki/$1",
-    r"^wmuk:(.*)": "https://wikimedia.org.uk/wiki/$1",
-    r"^wmplsite:(.*)": "https://wikimedia.pl/$1",
-    r"^wmsk:(.*)": "https://wikimedia.sk/$1",
-    r"^wmdc:(.*)": "https://wikimediadc.org/wiki/$1",
-    r"^wmch:(.*)": "https://www.wikimedia.ch/$1",
-    r"^wmcz:(.*)": "https://www.wikimedia.cz/$1",
-    r"^wmes:(.*)": "https://www.wikimedia.es/wiki/$1",
-    r"^wmar:(.*)": "https://www.wikimedia.org.ar/wiki/$1",
-    r"^wmil:(.*)": "https://www.wikimedia.org.il/$1",
+    r"^wmam:(.*)": "https://am.wikimedia.org/wiki/$2",
+    r"^wmbd:(.*)": "https://bd.wikimedia.org/wiki/$2",
+    r"^wmbe:(.*)": "https://be.wikimedia.org/wiki/$2",
+    r"^wmbr:(.*)": "https://br.wikimedia.org/wiki/$2",
+    r"^wmca:(.*)": "https://ca.wikimedia.org/wiki/$2",
+    r"^wmcn:(.*)": "https://cn.wikimedia.org/wiki/$2",
+    r"^wmco:(.*)": "https://co.wikimedia.org/wiki/$2",
+    r"^wmdk:(.*)": "https://dk.wikimedia.org/wiki/$2",
+    r"^wmec:(.*)": "https://ec.wikimedia.org/wiki/$2",
+    r"^wmee:(.*)": "https://ee.wikimedia.org/wiki/$2",
+    r"^wmfi:(.*)": "https://fi.wikimedia.org/wiki/$2",
+    r"^wmge:(.*)": "https://ge.wikimedia.org/wiki/$2",
+    r"^wmhi:(.*)": "https://hi.wikimedia.org/wiki/$2",
+    r"^wmid:(.*)": "https://id.wikimedia.org/wiki/$2",
+    r"^wmat:(.*)": "https://mitglieder.wikimedia.at/$2",
+    r"^wmmk:(.*)": "https://mk.wikimedia.org/wiki/$2",
+    r"^wmmx:(.*)": "https://mx.wikimedia.org/wiki/$2",
+    r"^wmnl:(.*)": "https://nl.wikimedia.org/wiki/$2",
+    r"^wmno:(.*)": "https://no.wikimedia.org/wiki/$2",
+    r"^wmnyc:(.*)": "https://nyc.wikimedia.org/wiki/$2",
+    r"^wmpa-us:(.*)": "https://pa-us.wikimedia.org/wiki/$2",
+    r"^wmpl:(.*)": "https://pl.wikimedia.org/wiki/$2",
+    r"^wmpt:(.*)": "https://pt.wikimedia.org/wiki/$2",
+    r"^wmpunjabi:(.*)": "https://punjabi.wikimedia.org/wiki/$2",
+    r"^wmromd:(.*)": "https://romd.wikimedia.org/wiki/$2",
+    r"^wmrs:(.*)": "https://rs.wikimedia.org/wiki/$2",
+    r"^wmru:(.*)": "https://ru.wikimedia.org/wiki/$2",
+    r"^wmse:(.*)": "https://se.wikimedia.org/wiki/$2",
+    r"^wmtr:(.*)": "https://tr.wikimedia.org/wiki/$2",
+    r"^wmua:(.*)": "https://ua.wikimedia.org/wiki/$2",
+    r"^wmve:(.*)": "https://ve.wikimedia.org/wiki/$2",
+    r"^wmit:(.*)": "https://wiki.wikimedia.it/wiki/$2",
+    r"^wmcl:(.*)": "https://wikimedia.cl/$2",
+    r"^wmde:(.*)": "https://wikimedia.de/$2",
+    r"^wmfr:(.*)": "https://wikimedia.fr/$2",
+    r"^wmhu:(.*)": "https://wikimedia.hu/wiki/$2",
+    r"^wmau:(.*)": "https://wikimedia.org.au/wiki/$2",
+    r"^wmuk:(.*)": "https://wikimedia.org.uk/wiki/$2",
+    r"^wmplsite:(.*)": "https://wikimedia.pl/$2",
+    r"^wmsk:(.*)": "https://wikimedia.sk/$2",
+    r"^wmdc:(.*)": "https://wikimediadc.org/wiki/$2",
+    r"^wmch:(.*)": "https://www.wikimedia.ch/$2",
+    r"^wmcz:(.*)": "https://www.wikimedia.cz/$2",
+    r"^wmes:(.*)": "https://www.wikimedia.es/wiki/$2",
+    r"^wmar:(.*)": "https://www.wikimedia.org.ar/wiki/$2",
+    r"^wmil:(.*)": "https://www.wikimedia.org.il/$2",
 }
 
 INVERTED_ARTICLES = {
-    r"^arxiv:(.*)": "https://arxiv.org/abs/$1",
-    r"^DiffBlog:(.*)": "https://diff.wikimedia.org/$1",
-    r"^DOI:(.*)": "https://doi.org/$1",
-    r"^hdl:(.*)": "https://hdl.handle.net/$1",
-    r"^Scholar:(.*)": "https://scholar.google.com/scholar?q=$1",
-    r"^translatewiki:(.*)": "https://translatewiki.net/wiki/$1",
-    r"^VIAF:(.*)": "https://viaf.org/viaf/$1",
-    r"^WikiApiary:(.*)": "https://wikiapiary.com/wiki/$1",
-    r"^Google:(.*)": "https://www.google.com/search?q=$1",
-    r"^JSTOR:(.*)": "https://www.jstor.org/journals/$1",
-    r"^PMID:(.*)": "https://www.ncbi.nlm.nih.gov/pubmed/$1?dopt=Abstract",
-    r"^ISSN:(.*)": "https://www.worldcat.org/issn/$1"
+    r"^arxiv:(.*)": "https://arxiv.org/abs/$2",
+    r"^DiffBlog:(.*)": "https://diff.wikimedia.org/$2",
+    r"^DOI:(.*)": "https://doi.org/$2",
+    r"^hdl:(.*)": "https://hdl.handle.net/$2",
+    r"^Scholar:(.*)": "https://scholar.google.com/scholar?q=$2",
+    r"^translatewiki:(.*)": "https://translatewiki.net/wiki/$2",
+    r"^VIAF:(.*)": "https://viaf.org/viaf/$2",
+    r"^WikiApiary:(.*)": "https://wikiapiary.com/wiki/$2",
+    r"^Google:(.*)": "https://www.google.com/search?q=$2",
+    r"^JSTOR:(.*)": "https://www.jstor.org/journals/$2",
+    r"^PMID:(.*)": "https://www.ncbi.nlm.nih.gov/pubmed/$2?dopt=Abstract",
+    r"^ISSN:(.*)": "https://www.worldcat.org/issn/21"
 }
 
 INVERTED_FRIENDLY_PROJECTS = {
-    r"^IArchive:(.*)": "https://archive.org/details/$1",
-    r"^ccorg:(.*)": "https://creativecommons.org/$1",
-    r"^CreativeCommons:(.*)": "https://creativecommons.org/licenses/$1",
-    r"^wikiedudashboard:(.*)": "https://dashboard.wikiedu.org/$1",
-    r"^LinguaLibre:(.*)": "https://lingualibre.org/wiki/$1",
-    r"^OSMwiki:(.*)": "https://wiki.openstreetmap.org/wiki/$1",
-    r"^FlickrUser:(.*)": "https://www.flickr.com/people/$1",
-    r"^FlickrPhoto:(.*)": "https://www.flickr.com/photo.gne?id=$1",
-    r"^Discord:(.*)": "https://discord.com/$1",
+    r"^IArchive:(.*)": "https://archive.org/details/$2",
+    r"^ccorg:(.*)": "https://creativecommons.org/$2",
+    r"^CreativeCommons:(.*)": "https://creativecommons.org/licenses/$2",
+    r"^wikiedudashboard:(.*)": "https://dashboard.wikiedu.org/$2",
+    r"^LinguaLibre:(.*)": "https://lingualibre.org/wiki/$2",
+    r"^OSMwiki:(.*)": "https://wiki.openstreetmap.org/wiki/$2",
+    r"^FlickrUser:(.*)": "https://www.flickr.com/people/$2",
+    r"^FlickrPhoto:(.*)": "https://www.flickr.com/photo.gne?id=$2",
+    r"^Discord:(.*)": "https://discord.com/$2",
 }
 
 INVERTED_LANGUAGE_BASED_PROJECTS = {
@@ -222,49 +222,48 @@ INVERTED_LANGUAGE_BASED_PROJECTS = {
 }
 
 INVERTED_MAIN_PROJECTS = {
-    r"^c:(.*)": "https://commons.wikimedia.org/wiki/$1",
-
-    r"^outreach:(.*)": "https://outreach.wikimedia.org/wiki/$1",
-    r"^phab:(.*)": "https://phabricator.wikimedia.org/$1",
-    r"^species:(.*)": "https://species.wikimedia.org/wiki/$1",
-    r"^wikitech:(.*)": "https://wikitech.wikimedia.org/wiki/$1",
-    r"^mw:(.*)": "https://www.mediawiki.org/wiki/$1",
-    r"^d:(.*)": "https://www.wikidata.org/wiki/$1",
-    r"^wikifunctions:(.*)": "https://www.wikifunctions.org/wiki/$1",
+    r"^c:(.*)": "https://commons.wikimedia.org/wiki/$2",
+    r"^outreach:(.*)": "https://outreach.wikimedia.org/wiki/$2",
+    r"^phab:(.*)": "https://phabricator.wikimedia.org/$2",
+    r"^species:(.*)": "https://species.wikimedia.org/wiki/$2",
+    r"^wikitech:(.*)": "https://wikitech.wikimedia.org/wiki/$2",
+    r"^mw:(.*)": "https://www.mediawiki.org/wiki/$2",
+    r"^d:(.*)": "https://www.wikidata.org/wiki/$2",
+    r"^wikifunctions:(.*)": "https://www.wikifunctions.org/wiki/$2",
 }
 
 INVERTED_OTHER_WIKIMEDIA_PROJECTS = {
-    r"^betawikiversity:(.*)": "https://beta.wikiversity.org/wiki/$1",
-    r"^MediaZilla:(.*)": "https://bugzilla.wikimedia.org/$1",
-    r"^Etherpad:(.*)": "https://etherpad.wikimedia.org/$1",
-    r"^WMF:(.*)": "https://foundation.wikimedia.org/wiki/$1",
-    r"^Gerrit:(.*)": "https://gerrit.wikimedia.org/r/$1",
-    r"^gitlab:(.*)": "https://gitlab.wikimedia.org/$1",
-    r"^incubator:(.*)": "https://incubator.wikimedia.org/wiki/$1",
-    r"^Policy:(.*)": "https://policy.wikimedia.org/$1",
-    r"^Quality:(.*)": "https://quality.wikimedia.org/wiki/$1",
-    r"^download:(.*)": "https://releases.wikimedia.org/$1",
-    r"^spcom:(.*)": "https://spcom.wikimedia.org/wiki/$1",
-    r"^stats:(.*)": "https://stats.wikimedia.org/$1",
-    r"^strategy:(.*)": "https://strategy.wikimedia.org/wiki/$1",
-    r"^Testwikidata:(.*)": "https://test.wikidata.org/wiki/$1",
-    r"^Testwiki:(.*)": "https://test.wikipedia.org/wiki/$1",
-    r"^Testcommons:(.*)": "https://test-commons.wikimedia.org/wiki/$1",
-    r"^toolhub:(.*)": "https://toolhub.wikimedia.org/$1",
-    r"^usability:(.*)": "https://usability.wikimedia.org/wiki/$1",
-    r"^Votewiki:(.*)": "https://vote.wikimedia.org/wiki/$1",
-    r"^Wikimania:(.*)": "https://wikimania.wikimedia.org/wiki/$1",
-    r"^foundation:(.*)": "https://wikimediafoundation.org/$1",
+    r"^betawikiversity:(.*)": "https://beta.wikiversity.org/wiki/$2",
+    r"^MediaZilla:(.*)": "https://bugzilla.wikimedia.org/$2",
+    r"^Etherpad:(.*)": "https://etherpad.wikimedia.org/$2",
+    r"^WMF:(.*)": "https://foundation.wikimedia.org/wiki/$2",
+    r"^Gerrit:(.*)": "https://gerrit.wikimedia.org/r/$2",
+    r"^gitlab:(.*)": "https://gitlab.wikimedia.org/$2",
+    r"^incubator:(.*)": "https://incubator.wikimedia.org/wiki/$2",
+    r"^Policy:(.*)": "https://policy.wikimedia.org/$2",
+    r"^Quality:(.*)": "https://quality.wikimedia.org/wiki/$2",
+    r"^download:(.*)": "https://releases.wikimedia.org/$2",
+    r"^spcom:(.*)": "https://spcom.wikimedia.org/wiki/$2",
+    r"^stats:(.*)": "https://stats.wikimedia.org/$2",
+    r"^strategy:(.*)": "https://strategy.wikimedia.org/wiki/$2",
+    r"^Testwikidata:(.*)": "https://test.wikidata.org/wiki/$2",
+    r"^Testwiki:(.*)": "https://test.wikipedia.org/wiki/$2",
+    r"^Testcommons:(.*)": "https://test-commons.wikimedia.org/wiki/$2",
+    r"^toolhub:(.*)": "https://toolhub.wikimedia.org/$2",
+    r"^usability:(.*)": "https://usability.wikimedia.org/wiki/$2",
+    r"^Votewiki:(.*)": "https://vote.wikimedia.org/wiki/$2",
+    r"^Wikimania:(.*)": "https://wikimania.wikimedia.org/wiki/$2",
+    r"^foundation:(.*)": "https://wikimediafoundation.org/$2",
 }
 
 INVERTED_TOOLFORGE = {
     r"^toolforge:([^\/]+)\/(.+)": "https://$1.toolforge.org/$2",
-    r"^mixnmatch:(.*)": "https://mix-n-match.toolforge.org/#/catalog/$1",
-    r"^wmfdashboard:(.*)": "https://outreachdashboard.wmflabs.org/$1",
-    r"^petscan:(.*)": "https://petscan.wmflabs.org/?psid=$1",
-    r"^paws:(.*)": "https://public-paws.wmcloud.org/$1",
-    r"^Quarry:(.*)": "https://quarry.wmcloud.org/$1",
-    r"^xtools:(.*)": "https://xtools.wmcloud.org/$1",
+    r"^mixnmatch:(.*)": "https://mix-n-match.toolforge.org/#/catalog/$2",
+    r"^wmfdashboard:(.*)": "https://outreachdashboard.wmflabs.org/$2",
+    r"^petscan:(.*)": "https://petscan.wmflabs.org/?psid=$2",
+    r"^paws:(.*)": "https://public-paws.wmcloud.org/$2",
+    r"^Quarry:(.*)": "https://quarry.wmcloud.org/$2",
+    r"^xtools:(.*)": "https://xtools.wmcloud.org/$2",
 }
 
 PATTERNS = AFFILIATES | ARTICLES | FRIENDLY_PROJECTS | LANGUAGE_BASED_PROJECTS | MAIN_PROJECTS | OTHER_WIKIMEDIA_PROJECTS | TOOLFORGE
@@ -302,7 +301,7 @@ def unwikify_link(match, updated_references):
                 bullet_items = bl_match.group(2).split("|")
                 # Make the concatenation of the bulleted list as an HTML element
                 updated_content = bl_match.group(1) + "<ul>\n" + "\n".join(
-                    f"<li>{item}</li>" for item in bullet_items) + "\n</ul>" + match.group(3)
+                    f"<li>{item}</li>" for item in bullet_items) + "\n</ul>" + bl_match.group(3)
         updated_link = f'<li id="sara-{ref_id}">{ref_id}. {updated_content}</li>'
 
         updated_references.append(updated_link)
@@ -313,6 +312,7 @@ def unwikify_link(match, updated_references):
 def replace_with_links(input_string):
     def replace(match):
         substring = match.group(0)
+
         if substring.startswith('[[') and substring.endswith(']]'):
             content = substring[2:-2]
             meta = False
@@ -320,10 +320,13 @@ def replace_with_links(input_string):
                 link, friendly = content.split("|", 1)
                 if ":" not in link:
                     meta = True
+                elif any(link.startswith(item) for item in ["Media:", "Special:", "User:", "Project:", "File:", "MediaWiki:", "Template:", "Help:", "Category:"]):
+                    meta = True
             else:
                 link = friendly = content
+                meta = True
 
-            link = ur.quote(dewikify_url(link, meta), safe=":/")
+            link = ur.quote(dewikify_url(link.replace(" ","_"), meta), safe=":/")
             return f'<a target="_blank" href="{link}">{friendly}</a>'
         elif substring.startswith('[') and substring.endswith(']'):
             content = substring[1:-1]
@@ -333,7 +336,6 @@ def replace_with_links(input_string):
                 link = friendly = content
             return f'<a target="_blank" href="{link}">{friendly}</a>'
         return substring
-
     result = re.sub(r'(\[\[.*?\]\]|\[.*?\])', replace, input_string)
     return result
 

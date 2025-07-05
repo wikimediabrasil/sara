@@ -666,6 +666,27 @@ class ReportViewViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={reverse('report:update_report', kwargs={'report_id': self.report_1.id})}")
 
+    def test_update_locked_report_is_possible_for_users_with_permissions(self):
+        change_locked_report = Permission.objects.get(codename="can_edit_locked_report")
+        self.user.user_permissions.add(change_locked_report)
+        self.report_1.locked = True
+        self.report_1.save()
+
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.get(reverse('report:update_report', kwargs={'report_id': self.report_1.id}))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_update_locked_report_is_not_possible_for_users_without_permissions(self):
+        self.report_1.locked = True
+        self.report_1.save()
+
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.get(reverse('report:update_report', kwargs={'report_id': self.report_1.id}))
+
+        self.assertEqual(response.status_code, 302)
+
+
     def test_update_report_get_view(self):
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse("report:update_report", kwargs={"report_id": self.report_1.id}))

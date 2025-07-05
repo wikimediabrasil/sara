@@ -1,17 +1,25 @@
-from django.test import TestCase
+import re
+from unittest.mock import patch, MagicMock
+from datetime import datetime, timedelta, date
+from django.test import TestCase, RequestFactory
 from django.db.utils import IntegrityError
 from django.core.exceptions import ValidationError
-from .models import Objective, Area, Metric, Activity, Project
+from django.urls import reverse
+from django.db.models import Q, Sum, F
+from django.contrib.auth.models import Permission
+from django.utils.translation import activate, gettext_lazy as _
+
 from report.models import Report, Editor, OperationReport, Direction, LearningArea, StrategicLearningQuestion
 from users.models import User, UserProfile, TeamArea
 from strategy.models import StrategicAxis
-from .views import get_metrics_and_aggregate_per_project, build_wiki_ref_for_reports
-from django.urls import reverse
-from django.contrib.auth.models import Permission
-from datetime import datetime, timedelta, date
-from metrics.templatetags.metricstags import categorize, perc, bool_yesno, is_yesno
-from django.utils.translation import gettext_lazy as _
-from unittest.mock import patch
+from metrics.models import Objective, Area, Metric, Activity, Project
+
+from metrics.views import get_metrics_and_aggregate_per_project, build_wiki_ref_for_reports, \
+    show_metrics_for_specific_project, get_results_for_timespan
+from metrics.templatetags.metricstags import categorize, perc, bool_yesno, is_yesno, bool_yesnopartial
+from metrics.utils import render_to_pdf
+from metrics.link_utils import process_all_references, unwikify_link, replace_with_links, dewikify_url, wikify_link, \
+    build_wikiref
 
 
 class AreaModelTests(TestCase):
@@ -302,6 +310,85 @@ class MetricViewsTests(TestCase):
         self.assertRedirects(response, f"{reverse('metrics:per_project')}")
 
 
+class ShowMetricsForProjectTests(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(username="admin", password="pass")
+        self.user.user_permissions.add(Permission.objects.get(codename="view_metric"))
+        self.project = Project.objects.create(text="Test Project", current_poa=True)
+
+    @patch("metrics.views.get_metrics_and_aggregate_per_project")
+    def test_metrics_view_with_current_poa_and_data(self, mock_get_metrics):
+        operational_data = { self.project.id: {"project_metrics": [1, 2]} }
+        bool_data = { self.project.id: {"project_metrics": [3]} }
+
+        def side_effect(*args, **kwargs):
+            if "Occurrence" in args:
+                return bool_data
+            else:
+                return operational_data
+
+        mock_get_metrics.side_effect = side_effect
+
+        request = self.factory.get("/fake-url/")
+        request.user = self.user
+
+        activate("en")
+
+        response = show_metrics_for_specific_project(request, self.project.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Test Project", response.content)
+        # Ensure metrics are combined
+        self.assertIn(b"1", response.content)
+        self.assertIn(b"3", response.content)
+
+    @patch("metrics.views.get_metrics_and_aggregate_per_project")
+    def test_metrics_view_with_current_poa_but_no_data(self, mock_get_metrics):
+        mock_get_metrics.return_value = {}
+
+        request = self.factory.get("/fake-url/")
+        request.user = self.user
+
+        response = show_metrics_for_specific_project(request, self.project.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Test Project", response.content)
+
+    @patch("metrics.views.get_metrics_and_aggregate_per_project")
+    def test_metrics_view_without_current_poa(self, mock_get_metrics):
+        project = Project.objects.create(text="Old Project", current_poa=False)
+        mock_get_metrics.return_value = {project.id: {"project_metrics": [42]}}
+
+        operational_data = { project.id: {"project_metrics": [1, 2]} }
+        bool_data = { project.id: {"project_metrics": [3]} }
+
+        def side_effect(*args, **kwargs):
+            if "Occurrence" in args:
+                return bool_data
+            else:
+                return operational_data
+
+        mock_get_metrics.side_effect = side_effect
+
+        request = self.factory.get("/fake-url/")
+        request.user = self.user
+
+        activate("en")
+
+        response = show_metrics_for_specific_project(request, project.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Old Project", response.content)
+        self.assertIn(b"1", response.content)
+        self.assertIn(b"3", response.content)
+
+
+
+    def test_view_requires_permission(self):
+        request = self.factory.get("/fake-url/")
+        request.user = User.objects.create_user("user2", "test@example.com", "pass")
+        response = self.client.get(reverse("metrics:specific_project", args=[self.project.id]))
+        self.assertEqual(response.status_code, 302)
+
+
 class PreparePDFViewTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='testuser', password='password')
@@ -327,6 +414,22 @@ class PreparePDFViewTests(TestCase):
         response = self.client.get(reverse('metrics:wmf_report'))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={reverse('metrics:wmf_report')}")
+
+    @patch("metrics.utils.get_template")
+    @patch("metrics.utils.pisa.pisaDocument")
+    def test_pdf_generation_error(self, mock_pisa_doc, mock_get_template):
+        # Setup: mock template rendering
+        mock_template = MagicMock()
+        mock_template.render.return_value = "<html><body>Error Test</body></html>"
+        mock_get_template.return_value = mock_template
+        mock_pdf = MagicMock()
+        mock_pdf.err = True
+        mock_pisa_doc.return_value = mock_pdf
+        response = render_to_pdf("fake_template.html", {"key": "value"})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.content, b"Invalid PDF")
+        self.assertEqual(response["Content-Type"], "text/plain")
 
 
 class MetricFunctionsTests(TestCase):
@@ -500,6 +603,214 @@ class MetricFunctionsTests(TestCase):
         response = build_wiki_ref_for_reports(self.metric_1)
         self.assertEqual(response, reference_text)
 
+    def test_get_results_for_timespan_with_metrics_goals(self):
+        self.report_1.metrics_related.add(self.metric_1)
+        self.report_1.save()
+        main_project = Project.objects.create(text="Main Project")
+        self.metric_1.project.add(main_project)
+        self.metric_1.wikipedia_created = 10
+        self.metric_1.save()
+
+        timespan_array = [
+            (datetime.now().date() - timedelta(days=10), datetime.now().date() + timedelta(days=10)),
+            (datetime.now().date() - timedelta(days=10), datetime.now().date() - timedelta(days=5))
+        ]
+
+        response = get_results_for_timespan(timespan_array, metric_query=Q(project=main_project), with_goal=True)
+        self.assertEqual([{"activity": self.metric_1.activity.text, "metric": self.metric_1.text, "done": ["-", "-", "", 10]}], response)
+
+    def test_get_results_for_timespan_without_metrics_goals(self):
+        self.report_1.metrics_related.add(self.metric_1)
+        self.report_1.save()
+        main_project = Project.objects.create(text="Main Project")
+        self.metric_1.project.add(main_project)
+        self.metric_1.save()
+
+        timespan_array = [
+            (datetime.now().date() - timedelta(days=10), datetime.now().date() + timedelta(days=10)),
+            (datetime.now().date() - timedelta(days=10), datetime.now().date() - timedelta(days=5))
+        ]
+
+        response = get_results_for_timespan(timespan_array, metric_query=Q(project=main_project), with_goal=True)
+        self.assertEqual([{"activity": self.metric_1.activity.text, "metric": self.metric_1.text, "done": ["", "?"]}], response)
+
+    def test_get_results_for_timespan_in_English(self):
+        self.report_1.metrics_related.add(self.metric_1)
+        self.report_1.save()
+        main_project = Project.objects.create(text="Main Project")
+        self.metric_1.project.add(main_project)
+        self.metric_1.wikipedia_created = 10
+        self.metric_1.save()
+
+        timespan_array = [
+            (datetime.now().date() - timedelta(days=10), datetime.now().date() + timedelta(days=10)),
+            (datetime.now().date() - timedelta(days=10), datetime.now().date() - timedelta(days=5))
+        ]
+
+        response = get_results_for_timespan(timespan_array, metric_query=Q(project=main_project), with_goal=True, lang="en")
+        self.assertEqual([{"activity": self.metric_1.activity.text, "metric": self.metric_1.text_en, "done": ["-", "-", "", 10]}], response)
+
+
+class ReferencesFunctionsTests(TestCase):
+    def test_single_internal_link(self):
+        input_string = '<ref name="sara-123">[[Main Page|Main Page]]</ref>'
+        expected = ['<li id="sara-123">123. <a target="_blank" href="https://meta.wikimedia.org/wiki/Main_Page">Main Page</a></li>']
+        result = process_all_references(input_string)
+        self.assertEqual(result, expected)
+
+    def test_single_internal_link_with_alias(self):
+        input_string = '<ref name="sara-456">[[Main Page|Homepage]]</ref>'
+        expected = ['<li id="sara-456">456. <a target="_blank" href="https://meta.wikimedia.org/wiki/Main_Page">Homepage</a></li>']
+        result = process_all_references(input_string)
+        self.assertEqual(result, expected)
+
+    def test_single_external_link(self):
+        input_string = '<ref name="sara-789">[https://example.org Example]</ref>'
+        expected = ['<li id="sara-789">789. <a target="_blank" href="https://example.org">Example</a></li>']
+        result = process_all_references(input_string)
+        self.assertEqual(result, expected)
+
+    def test_multiple_references(self):
+        input_string = (
+            '<ref name="sara-1">[[Link A]]</ref> '
+            'text in between '
+            '<ref name="sara-2">[https://example.org Example]</ref>'
+        )
+        result = process_all_references(input_string)
+        self.assertEqual(len(result), 2)
+        self.assertIn("sara-1", result[0])
+        self.assertIn("sara-2", result[1])
+
+    def test_reference_with_bulleted_list(self):
+        input_string = '<ref name="sara-99">ABC {{bulleted list|item1|item2}}</ref>'
+        result = process_all_references(input_string)
+        self.assertEqual(len(result), 1)
+        self.assertIn("<ul>", result[0])
+        self.assertIn("<li>item1</li>", result[0])
+        self.assertIn("<li>item2</li>", result[0])
+
+    def test_invalid_reference_format(self):
+        input_string = 'No ref tags here'
+        result = process_all_references(input_string)
+        self.assertEqual(result, [])
+
+    def test_unwikify_link(self):
+        input_ref = '<ref name="sara-101">Just text</ref>'
+        updated_refs = []
+        match = re.match(r'<ref name="sara-\d+">.*?</ref>', input_ref)
+        result = unwikify_link(match, updated_refs)
+
+        expected = '<li id="sara-101">101. Just text</li>'
+        self.assertEqual(result, expected)
+        self.assertEqual(updated_refs, [expected])
+
+    def test_unwikify_reference_with_bulleted_list(self):
+        input_ref = '<ref name="sara-202">Intro {{bulleted list|A|B|C}} end</ref>'
+        updated_refs = []
+        match = re.match(r'<ref name="sara-\d+">.*?</ref>', input_ref)
+        result = unwikify_link(match, updated_refs)
+
+        expected = (
+            '<li id="sara-202">202. Intro <ul>\n'
+            '<li>A</li>\n<li>B</li>\n<li>C</li>\n</ul> end</li>'
+        )
+        self.assertEqual(result, expected)
+        self.assertEqual(updated_refs, [expected])
+
+    def test_unwikify_invalid_format_reference(self):
+        input_ref = '<ref>Malformed ref without sara-343 name</ref>'
+        updated_refs = []
+        match = re.match(r'<ref.*?</ref>', input_ref)
+        result = unwikify_link(match, updated_refs)
+
+        self.assertEqual(result, input_ref)
+        self.assertEqual(updated_refs, [])
+
+    def test_reference_with_extra_text(self):
+        input_ref = '<ref name="sara-303">Text with {{bulleted list|Item 1|Item 2}} and more.</ref>'
+        updated_refs = []
+        match = re.match(r'<ref name="sara-\d+">.*?</ref>', input_ref)
+        result = unwikify_link(match, updated_refs)
+
+        expected = (
+            '<li id="sara-303">303. Text with <ul>\n'
+            '<li>Item 1</li>\n<li>Item 2</li>\n</ul> and more.</li>'
+        )
+        self.assertEqual(result, expected)
+
+    def test_internal_link_simple(self):
+        input_text = "See [[Main Page]] for details."
+        expected = 'See <a target="_blank" href="https://meta.wikimedia.org/wiki/Main_Page">Main Page</a> for details.'
+        self.assertEqual(replace_with_links(input_text), expected)
+
+    def test_plain_url(self):
+        input_text = "https://meta.wikimedia.org/wiki/Main_Page"
+        expected = 'https://meta.wikimedia.org/wiki/Main_Page'
+        self.assertEqual(replace_with_links(input_text), expected)
+
+    def test_internal_link_with_label(self):
+        input_text = "Visit [[Help:Editing|how to edit]]."
+        expected = 'Visit <a target="_blank" href="https://meta.wikimedia.org/wiki/Help:Editing">how to edit</a>.'
+        self.assertEqual(replace_with_links(input_text), expected)
+
+    def test_external_link_with_label(self):
+        input_text = "Go to [https://example.com Homepage]."
+        expected = 'Go to <a target="_blank" href="https://example.com">Homepage</a>.'
+        self.assertEqual(replace_with_links(input_text), expected)
+
+    def test_external_link_without_label(self):
+        input_text = "Go to [https://example.com]."
+        expected = 'Go to <a target="_blank" href="https://example.com">https://example.com</a>.'
+        self.assertEqual(replace_with_links(input_text), expected)
+
+    def test_mixed_links(self):
+        input_text = "See [[Main Page]] or [https://example.com External Site] or [[Special:Version|version info]]."
+        expected = (
+            'See <a target="_blank" href="https://meta.wikimedia.org/wiki/Main_Page">Main Page</a> or '
+            '<a target="_blank" href="https://example.com">External Site</a> or '
+            '<a target="_blank" href="https://meta.wikimedia.org/wiki/Special:Version">version info</a>.'
+        )
+        self.assertEqual(replace_with_links(input_text), expected)
+
+    def test_no_links(self):
+        input_text = "No links here."
+        expected = "No links here."
+        self.assertEqual(replace_with_links(input_text), expected)
+
+    def test_edge_case_empty(self):
+        self.assertEqual(replace_with_links(""), "")
+
+    def test_link_with_spaces_and_encoding(self):
+        input_text = "Check [[My Page Name|this page]]!"
+        expected = 'Check <a target="_blank" href="https://meta.wikimedia.org/wiki/My_Page_Name">this page</a>!'
+        self.assertEqual(replace_with_links(input_text), expected)
+
+    def test_language_wiki_link(self):
+        self.assertEqual(dewikify_url("w:en:Main_Page"),"https://en.wikipedia.org/wiki/Main Page")
+
+    def test_commons_link(self):
+        self.assertEqual(dewikify_url("c:Category:Birds"),"https://commons.wikimedia.org/wiki/Category:Birds")
+
+    def test_wikidata_link(self):
+        self.assertEqual(dewikify_url("d:Q42"),"https://www.wikidata.org/wiki/Q42")
+
+    def test_meta_link_flag_true(self):
+        self.assertEqual(dewikify_url("Sandbox", meta=True),"https://meta.wikimedia.org/wiki/Sandbox")
+
+    def test_meta_link_flag_false(self):
+        self.assertEqual(dewikify_url("Sandbox", meta=False),"Sandbox")
+
+    def test_dash_as_link(self):
+        self.assertEqual(dewikify_url("-", meta=False),"")
+
+    def test_trailing_slash_is_removed(self):
+        self.assertEqual(dewikify_url("w:en:Main_Page/"),"https://en.wikipedia.org/wiki/Main Page")
+
+    def test_url_decoding(self):
+        encoded = "w:en:Main_Page%2FSubpage"
+        expected = "https://en.wikipedia.org/wiki/Main Page/Subpage"
+        self.assertEqual(dewikify_url(encoded), expected)
+
 
 class TagsTests(TestCase):
     def test_categorize_for_0(self):
@@ -574,6 +885,10 @@ class TagsTests(TestCase):
         result = perc("invalid", 100)
         self.assertEqual(result, "-")
 
+    def test_perc_bool(self):
+        result = perc(False, 1)
+        self.assertEqual(result, "-")
+
     def test_bool_yesno_returns_yes_if_true(self):
         result = bool_yesno(True)
         self.assertEqual(result, _("Yes"))
@@ -585,6 +900,10 @@ class TagsTests(TestCase):
     def test_bool_yesno_returns_value_if_not_boolean(self):
         result = bool_yesno("Test")
         self.assertEqual(result, _("Test"))
+
+    def test_bool_yesno_returns_value_if_true(self):
+        result = bool_yesnopartial(False, True)
+        self.assertEqual(result, _("Yes"))
 
     def test_bool_is_yesno_returns_true_if_boolean(self):
         result = is_yesno(True)

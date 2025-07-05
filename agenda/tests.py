@@ -1,14 +1,16 @@
 import datetime
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from django.urls import reverse
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group
+from unittest.mock import patch, MagicMock
+
 from metrics.models import Metric, Activity
 from agenda.models import Event
 from users.models import User, UserProfile, TeamArea, Position
 from agenda.views import get_activities_soon_to_be_finished, get_activities_already_finished,\
-    get_activities_about_to_kickoff
+    get_activities_about_to_kickoff, show_list_of_reports_of_specific_area, show_list_of_reports_of_area
 
 
 class EventModelTests(TestCase):
@@ -342,3 +344,64 @@ class EventEmailTests(TestCase):
 
         response = self.client.get(reverse('agenda:send_email'))
         self.assertEqual(response.status_code, 302)
+
+
+class ListReportsTests(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.username = "testuser"
+        self.password = "testpass"
+        self.user = User.objects.create_user(username=self.username, password=self.password)
+        self.user.first_name = "First Name"
+        self.user.save()
+
+        self.profile = UserProfile.objects.get(user=self.user)
+        self.group = Group.objects.create(name="Group")
+        self.area = TeamArea.objects.create(text="Test Area")
+        self.position = Position.objects.create(text="Position", type=self.group, area_associated=self.area)
+
+    @patch("agenda.views.get_activities_already_finished")
+    @patch("agenda.views.get_activities_soon_to_be_finished")
+    @patch("agenda.views.build_message_about_reports")
+    def test_view_with_area_id(self, mock_build_message, mock_future, mock_past):
+        mock_past.return_value = "past"
+        mock_future.return_value = "future"
+        mock_build_message.side_effect = lambda x: f"built-{x}"
+
+        request = self.factory.get("/fake-url")
+        request.user = self.user
+
+        with patch("agenda.views.TeamArea.objects.get") as mock_area_get, \
+                patch("agenda.views.UserProfile.objects.filter") as mock_userprofile_filter:
+            mock_area_get.return_value = self.area
+            mock_userprofile_filter.return_value.first.return_value = self.profile
+
+            response = show_list_of_reports_of_specific_area(request, area_id=self.area.pk)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b"built-past", response.content)
+            self.assertIn(b"built-future", response.content)
+
+    @patch("agenda.views.get_activities_already_finished")
+    @patch("agenda.views.get_activities_soon_to_be_finished")
+    @patch("agenda.views.build_message_about_reports")
+    def test_view_without_area_id(self, mock_build_message, mock_future, mock_past):
+        mock_past.return_value = "past"
+        mock_future.return_value = "future"
+        mock_build_message.side_effect = lambda x: f"built-{x}"
+
+        request = self.factory.get("/fake-url")
+        request.user = self.user
+
+        with patch("agenda.views.TeamArea.objects.get") as mock_area_get:
+            mock_area_get.return_value = self.area
+
+            response = show_list_of_reports_of_specific_area(request)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b"built-past", response.content)
+            self.assertIn(b"built-future", response.content)
+
+    def test_redirect_from_area_view(self):
+        request = self.factory.get("/fake-url")
+        response = show_list_of_reports_of_area(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("agenda:specific_area_activities"))
