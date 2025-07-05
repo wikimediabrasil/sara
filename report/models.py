@@ -148,6 +148,7 @@ class Report(models.Model):
     modified_by = models.ForeignKey(UserProfile, on_delete=models.RESTRICT, related_name="user_modifying")
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now_add=True)
+    locked = models.BooleanField(default=False)
     reference_text = models.TextField(max_length=10000, blank=True, null=True, default="")
 
     # Administrative fields
@@ -221,6 +222,9 @@ class Report(models.Model):
     class Meta:
         verbose_name = _("Report")
         verbose_name_plural = _("Reports")
+        permissions = [
+            ("can_edit_locked_report", "Can edit locked report"),
+        ]
 
     def save(self, *args, **kwargs):
         super(Report, self).save(*args, **kwargs)

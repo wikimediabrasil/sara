@@ -610,6 +610,14 @@ def export_technologies_used(report_id=None, custom_query=Q()):
 @permission_required("report.change_report")
 def update_report(request, report_id):
     obj = get_object_or_404(Report, id=report_id)
+
+    if obj.locked:
+        if not request.user.has_perm("report.can_edit_locked_report"):
+            messages.error(request, _("You do not have permission to edit this report. Please, share the link with the Products and Technology team for any questions."))
+            return redirect(reverse("report:detail_report", kwargs={"report_id": report_id}))
+        else:
+            pass
+
     if request.method == "POST":
         report_form = NewReportForm(request.POST or None, instance=obj, user=request.user, is_update=True)
         operation_metrics = OperationUpdateFormSet(request.POST, instance=obj, prefix='Operation')
