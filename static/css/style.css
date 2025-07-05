@@ -305,6 +305,7 @@ canvas {
 .btn-update { background-color: var(--main-color); }
 .btn-delete { background-color: var(--error-color); }
 .btn-export { background-color: var(--attention-color); }
+.btn-readonly { background-color: var(--grey-color); }
 
 .custombutton {
     background-color: var(--main-color);

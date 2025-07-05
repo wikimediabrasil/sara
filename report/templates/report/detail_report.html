@@ -40,6 +40,14 @@
                         </button>
                     </a>
                 </div>
+            {% else %}
+                <div class="w3-container" style="margin-top: 1em">
+                    <a href="{% url 'report:update_report' report_id=data.id %}" aria-label="{% trans 'Update' %}">
+                        <button class="custombutton" type="button">
+                            <i class="fa-solid fa-lock-open"></i> {% trans "Update" %}
+                        </button>
+                    </a>
+                </div>
             {% endif %}
             <div class="w3-container" style="margin-top: 1em">
                 <a href="{% url 'report:export_report' report_id=data.id %}" aria-label="{% trans 'Export' %}">
