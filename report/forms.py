@@ -57,6 +57,7 @@ class NewReportForm(forms.ModelForm):
             else:
                 if not self.is_update:
                     editor_object.retained = 1
+                    editor_object.retained_at = datetime.today().date()
 
             editor_object.save()
             editors.append(editor_object)
