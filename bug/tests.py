@@ -92,7 +92,7 @@ class BugViewsTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('bug:create_bug')}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('bug:create_bug')}")
 
     def test_add_bug_view_get(self):
         self.client.login(username=self.username, password=self.password)
@@ -140,7 +140,7 @@ class BugViewsTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('bug:list_bugs')}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('bug:list_bugs')}")
 
     def test_list_bugs_view(self):
         url = reverse("bug:list_bugs")
@@ -157,7 +157,7 @@ class BugViewsTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('bug:detail_bug', args=[self.bug.id])}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('bug:detail_bug', args=[self.bug.id])}")
 
     def test_detail_bug_view(self):
         self.client.login(username=self.username, password=self.password)
@@ -226,7 +226,7 @@ class BugViewsTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('bug:add_obs', kwargs={'bug_id': self.bug.pk})}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('bug:add_obs', kwargs={'bug_id': self.bug.pk})}")
 
     def test_add_observation_view_get(self):
         self.client.login(username=self.username, password=self.password)
@@ -259,7 +259,7 @@ class BugViewsTests(TestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('bug:edit_obs', args=[self.bug.id])}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('bug:edit_obs', args=[self.bug.id])}")
 
     def test_update_observation_view(self):
         self.client.login(username=self.username, password=self.password)
@@ -294,7 +294,7 @@ class BugViewsTests(TestCase):
 
     def test_export_bugs_get_view_is_only_accessible_for_users_with_the_right_permissions(self):
         self.user.user_permissions.remove(self.view_bug_permission)
-        self.client.login(username=self.username, password=self.password)
+        self.client.force_login(self.user)
         bug1 = Bug.objects.create(title="Bug 1", description="Bug description 1", type_of_bug=Bug.BugType.ERROR, status=Bug.Status.TODO, reporter=self.user_profile)
         bug2 = Bug.objects.create(title="Bug 2", description="Bug description 2", type_of_bug=Bug.BugType.CLARIFICATION, status=Bug.Status.PROG, reporter=self.user_profile)
         bug3 = Bug.objects.create(title="Bug 3", description="Bug description 3", type_of_bug=Bug.BugType.IMPROVEMENT, status=Bug.Status.TEST, reporter=self.user_profile)
@@ -304,7 +304,7 @@ class BugViewsTests(TestCase):
         url = reverse("bug:export_bugs")
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('bug:export_bugs')}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('bug:export_bugs')}")
 
     def test_export_bugs_get_view_returns_zip_file(self):
         self.client.login(username=self.username, password=self.password)

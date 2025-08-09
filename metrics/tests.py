@@ -168,7 +168,7 @@ class MetricViewsTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={url}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={url}")
 
     def test_show_detailed_metrics_per_project_succeeds_if_user_have_permission(self):
         permission = Permission.objects.get(codename="delete_logentry")
@@ -248,7 +248,7 @@ class MetricViewsTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={url}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={url}")
 
     def test_show_reports_associated_to_a_metric_only_to_users_with_permission(self):
         self.client.login(username=self.username, password=self.password)
@@ -413,7 +413,7 @@ class PreparePDFViewTests(TestCase):
         self.user.user_permissions.remove(self.permission)
         response = self.client.get(reverse('metrics:wmf_report'))
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('metrics:wmf_report')}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('metrics:wmf_report')}")
 
     @patch("metrics.utils.get_template")
     @patch("metrics.utils.pisa.pisaDocument")
@@ -957,7 +957,7 @@ class MetricsExportTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={url}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={url}")
 
     def test_export_trimester_report_exports_activities_results_with_hifens_when_nothing_was_done(self):
         self.client.login(username=self.username, password=self.password)
@@ -1094,7 +1094,7 @@ class MetricsExportTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={url}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={url}")
 
     def test_export_trimester_report_exports_wiki_links_as_wikitext(self):
         self.client.login(username=self.username, password=self.password)

@@ -35,7 +35,7 @@ class ReportAddViewTest(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('report:add_report')}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('report:add_report')}")
 
     def test_add_report_view_get(self):
         self.client.login(username=self.username, password=self.password)
@@ -300,7 +300,7 @@ class ReportAddViewTest(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('report:delete_report', kwargs={'report_id': report_1.id})}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('report:delete_report', kwargs={'report_id': report_1.id})}")
 
     def test_delete_report_view_get(self):
         activity_associated = Activity.objects.create(text="Activity")
@@ -632,7 +632,7 @@ class ReportViewViewTest(TestCase):
         response = self.client.get(reverse("report:list_reports"))
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('report:list_reports')}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('report:list_reports')}")
 
     def test_list_reports_show_list_of_reports(self):
         self.client.login(username=self.username, password=self.password)
@@ -648,7 +648,7 @@ class ReportViewViewTest(TestCase):
         response = self.client.get(reverse("report:detail_report", kwargs={"report_id": self.report_1.id}))
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('report:detail_report', kwargs={'report_id': self.report_1.id})}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('report:detail_report', kwargs={'report_id': self.report_1.id})}")
 
     def test_detail_report_show_report(self):
         self.client.login(username=self.username, password=self.password)
@@ -664,7 +664,7 @@ class ReportViewViewTest(TestCase):
         response = self.client.post(reverse('report:update_report', kwargs={'report_id': self.report_1.id}))
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('report:update_report', kwargs={'report_id': self.report_1.id})}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('report:update_report', kwargs={'report_id': self.report_1.id})}")
 
     def test_update_locked_report_is_possible_for_users_with_permissions(self):
         change_locked_report = Permission.objects.get(codename="can_edit_locked_report")
@@ -792,7 +792,7 @@ class ReportExportViewTest(TestCase):
         response = self.client.get(reverse("report:export_report", kwargs={"report_id": self.report_1.id}))
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('report:export_report', kwargs={'report_id': self.report_1.id})}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('report:export_report', kwargs={'report_id': self.report_1.id})}")
 
     def test_export_report_generates_a_zip_file(self):
         self.client.login(username=self.username, password=self.password)

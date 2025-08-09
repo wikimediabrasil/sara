@@ -128,7 +128,7 @@ class UserProfileViewTest(TestCase):
 
     def test_user_profile_is_only_accessible_by_logged_users(self):
         response = self.client.get(reverse('user:profile', kwargs={"user_id": self.user.pk}))
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('user:profile', kwargs={'user_id': self.user.pk})}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('user:profile', kwargs={'user_id': self.user.pk})}")
 
     def test_user_profile_view_get(self):
         self.client.login(username=self.username, password=self.password)
@@ -178,7 +178,7 @@ class RegisterViewTest(TestCase):
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse("user:register"))
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('user:register')}")
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('user:register')}")
 
     def test_register_get_view_is_accessed_by_users_with_permission(self):
         self.client.login(username=self.username, password=self.password)
