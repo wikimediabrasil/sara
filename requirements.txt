@@ -7,3 +7,4 @@ django_select2
 requests
 xhtml2pdf
 pdfkit
+social-auth-app-django

@@ -94,7 +94,7 @@
             <div class="nav_separator"></div>
             <div class="nav_block">
                 {% if user.is_authenticated %}
-                    <form action="{% url 'logout' %}" method="post">
+                    <form action="{% url 'users:logout' %}" method="post">
                         {% csrf_token %}
                         <button class="link-button" type="submit">
                             <i class="nav_icon fa-solid fa-right-from-bracket"></i>
@@ -102,7 +102,7 @@
                         </button>
                     </form>
                 {% else %}
-                    <a href="{% url 'login' %}" aria-label="{% translate 'Login' %}">
+                    <a href="{% url 'users:login' %}" aria-label="{% translate 'Login' %}">
                         <i class="nav_icon fa-solid fa-right-to-bracket"></i>
                         <span class="nav_btn_title">{% translate "Login" %}</span>
                     </a>

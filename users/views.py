@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.contrib import messages
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.utils.translation import gettext as _
@@ -40,3 +41,12 @@ def register(request):
     form = NewUserForm()
     context = {"register_form": form, "title": _("Add new user")}
     return render(request, "users/register.html", context)
+
+
+def login_oauth(request):
+    return redirect(reverse("users:social:begin", kwargs={"backend": "mediawiki"}))
+
+
+def logout_oauth(request):
+    logout(request)
+    return redirect(reverse("metrics:index"))
