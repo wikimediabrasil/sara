@@ -22,7 +22,7 @@
     <div class="nav_section">
         <div class="nav_middle">
             <div class="nav_separator"></div>
-            {% if user.is_authenticated %}
+            {% if perms.report.add_report %}
                 <div class="nav_block">
                     <a href="{% url 'report:add_report' %}" aria-label="{% translate 'Add report of activity' %}">
                         <i class="nav_icon fa-solid fa-circle-plus"></i>
@@ -31,7 +31,7 @@
                 </div>
                 <div class="nav_separator"></div>
             {% endif %}
-            {% if user.is_authenticated %}
+            {% if perms.report.view_report or perms.metrics.view_metric %}
                 <div class="nav_block">
                     <a href="{% url 'report:list_reports' %}" aria-label="{% translate 'Reports of activities' %}">
                         <i class="nav_icon fa-solid fa-chart-pie"></i>
@@ -54,7 +54,7 @@
                 </a>
             </div>
             <div class="nav_separator"></div>
-            {% if user.is_authenticated %}
+            {% if perms.report.add_report %}
                 <div class="nav_block">
                     <a href="{% url 'agenda:area_activities' %}" aria-label="{% translate 'Area activities' %}">
                         <i class="nav_icon fa-solid fa-calendar-check"></i>
@@ -83,7 +83,7 @@
             <div class="nav_separator"></div>
         </div>
         <div class="nav_bottom">
-            {% if user.is_authenticated %}
+            {% if perms.users.change_userprofile %}
                 <div class="nav_block">
                     <a href="{% url 'user:profile' user_id=user.id %}" aria-label="{% translate 'User profile' %}">
                         <i class="nav_icon fa-solid fa-user-gear"></i>
