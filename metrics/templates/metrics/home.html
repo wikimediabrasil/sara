@@ -21,7 +21,7 @@
             <div class="w3-half" id="homepage_buttons">
                 {% if perms.report.add_report %}<div class="w3-half"><a href="{% url 'report:add_report' %}"><button class="custombutton" type="button">{% translate "Add report" %}</button></a></div>{% endif %}
                 {% if perms.report.view_report %}<div class="w3-half"><a href="{% url 'report:list_reports' %}"><button class="custombutton" type="button">{% translate "List reports" %}</button></a></div>{% endif %}
-                {% if perms.metrics.view_metric %}<div class="w3-half"><a href="{% url 'metrics:metrics_per_project' %}"><button class="custombutton" type="button">{% translate "Track metrics" %}</button></a></div>{% endif %}
+                {% if perms.metrics.view_metric %}<div class="w3-half"><a href="{% url 'metrics:per_project' %}"><button class="custombutton" type="button">{% translate "Track metrics" %}</button></a></div>{% endif %}
                 <div class="w3-half"><a href="{% url 'agenda:show_calendar' %}"><button class="custombutton" type="button">{% translate "Show calendar" %}</button></a></div>
                 {% if perms.report.add_report %}<div class="w3-half"><a href="{% url 'agenda:area_activities' %}"><button class="custombutton" type="button">{% translate "Area activities" %}</button></a></div>{% endif %}
                 <div class="w3-half"><a href="{% url 'metrics:show_activities' %}"><button class="custombutton" type="button">{% translate "See activities plan" %}</button></a></div>
