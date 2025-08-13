@@ -2,7 +2,7 @@ from django.utils import timezone
 from django import forms
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
-from django.db.models import fields, Q
+from django.db.models import fields, Q, Case, When, Value, IntegerField
 from django.db.models.functions import Lower
 from .models import Report, StrategicLearningQuestion, LearningArea, AreaActivated, Funding, Partner, Technology,\
     Editor, Organizer, OperationReport
@@ -212,7 +212,10 @@ def area_responsible_of_user(user):
 
 def activities_associated_as_choices():
     areas = []
-    for area in Area.objects.filter(project__active=True).distinct().order_by("text"):
+    area_list = Area.objects.filter(project__active=True).annotate(
+        poa_first=Case(When(project__current_poa=True, then=Value(0)), default=Value(1), output_field=IntegerField()))
+    for area in area_list.distinct().order_by("poa_first", "text"):
+    # for area in Area.objects.filter(project__active=True).distinct().order_by("text"):
         activities = []
         for activity in area.activities.all():
             activities.append((activity.id, activity.text + " (" + activity.code + ")"))
