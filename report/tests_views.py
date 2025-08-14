@@ -1926,7 +1926,7 @@ class ReportFormTest(TestCase):
         Activity.objects.create(text="Activity 2", code="Code 2", area=area_1)
         Activity.objects.create(text="Activity 3", code="Code 3", area=area_2)
 
-        expected_result = (("Area 1", ((1, "Activity 1 (Code 1)"), (2, "Activity 2 (Code 2)"))),("Area 2", ((3, "Activity 3 (Code 3)"),)))
+        expected_result = (("Area 1", 0, ((1, "Activity 1 (Code 1)"), (2, "Activity 2 (Code 2)"))),("Area 2", 0, ((3, "Activity 3 (Code 3)"),)))
         result = activities_associated_as_choices()
         self.assertEqual(expected_result, result)
 

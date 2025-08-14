@@ -335,7 +335,6 @@ def replace_with_links(input_string):
             else:
                 link = friendly = content
             return f'<a target="_blank" href="{link}">{friendly}</a>'
-        return substring
     result = re.sub(r'(\[\[.*?\]\]|\[.*?\])', replace, input_string)
     return result
 

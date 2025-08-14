@@ -748,6 +748,11 @@ class ReferencesFunctionsTests(TestCase):
         expected = 'https://meta.wikimedia.org/wiki/Main_Page'
         self.assertEqual(replace_with_links(input_text), expected)
 
+    def test_text_with_url(self):
+        input_text = "text [with] links on it"
+        expected = 'text <a target="_blank" href="with">with</a> links on it'
+        self.assertEqual(replace_with_links(input_text), expected)
+
     def test_internal_link_with_label(self):
         input_text = "Visit [[Help:Editing|how to edit]]."
         expected = 'Visit <a target="_blank" href="https://meta.wikimedia.org/wiki/Help:Editing">how to edit</a>.'
@@ -810,6 +815,18 @@ class ReferencesFunctionsTests(TestCase):
         encoded = "w:en:Main_Page%2FSubpage"
         expected = "https://en.wikipedia.org/wiki/Main Page/Subpage"
         self.assertEqual(dewikify_url(encoded), expected)
+
+    def test_build_wikiref(self):
+        links = "https://sara-wmb.toolforge.org/calendar\r\nhttps://pt.wikipedia.org/wiki/Wikipedia:Pagina_inicial\r\nhttps://commons.wikimedia.org/wiki/Main_Page\r\nhttps://example.com"
+
+        wikiref = build_wikiref(links, 1)
+        self.assertEqual(wikiref, "<ref name=\"sara-1\">[[toolforge:sara-wmb/calendar|calendar]], [[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]], [[c:Main_Page|Main Page]], [https://example.com]</ref>")
+
+    def test_build_wikiref_with_hifen_returns_empty_string(self):
+        links = "-"
+
+        wikiref = build_wikiref(links, 1)
+        self.assertEqual(wikiref, "")
 
 
 class TagsTests(TestCase):

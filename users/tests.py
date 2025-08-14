@@ -1,17 +1,20 @@
+import datetime
+from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.db.models import RestrictedError
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.admin import User
 from django.test.client import RequestFactory
 from django.contrib.admin.sites import AdminSite
 from django.utils.translation import gettext as _
-from .models import TeamArea, Position, UserProfile
-from .admin import AccountUserAdmin, UserProfileInline
+
+from users.models import TeamArea, Position, UserProfile
+from users.admin import AccountUserAdmin, UserProfileInline
+from users.views import login_oauth, logout_oauth
 from agenda.models import Event
-import datetime
-from django.contrib.auth.models import Permission
+
 
 
 class TeamAreaModelTests(TestCase):
@@ -243,3 +246,25 @@ class AccountUserAdminTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.account_user_admin.inlines, [UserProfileInline])
+
+
+class OauthViewTest(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_login_oauth_redirect(self):
+        request = self.factory.get("/fake-login/")
+        response = login_oauth(request)
+        expected_url = reverse("users:social:begin", kwargs={"backend": "mediawiki"})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, expected_url)
+
+    @patch("users.views.logout")
+    def test_logout_oauth_redirect_and_logout_called(self, mock_logout):
+        request = self.factory.get("/fake-logout/")
+        response = logout_oauth(request)
+
+        mock_logout.assert_called_once_with(request)
+        expected_url = reverse("metrics:index")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, expected_url)
