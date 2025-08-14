@@ -43,6 +43,8 @@ fieldset input { background-color: var(--main-lighter-color) !important }
     overflow-y: auto;
     overflow-x: auto;
 }
+.form-left { padding-right: 1em; }
+.form-right { padding-left: 1em; }
 
 /* BUTTONS */
 .closebtn {

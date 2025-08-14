@@ -212,14 +212,12 @@ def area_responsible_of_user(user):
 
 def activities_associated_as_choices():
     areas = []
-    area_list = Area.objects.filter(project__active=True).annotate(
-        poa_first=Case(When(project__current_poa=True, then=Value(0)), default=Value(1), output_field=IntegerField()))
-    for area in area_list.distinct().order_by("poa_first", "text"):
-    # for area in Area.objects.filter(project__active=True).distinct().order_by("text"):
+    area_list = Area.objects.filter(project__active=True).distinct().order_by("-poa_area", "text")
+    for area in area_list:
         activities = []
         for activity in area.activities.all():
             activities.append((activity.id, activity.text + " (" + activity.code + ")"))
-        areas.append((area.text, tuple(activities)))
+        areas.append((area.text, int(area.poa_area), tuple(activities)))
     return tuple(areas)
 
 

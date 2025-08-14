@@ -207,11 +207,11 @@ class Report(models.Model):
     technologies_used = models.ManyToManyField(Technology, related_name="tecnologies", blank=True)
 
     # Strategy
-    directions_related = models.ManyToManyField(Direction, related_name="direction_related", blank=False)
+    directions_related = models.ManyToManyField(Direction, related_name="direction_related", blank=True)
     learning = models.TextField(max_length=5000, null=True, blank=True, default="")
 
     # Theory of Change
-    learning_questions_related = models.ManyToManyField(StrategicLearningQuestion, related_name="strategic_learning_question_related", blank=False)
+    learning_questions_related = models.ManyToManyField(StrategicLearningQuestion, related_name="strategic_learning_question_related", blank=True)
 
     # Metrics associated
     metrics_related = models.ManyToManyField(Metric, related_name="metrics_related", blank=False)

@@ -10,8 +10,8 @@
                 <option value="" selected>----------</option>
                 {% for area in report_form.fields.activity_associated.choices %}
                     <optgroup label="{{ area.0 }}">
-                        {% for activity in area.1 %}
-                            <option value="{{ activity.0 }}" {% if activity.0 == report_form.instance.activity_associated_id %}selected{% endif %}>{{ activity.1 }}</option>
+                        {% for activity in area.2 %}
+                            <option value="{{ activity.0 }}" data-poa_area="{{ area.1 }}" {% if activity.0 == report_form.instance.activity_associated_id %}selected{% endif %}>{{ activity.1 }}</option>
                         {% endfor %}
                     </optgroup>
                 {% endfor %}

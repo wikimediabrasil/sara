@@ -25,6 +25,7 @@
                 <button id="nav_Quantitative" class="tablinks" onclick="openTab(this, 'Quantitative')">{% translate "Quantitative" %}</button>
                 <button id="nav_Strategic" class="tablinks" onclick="openTab(this, 'Strategic')">{% translate "Strategic" %}</button>
                 <button id="nav_Learning" class="tablinks" onclick="openTab(this, 'Learning')">{% translate "Learning" %}</button>
+                <button id="nav_submit_report" class="tablinks" type="submit">{% translate "Submit" %}</button>
             </div>
             <div class="w3-row userform">
                 <form id="report" method="post">
@@ -70,7 +71,26 @@
                 $("#learning_container").hide();
             }
             hide_duplicate_headers();
+
+            $("#activity_associated").on("change", toggle_tab);
+            toggle_tab();
         });
+
+        function toggle_tab() {
+          let activity_associated = $("#activity_associated option:selected").data("poa_area");
+
+          if (activity_associated === undefined || activity_associated === null || activity_associated === "") {
+            return;
+          }
+
+          if (!activity_associated) {
+            document.getElementById("nav_Strategic").style.display = "none";
+            document.getElementById("nav_Learning").style.display = "none";
+          } else {
+            document.getElementById("nav_Strategic").style.display = "block";
+            document.getElementById("nav_Learning").style.display = "block";
+          }
+        }
 
         function toggle_field(selectObject) {
             $("."+selectObject).toggleClass("invisible_field");
@@ -101,7 +121,7 @@
             }
         }
 
-        $("#submit_report").click(function(event) {
+        $("#submit_report, #nav_submit_report").click(function(event) {
             event.preventDefault();
             validateForm();
         });
@@ -117,47 +137,54 @@
             let learning_tab = $("#nav_Learning");
             let admin_fields = ["#activity_associated", "#area_responsible", "#initial_date", "#description", "#links"];
             let learning_fields = ["#learning"];
+            let activity_associated = form.find("#activity_associated option:selected").data("poa_area")
 
             for (let i = 0; i < admin_fields.length; i++ ){
                 if (focus_is_empty(form.find(admin_fields[i]), admin_tab)){
                     admin_tab.click();
-                    form.find(admin_fields[i]).focus();
+                    setTimeout(function() {
+                      form.find(admin_fields[i])[0].focus();
+                    }, 50);
                     return;
                 }
             }
 
             if ($("#metrics_fieldset input[type='checkbox']:checked").length === 0 && $("#metrics_fieldset input[type='radio']:checked").length === 0) {
                 quantitative_tab.click();
-                $("#metrics_fieldset input[value=1]").focus();
+                setTimeout(function() {
+                  $("#metrics_fieldset input[value=1]").focus();
+                }, 50);
                 return;
             }
 
-            if ($("#directions_fieldset input[type='checkbox']:checked").length === 0) {
-                strategy_tab.click();
-                $("#directions_fieldset input[value=1]").focus();
-                return;
-            }
-
-            if ($("#strategic_questions_fieldset input[type='checkbox']:checked").length === 0) {
-                learning_tab.click();
-                $("#strategic_questions_fieldset input[value=1]").focus();
-                return;
-            }
-
-            let learning = $("#learning");
-            let has_learning = learning.data("has_learning");
-            if (has_learning) {
-                if (learning.val() === 0 || learning.val().length < 500) {
-                    learning_tab.click();
-                    learning.focus();
+            if (activity_associated === 1){
+                if ($("#directions_fieldset input[type='checkbox']:checked").length === 0) {
+                    strategy_tab.click();
+                    $("#directions_fieldset input[value=1]").focus();
                     return;
                 }
 
-                for (let i = 0; i < learning_fields.length; i++) {
-                    if (focus_is_empty(form.find(learning_fields[i]))) {
+                if ($("#strategic_questions_fieldset input[type='checkbox']:checked").length === 0) {
+                    learning_tab.click();
+                    $("#strategic_questions_fieldset input[value=1]").focus();
+                    return;
+                }
+
+                let learning = $("#learning");
+                let has_learning = learning.data("has_learning");
+                if (has_learning) {
+                    if (learning.val() === 0 || learning.val().length < 500) {
                         learning_tab.click();
-                        form.find(learning_fields[i]).focus();
+                        learning.focus();
                         return;
+                    }
+
+                    for (let i = 0; i < learning_fields.length; i++) {
+                        if (focus_is_empty(form.find(learning_fields[i]))) {
+                            learning_tab.click();
+                            form.find(learning_fields[i]).focus();
+                            return;
+                        }
                     }
                 }
             }
@@ -227,6 +254,7 @@
 
         document.getElementById("report").addEventListener("submit", function (event) {
             document.getElementById("submit_report").disabled = true;
+            document.getElementById("nav_submit_report").disabled = true;
         });
     </script>
 {% endblock %}
