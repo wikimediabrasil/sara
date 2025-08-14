@@ -31,8 +31,9 @@ jobs:
         echo "DEBUG = True" >> sara/settings_local.py
         echo "ALLOWED_HOSTS = ['localhost', '127.0.0.1']" >> sara/settings_local.py
         echo "DATABASES = { 'default': { 'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'db.sqlite3' } }" >> sara/settings_local.py
-        echo "POA_URL = 'https://meta.wikimedia.org/wiki/Wiki_Movement_Brazil_User_Group/Plan_of_Activities'" >> sara/settings_local.py
+        echo "POA_URL = 'https://meta.wikimedia.org/wiki/Wikimedia_Brasil/Plan_of_Activities'" >> sara/settings_local.py
         echo "EMAIL_COORDINATOR = 'test@test.com'" >> sara/settings_local.py
+        echo "STRATEGY_URL = 'https://br.wikimedia.org/wiki/Estrat%C3%A9gia_Wiki_Movimento_Brasil_2023-2025'" >> sara/settings_local.py
     - name: Coverage report
       run: |
         pip install coverage
