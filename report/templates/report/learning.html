@@ -37,7 +37,7 @@
         <span id="character_count" class="btn-round {% if report_form.instance.learning|length > 500 %}btn-view{% else %}btn-delete{% endif %}" style="float: right; color:black;">{{ report_form.instance.learning|length }}/500</span>
     </div>
     <div class="w3-row">
-        <div class="w3-half formfield form-left">
+        <div id="back_strategy" class="w3-half formfield form-left">
             <button type="button" class="tablinks custombutton"
                     onclick="openTab(this, 'Strategy')">{% translate "Go back to strategy report" %}</button>
         </div>

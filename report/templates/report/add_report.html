@@ -80,9 +80,15 @@
           if (!activity_associated) {
             document.getElementById("nav_Strategic").style.display = "none";
             document.getElementById("nav_Learning").style.display = "none";
+            const buttons = document.querySelectorAll("#next_strategic button");
+            buttons[0].style.display = "none";
+            buttons[1].style.display = "inline-block";
           } else {
             document.getElementById("nav_Strategic").style.display = "block";
             document.getElementById("nav_Learning").style.display = "block";
+            const buttons = document.querySelectorAll("#next_strategic button");
+            buttons[0].style.display = "inline-block";
+            buttons[1].style.display = "none";
           }
         }
 

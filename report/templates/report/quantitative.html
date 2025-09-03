@@ -320,10 +320,10 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
         </div>
     </div>
     <div class="w3-row">
-        <div class="w3-half formfield form-left">
+        <div id="back_operational" class="w3-half formfield form-left">
             <button type="button" class="tablinks submitbutton" onclick="openTab(this, 'Operational')">{% translate "Go back to operational report" %}</button>
         </div>
-        <div class="w3-half formfield form-right">
+        <div id="next_strategic" class="w3-half formfield form-right">
             <button type="button" class="tablinks submitbutton" onclick="openTab(this, 'Strategic')">{% translate "Fill strategic report" %}</button>
         </div>
     </div>
