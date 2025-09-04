@@ -55,19 +55,23 @@
             </div>
         </div>
     </div>
+    {% trans "Submit" as submit_label %}
     <script>
-        $(document).ready(function () {
-            $('.toggle__input.wiki').each(function(){
-                if (this.checked) {
-                    toggle_field(this.id);
-                }
-            })
-            show_metrics_options();
-            $(".select-with-text").select2();
-            $("#learning_container").hide();
-            hide_duplicate_headers();
+        let submitText = "{% translate 'Submit' %}";
+        let nextStrategic = "{% translate "Fill strategic report" %}";
 
-            $("#activity_associated").on("change", toggle_tab);
+        $(document).ready(function () {
+          $('.toggle__input.wiki').each(function () {
+            if (this.checked) {
+              toggle_field(this.id);
+            }
+          })
+          show_metrics_options();
+          $(".select-with-text").select2();
+          $("#learning_container").hide();
+          hide_duplicate_headers();
+
+          $("#activity_associated").on("change", toggle_tab);
         });
 
         function toggle_tab() {
@@ -80,15 +84,11 @@
           if (!activity_associated) {
             document.getElementById("nav_Strategic").style.display = "none";
             document.getElementById("nav_Learning").style.display = "none";
-            const buttons = document.querySelectorAll("#next_strategic button");
-            buttons[0].style.display = "none";
-            buttons[1].style.display = "inline-block";
+            $("#next_strategic button").replaceWith(`<button id="submit_report" class="custombutton" type="submit">${submitText}</button>`);
           } else {
             document.getElementById("nav_Strategic").style.display = "block";
             document.getElementById("nav_Learning").style.display = "block";
-            const buttons = document.querySelectorAll("#next_strategic button");
-            buttons[0].style.display = "inline-block";
-            buttons[1].style.display = "none";
+            $("#next_strategic button").replaceWith(`<button type="button" class="tablinks submitbutton" onclick="openTab(this, 'Strategic')">${nextStrategic}</button>`);
           }
         }
 
