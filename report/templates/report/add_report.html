@@ -85,10 +85,12 @@
             document.getElementById("nav_Strategic").style.display = "none";
             document.getElementById("nav_Learning").style.display = "none";
             document.getElementById("next_strategic").classList.add("invisible_field");
+            document.getElementById("submit_report_from_quantitative").classList.remove("invisible_field");
           } else {
             document.getElementById("nav_Strategic").style.display = "block";
             document.getElementById("nav_Learning").style.display = "block";
             document.getElementById("next_strategic").classList.remove("invisible_field");
+            document.getElementById("submit_report_from_quantitative").classList.add("invisible_field");
           }
         }
 
@@ -121,7 +123,7 @@
             }
         }
 
-        $("#submit_report, #nav_submit_report").click(function(event) {
+        $("#submit_report, #nav_submit_report, #submit_report_from_quantitative").click(function(event) {
             event.preventDefault();
             validateForm();
         });
