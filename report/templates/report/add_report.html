@@ -84,11 +84,11 @@
           if (!activity_associated) {
             document.getElementById("nav_Strategic").style.display = "none";
             document.getElementById("nav_Learning").style.display = "none";
-            $("#next_strategic button").replaceWith(`<button id="submit_report" class="custombutton" type="submit">${submitText}</button>`);
+            $("#next_strategic").style.display = "none";
           } else {
             document.getElementById("nav_Strategic").style.display = "block";
             document.getElementById("nav_Learning").style.display = "block";
-            $("#next_strategic button").replaceWith(`<button type="button" class="tablinks submitbutton" onclick="openTab(this, 'Strategic')">${nextStrategic}</button>`);
+            $("#next_strategic").style.display = "block";
           }
         }
 
