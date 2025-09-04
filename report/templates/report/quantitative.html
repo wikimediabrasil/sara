@@ -325,7 +325,9 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
         </div>
         <div id="next_strategic" class="w3-half formfield form-right">
             <button type="button" class="tablinks submitbutton" onclick="openTab(this, 'Strategic')">{% translate "Fill strategic report" %}</button>
-            <button id="submit_report_from_quantitative" class="custombutton invisible_field" type="submit">{% translate "Submit" %}</button>
+        </div>
+        <div id="submit_report_from_quantitative" class="w3-half formfield form-right">
+            <button id="submit_from_quantitative_button" class="custombutton invisible_field" type="submit">{% translate "Submit" %}</button>
         </div>
     </div>
 </div>
