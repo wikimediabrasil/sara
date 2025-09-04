@@ -84,11 +84,11 @@
           if (!activity_associated) {
             document.getElementById("nav_Strategic").style.display = "none";
             document.getElementById("nav_Learning").style.display = "none";
-            $("#next_strategic").style.display = "none";
+            document.getElementById("next_strategic").classList.add("invisible_field");
           } else {
             document.getElementById("nav_Strategic").style.display = "block";
             document.getElementById("nav_Learning").style.display = "block";
-            $("#next_strategic").style.display = "block";
+            document.getElementById("next_strategic").classList.remove("invisible_field");
           }
         }
 
