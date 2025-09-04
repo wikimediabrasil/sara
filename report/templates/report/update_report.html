@@ -3,6 +3,8 @@
 {% load i18n %}
 {% block title %}{{ title }}{% endblock %}
 
+{% block banner %}{% endblock %}
+{% block footer %}{% endblock %}
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">
     <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css">
@@ -12,9 +14,6 @@
     <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 {% endblock %}
-
-{% block banner %}{% endblock %}
-{% block footer %}{% endblock %}
 
 {% block content %}
     <div class="w3-container">
@@ -57,23 +56,25 @@
         </div>
     </div>
     <script>
-        $(document).ready(function () {
-            $('.toggle__input.wiki').each(function(){
-                if (this.checked) {
-                    toggle_field(this.id);
-                }
-            })
-            show_metrics_options();
-            $(".select-with-text").select2();
+        let submitText = "{% translate 'Submit' %}";
+        let nextStrategic = "{% translate "Fill strategic report" %}";
 
-            let learning = $("#learning");
+        $(document).ready(function () {
+          $('.toggle__input.wiki').each(function () {
+            if (this.checked) {
+              toggle_field(this.id);
+            }
+          })
+          show_metrics_options();
+          $(".select-with-text").select2();
+
+          let learning = $("#learning");
             if (learning.val() > 0) {
                 $("#learning_container").hide();
             }
-            hide_duplicate_headers();
+          hide_duplicate_headers();
 
-            $("#activity_associated").on("change", toggle_tab);
-            toggle_tab();
+          $("#activity_associated").on("change", toggle_tab);
         });
 
         function toggle_tab() {
@@ -86,9 +87,13 @@
           if (!activity_associated) {
             document.getElementById("nav_Strategic").style.display = "none";
             document.getElementById("nav_Learning").style.display = "none";
+            document.getElementById("next_strategic").classList.add("invisible_field");
+            document.getElementById("submit_report_from_quantitative").classList.remove("invisible_field");
           } else {
             document.getElementById("nav_Strategic").style.display = "block";
             document.getElementById("nav_Learning").style.display = "block";
+            document.getElementById("next_strategic").classList.remove("invisible_field");
+            document.getElementById("submit_report_from_quantitative").classList.add("invisible_field");
           }
         }
 
@@ -121,7 +126,7 @@
             }
         }
 
-        $("#submit_report, #nav_submit_report").click(function(event) {
+        $("#submit_report, #nav_submit_report, #submit_report_from_quantitative").click(function(event) {
             event.preventDefault();
             validateForm();
         });
@@ -151,22 +156,26 @@
 
             if ($("#metrics_fieldset input[type='checkbox']:checked").length === 0 && $("#metrics_fieldset input[type='radio']:checked").length === 0) {
                 quantitative_tab.click();
-                setTimeout(function() {
-                  $("#metrics_fieldset input[value=1]").focus();
-                }, 50);
-                return;
+              setTimeout(function () {
+                $("#metrics_fieldset input").first()[0].focus();
+              }, 50);
+              return;
             }
 
             if (activity_associated === 1){
                 if ($("#directions_fieldset input[type='checkbox']:checked").length === 0) {
                     strategy_tab.click();
-                    $("#directions_fieldset input[value=1]").focus();
+                    setTimeout(function () {
+                      $("#directions_fieldset input[value=1]").focus();
+                    }, 50);
                     return;
                 }
 
                 if ($("#strategic_questions_fieldset input[type='checkbox']:checked").length === 0) {
                     learning_tab.click();
-                    $("#strategic_questions_fieldset input[value=1]").focus();
+                    setTimeout(function () {
+                      $("#strategic_questions_fieldset input[value=1]").focus();
+                    }, 50);
                     return;
                 }
 

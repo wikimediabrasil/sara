@@ -55,7 +55,6 @@
             </div>
         </div>
     </div>
-    {% trans "Submit" as submit_label %}
     <script>
         let submitText = "{% translate 'Submit' %}";
         let nextStrategic = "{% translate "Fill strategic report" %}";
@@ -68,7 +67,11 @@
           })
           show_metrics_options();
           $(".select-with-text").select2();
-          $("#learning_container").hide();
+
+          let learning = $("#learning");
+            if (learning.val() > 0) {
+                $("#learning_container").hide();
+            }
           hide_duplicate_headers();
 
           $("#activity_associated").on("change", toggle_tab);
