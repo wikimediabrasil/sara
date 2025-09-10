@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 {% block title %}{{ title }}{% endblock %}
 
 {% block styles %}
@@ -57,7 +58,7 @@
                         <div class="w3-twothird formfield">
                             <select class="select-with-text" name="metric_associated" id="id_metric_associated" multiple>
                                 {% for metric in eventform.fields.metric_associated.queryset %}
-                                    <option value="{{ metric.id }}">{{ metric.text }}</option>
+                                    <option value="{{ metric.id }}">{% if LANGUAGE_CODE == "en" %}{{ form.instance.metric.text_en }}{% else %}{{ form.instance.metric.text }}{% endif %}</option>
                                 {% endfor %}
                             </select>
                         </div>

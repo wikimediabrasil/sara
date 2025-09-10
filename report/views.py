@@ -134,12 +134,12 @@ def add_csv_file(function_name, report_id=None, custom_query=None):
     return csv_file
 
 
-def add_excel_file(report_id=None, custom_query=None):
+def add_excel_file(report_id=None, custom_query=None, lang=""):
     excel_file = BytesIO()
     writer = pd.ExcelWriter(excel_file, engine='xlsxwriter')
 
     export_report_instance(report_id, custom_query).to_excel(writer, sheet_name='Report', index=False)
-    export_operation_report(report_id, custom_query).to_excel(writer, sheet_name='Operation report', index=False)
+    export_operation_report(report_id, custom_query, lang).to_excel(writer, sheet_name='Operation report', index=False)
     export_metrics(report_id, custom_query).to_excel(writer, sheet_name='Metrics', index=False)
     export_user_profile(report_id, custom_query).to_excel(writer, sheet_name='Users', index=False)
     export_area_activated(report_id, custom_query).to_excel(writer, sheet_name='Areas', index=False)
@@ -159,6 +159,7 @@ def add_excel_file(report_id=None, custom_query=None):
 @permission_required("report.view_report")
 def export_report(request, report_id=None, year=None):
     if Report.objects.count():
+        lang = translation.get_language()
         buffer = BytesIO()
         zip_file = zipfile.ZipFile(buffer, mode="w")
         sub_directory = "csv/"
@@ -191,7 +192,7 @@ def export_report(request, report_id=None, year=None):
 
         for file in files:
             zip_file.writestr('{}.csv'.format(file[1]), add_csv_file(file[0], report_id, custom_query).getvalue())
-        zip_file.writestr('Export' + posfix + '.xlsx', add_excel_file(report_id, custom_query).getvalue())
+        zip_file.writestr('Export' + posfix + '.xlsx', add_excel_file(report_id, custom_query, lang).getvalue())
 
         zip_file.close()
 
@@ -353,7 +354,7 @@ def export_report_instance(report_id=None, custom_query=Q()):
     return df
 
 
-def export_operation_report(report_id=None, custom_query=Q()):
+def export_operation_report(report_id=None, custom_query=Q(), lang=""):
     header = [_('ID'), _('Report ID'), _('Metric ID'), _('Metric'), _('Number of people reached through social media'),
               _('Number of new followers'), _('Number of mentions'), _('Number of community communications'),
               _('Number of events'), _('Number of resources'), _('Number of partnerships activated'),
@@ -365,12 +366,14 @@ def export_operation_report(report_id=None, custom_query=Q()):
         reports = Report.objects.filter(custom_query)
         operation_reports = OperationReport.objects.filter(report_id__in=reports.values_list("id", flat=True))
 
+    metric_name_attr = f"text_{lang}" if lang == "en" else "text"
+
     rows = []
     for operation_report in operation_reports:
         rows.append([operation_report.id,
                      operation_report.report_id,
                      operation_report.metric_id,
-                     operation_report.metric.text,
+                     getattr(operation_report.metric, metric_name_attr),
                      operation_report.number_of_people_reached_through_social_media,
                      operation_report.number_of_new_followers,
                      operation_report.number_of_mentions,

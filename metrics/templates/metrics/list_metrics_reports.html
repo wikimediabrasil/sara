@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 {% block title %}{{ title }}{% endblock %}
 {% load metricstags %}
 
@@ -20,6 +21,12 @@
 {% block content %}
     <div class="w3-row">
         <div class="w3-container userform" style="background-color: var(--light-color); color:black;">
+            {% if LANGUAGE_CODE == "en" %}
+                <h1>{% trans metric.text_en %}</h1>
+            {% else %}
+                <h1>{% trans metric.text %}</h1>
+            {% endif %}
+            {% if not forloop.last %}<br>{% endif %}
             <h1>{% trans metric.text %}</h1>
             {% for metric_goal in values %}
                 <h3>{% trans metric_goal.text %}</h3>

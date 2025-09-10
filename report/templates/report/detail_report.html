@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 {% block title %}{{ title }}{% endblock %}
 {% block styles %}<link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">{% endblock %}
 
@@ -165,7 +166,7 @@
                     {% if data.metrics_related %}
                         <div class="w3-row">
                             <div class="w3-third formfieldtitle">{% trans "Metrics related" %}</div>
-                            <div class="w3-twothird formfield view-field">{% for metric in data.metrics_related.all %}{{ metric.text }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</div>
+                            <div class="w3-twothird formfield view-field">{% for metric in data.metrics_related.all %}{% if LANGUAGE_CODE == "en" %}{{ form.instance.metric.text_en }}{% else %}{{ form.instance.metric.text }}{% endif %}{% if not forloop.last %}<br>{% endif %}{% endfor %}</div>
                         </div>
                     {% endif %}
                     {% if data.participants %}
