@@ -1,13 +1,15 @@
 {% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
 <div class="w3-container">
     {{ operation_metrics.management_form }}
     {% for form in operation_metrics.forms %}
         {% if not form.instance.pk %}
             <h3 class="operation-header">{{ form.initial.metric.activity }}</h3>
-            <h4><label class="formfieldtitle" for="id_Operation-{{ forloop.counter0 }}-metric">{{ form.initial.metric }}</label></h4>
+            <h4><label class="formfieldtitle" for="id_Operation-{{ forloop.counter0 }}-metric">{% if LANGUAGE_CODE == "en" %}{{ form.initial.metric.text_en }}{% else %}{{ form.initial.metric.text }}{% endif %}</label></h4>
             <div class="w3-row">
                 <select name="Operation-{{ forloop.counter0 }}-metric" id="id_Operation-{{ forloop.counter0 }}-metric" hidden>
-                    <option value="{{ form.initial.metric.id }}" selected>{{ form.initial.metric.text }}</option>
+                    <option value="{{ form.initial.metric.id }}" selected>{% if LANGUAGE_CODE == "en" %}{{ form.initial.metric.text_en }}{% else %}{{ form.initial.metric.text }}{% endif %}</option>
                 </select>
             </div>
             {% if form.initial.metric.number_of_people_reached_through_social_media %}
@@ -87,10 +89,10 @@
                 {{ hidden }}
             {% endfor %}
             <h3 class="operation-header">{{ form.instance.metric.activity }}</h3>
-            <h4><label class="formfieldtitle" for="id_Operation-{{ forloop.counter0 }}-metric">{{ form.instance.metric }}</label></h4>
+            <h4><label class="formfieldtitle" for="id_Operation-{{ forloop.counter0 }}-metric">{% if LANGUAGE_CODE == "en" %}{{ form.instance.metric.text_en }}{% else %}{{ form.instance.metric.text }}{% endif %}</label></h4>
             <div class="w3-row">
                 <select name="Operation-{{ forloop.counter0 }}-metric" id="id_Operation-{{ forloop.counter0 }}-metric" hidden>
-                    <option value="{{ form.instance.metric.id }}" selected>{{ form.instance.metric.text }}</option>
+                    <option value="{{ form.instance.metric.id }}" selected>{% if LANGUAGE_CODE == "en" %}{{ form.instance.metric.text_en }}{% else %}{{ form.instance.metric.text }}{% endif %}</option>
                 </select>
             </div>
             {% if form.instance.metric.number_of_people_reached_through_social_media %}

@@ -17,6 +17,7 @@ from report.models import Editor, Organizer, Partner, \
     Funding, Technology, Report, AreaActivated, Activity, OperationReport
 from users.models import UserProfile
 from report.forms import NewReportForm, OperationForm, OperationUpdateFormSet
+from django.utils import translation
 
 
 # CREATE
@@ -737,6 +738,7 @@ def get_or_create_organizers(organizers_string):
 def get_metrics(request):
     projects = []
     main_ = False
+    user_lang = translation.get_language()
 
     # ACTIVITY
     activity = request.GET.get("activity")
@@ -744,7 +746,7 @@ def get_metrics(request):
         activity_project = Project.objects.get(project_activity__activities=int(activity), active=True)
         metrics = Metric.objects.filter(activity_id=activity).values()
         main_ = Activity.objects.get(pk=int(activity)).is_main_activity
-        projects.append({"project": activity_project.text, "metrics": list(metrics), "main": main_})
+        projects.append({"project": activity_project.text, "metrics": list(metrics), "main": main_, "lang": user_lang})
     elif activity == "1":
         for project in Project.objects.filter(active=True).exclude(current_poa=True):
             metrics = Metric.objects.filter(project=project).values()

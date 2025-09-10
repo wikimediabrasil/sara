@@ -225,7 +225,8 @@
                                     let check_style = "";
                                     if (jQuery.inArray(metric.id, metrics_related) >= 0) { checked = "checked"; }
                                     if (projectEl["main"]) { button_type = "radio"; check_style = "radio-checkmark"; }
-                                    let metric_element = "<label class='select-container'>" + metric.text +
+                                    let metric_label = (projectEl["lang"] === "en") ? metric.text_en : metric.text;
+                                    let metric_element = "<label class='select-container'>" + metric_label +
                                         "<input type='" + button_type + "' name='metrics_related' value='" + metric.id +
                                         "' " + checked + ">" + "<span class='checkmark "+ check_style +"'></span></label>"
                                     inner_html += metric_element

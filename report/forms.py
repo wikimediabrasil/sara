@@ -257,8 +257,9 @@ def learning_areas_as_choices():
 
 
 def get_user_date_of_registration(user):
+    headers = {"User-Agent": "SARA-WMB/Toolforge (contact: User:EPorto (WMB) / mailto: eder.porto@wmnobrasil.org) environment=toolforge"}
     url = "https://www.mediawiki.org/w/api.php?action=query&meta=globaluserinfo&format=json&guiuser=" + quote(user, safe="")
-    result = requests.get(url)
+    result = requests.get(url, headers=headers)
     data = result.json()
     try:
         date_obj = datetime.strptime(data["query"]["globaluserinfo"]["registration"], "%Y-%m-%dT%H:%M:%SZ")
