@@ -175,36 +175,37 @@ def send_email(request):
     areas = TeamArea.objects.filter(team_area_of_position__type__name="Manager")
     for area in areas:
         manager = UserProfile.objects.filter(user__is_active=True, position__area_associated=area, position__type__name="Manager").first()
-        manager_email = manager.user.email
+        if manager:
+            manager_email = manager.user.email
 
-        if manager_email:
-            upcoming_reports = get_activities_soon_to_be_finished(area)
-            late_reports = get_activities_already_finished(area)
-            about_to_kickoff = get_activities_about_to_kickoff(area)
+            if manager_email:
+                upcoming_reports = get_activities_soon_to_be_finished(area)
+                late_reports = get_activities_already_finished(area)
+                about_to_kickoff = get_activities_about_to_kickoff(area)
 
-            context_data = {
-                "late_reports": build_message_about_reports(late_reports),
-                "upcoming_reports": build_message_about_reports(upcoming_reports),
-                "about_to_kickoff": build_message_about_reports(about_to_kickoff),
-                "manager": manager,
-                "area": area
-            }
+                context_data = {
+                    "late_reports": build_message_about_reports(late_reports),
+                    "upcoming_reports": build_message_about_reports(upcoming_reports),
+                    "about_to_kickoff": build_message_about_reports(about_to_kickoff),
+                    "manager": manager,
+                    "area": area
+                }
 
-            if upcoming_reports or late_reports or about_to_kickoff:
-                email_html_template = get_template(html_template_path).render(context_data)
+                if upcoming_reports or late_reports or about_to_kickoff:
+                    email_html_template = get_template(html_template_path).render(context_data)
 
-                email_msg = EmailMessage(
-                    subject = _("SARA Report- %(area)s") % {"area": area},
-                    body = email_html_template,
-                    from_email = settings.EMAIL_HOST_USER,
-                    to = [manager_email],
-                    reply_to = [settings.EMAIL_HOST_USER],
-                    bcc = [settings.EMAIL_COORDINATOR]
-                )
-                email_msg.content_subtype = "html"
-                email_msg.send(fail_silently=False)
-        else:
-            pass
+                    email_msg = EmailMessage(
+                        subject = _("SARA Report- %(area)s") % {"area": area},
+                        body = email_html_template,
+                        from_email = settings.EMAIL_HOST_USER,
+                        to = [manager_email],
+                        reply_to = [settings.EMAIL_HOST_USER],
+                        bcc = [settings.EMAIL_COORDINATOR]
+                    )
+                    email_msg.content_subtype = "html"
+                    email_msg.send(fail_silently=False)
+            else:
+                pass
     return redirect(reverse("metrics:index"))
 
 
