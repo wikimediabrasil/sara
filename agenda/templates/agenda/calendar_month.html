@@ -37,8 +37,8 @@
                     </a>
                 </th>
                 <th class="slim">
-                    <a href="{% url 'agenda:list_events' %}" tabindex="0" target="_self" aria-label="{% translate 'List events' %}">
-                        <i class="fa-solid fa-table-list"></i><span class="disappear"><br>{% translate "List all" %}</span>
+                    <a href="{% url 'agenda:show_specific_calendar_year' year=year %}" tabindex="0" target="_self" aria-label="{% translate 'Year calendar' %}">
+                        <i class="fa-solid fa-table-list"></i><span class="disappear"><br>{% translate "Year calendar" %}</span>
                     </a>
                 </th>
                 <th class="slim">
@@ -71,33 +71,23 @@
             {% for week in calendar %}
                 <tr>
                     {% for day in week %}
-                        {% date_tag year month day as activities %}
                         <td class="day">
-                            <table class="table">
-                                <thead>
-                                {% if day %}
-                                    <tr>
-                                        <th>
-                                            <a href="{% url 'agenda:show_specific_calendar_day' year=year month=month day=day %}">
-                                                <button class="btn-circle {% if activities.count > 0 %}border-main{% endif %}">
-                                                    {{ day }}
-                                                </button>
-                                            </a>
-                                        </th>
-                                    </tr>{% endif %}
-                                </thead>
-                                <tbody>
-                                {% for activity in activities %}
-                                    <tr class="activity-{{ activity.area_responsible.code }}">
-                                        <td class="disappear">
-                                            <a href="{% if user.is_auhenticated %}{% url 'agenda:edit_event' event_id=activity.id %}{% else %}{% url 'agenda:detail_event' event_id=activity.id %}{% endif %}" title="{{ activity.name }}">
-                                                {{ activity.name }}
-                                            </a>
-                                        </td>
-                                    </tr>
+                            {% if day %}
+                                {% if day.activities|length > 0 %}
+                                    <a href="{% url 'agenda:show_specific_calendar_day'  year=year month=month day=day.day %}" class="btn-circle border-main day-link">
+                                        {{ day.day }}
+                                    </a>
+                                {% else %}
+                                    <span class="btn-circle day-link">{{ day.day }}</span>
+                                {% endif %}
+                                {% for activity in day.activities %}
+                                    <div class="activity mobile-dot activity-{{ activity.area_responsible.code|default:'unknown' }}">
+                                        <a class="disappear" href="{% url 'agenda:detail_event' event_id=activity.id %}">{{ activity.name }}</a>
+                                    </div>
+                                {% empty %}
+                                    <div class="no-activity">-</div>
                                 {% endfor %}
-                                </tbody>
-                            </table>
+                            {% endif %}
                         </td>
                     {% endfor %}
                 </tr>

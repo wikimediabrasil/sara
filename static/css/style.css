@@ -161,7 +161,7 @@ canvas {
     .disappear { display: none; }
     .appear { display: block; }
     .form-left, .form-right, #homepage_buttons div { padding: 0 !important; }
-    .table>:not(caption)>*>* { padding: 0 !important; }
+    .table:not(.calendar_table)>:not(caption)>*>* { padding: 0 !important; }
     .btn100 { width: 100% !important; height: auto !important; }
 }
 

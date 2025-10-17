@@ -12,8 +12,10 @@
     <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
 {% endblock %}
 {% block styles %}
-    <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/bootstrap-table.min.css">
+    <link rel="stylesheet"
+          href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css">
+    <link rel="stylesheet"
+          href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/bootstrap-table.min.css">
     <link rel="stylesheet" type="text/css" href="{% static 'css/calendar.css' %}">
 {% endblock %}
 
@@ -21,10 +23,7 @@
     <div class="calendar">
         <div class="w3-row">
             <div class="w3-quarter disappear">&nbsp;</div>
-            <div class="w3-half logo">
-                <h1>{{ year }}<br>{% blocktrans with day=day month_name=month_name %}{{ month_name }} {{ day }}{% endblocktrans %}
-                </h1>
-            </div>
+            <div class="w3-half logo"> <h1>{{ year }}<br>{% blocktrans with day=day month_name=month_name %}{{ month_name }} {{ day }}{% endblocktrans %}</h1></div>
         </div>
         <table class="table table-striped calendar_table">
             <thead>
@@ -32,22 +31,29 @@
                 {% previous_day_tag year month day as previous_day %}
                 {% next_day_tag year month day as next_day %}
                 <th class="slim" style="width: 20%">
-                    <a href="{{ previous_day }}" tabindex="0" target="_self" aria-label="{% translate 'Previous day' %}">
-                        <i class="fa-solid fa-backward"></i><span class="disappear"><br>{% translate 'Previous day' %}</span>
+                    <a href="{{ previous_day }}" tabindex="0" target="_self"
+                       aria-label="{% translate 'Previous day' %}">
+                        <i class="fa-solid fa-backward"></i><span
+                            class="disappear"><br>{% translate 'Previous day' %}</span>
                     </a>
                 </th>
                 <th class="slim" style="width: 20%">
-                    <a href="{% url 'agenda:show_specific_calendar' year=year month=month %}" tabindex="0" target="_self" aria-label="{% translate 'Month calendar' %}">
-                        <i class="fa-solid fa-calendar-days"></i><span class="disappear"><br>{% translate "Month calendar" %}</span>
+                    <a href="{% url 'agenda:show_specific_calendar' year=year month=month %}" tabindex="0"
+                       target="_self" aria-label="{% translate 'Month calendar' %}">
+                        <i class="fa-solid fa-calendar-days"></i><span
+                            class="disappear"><br>{% translate "Month calendar" %}</span>
                     </a>
                 </th>
                 <th class="slim" style="width: 20%">
-                    <a href="{% url 'agenda:show_calendar_day' %}" tabindex="0" target="_self" aria-label="{% translate 'Today' %}">
-                        <i class="fa-solid fa-calendar-day"></i><span class="disappear"><br>{% translate 'Today' %}</span>
+                    <a href="{% url 'agenda:show_calendar_day' %}" tabindex="0" target="_self"
+                       aria-label="{% translate 'Today' %}">
+                        <i class="fa-solid fa-calendar-day"></i><span
+                            class="disappear"><br>{% translate 'Today' %}</span>
                     </a>
                 </th>
                 <th class="slim" style="width: 20%">
-                    <a href="{% url 'agenda:create_event' %}" tabindex="0" target="_self" aria-label="{% translate 'Add event' %}">
+                    <a href="{% url 'agenda:create_event' %}" tabindex="0" target="_self"
+                       aria-label="{% translate 'Add event' %}">
                         <i class="fa-solid fa-plus"></i><span class="disappear"><br>{% translate "Add event" %}</span>
                     </a>
                 </th>
@@ -59,15 +65,16 @@
             </tr>
             </thead>
             <tbody>
-            {% date_tag year month day as activities %}
             {% for activity in activities %}
-                <tr class="activity-{{ activity.area_responsible.code }}">
+                <tr class="activity activity-{{ activity.area_responsible.code|default:'unknown' }}">
                     <td class="align-middle" colspan="7">
-                        <a href="{% url 'agenda:edit_event' event_id=activity.id %}" title="{{ activity.name }}">
-                            {{ activity.name }}
+                        <a href="{% url 'agenda:detail_event' event_id=activity.id %}">
+                            <b>{{ activity.name }}</b><br>{{ activity.initial_date}}{% if activity.initial_date != activity.end_date %} - {{ activity.end_date }}{% endif %}<br>{% trans "Area responsible: " %}{{ activity.area_responsible }}
                         </a>
                     </td>
                 </tr>
+            {% empty %}
+                <tr><td colspan="7"><div class="no-activity">-</div></td></tr>
             {% endfor %}
             </tbody>
         </table>

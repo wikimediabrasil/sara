@@ -69,30 +69,37 @@ class EventViewTests(TestCase):
                                           end_date=datetime.date.today(),
                                           area_responsible=self.team_area)
 
-    def test_show_calendar_for_logged_user(self):
-        self.client.login(username=self.username, password=self.password)
+    def test_show_calendar_year(self):
+        response = self.client.get(reverse('agenda:show_calendar_year'))
+        self.assertRedirects(response, reverse('agenda:show_specific_calendar_year',
+                                               kwargs={"year": datetime.datetime.now().year}))
+
+    def test_show_specific_calendar_year(self):
+        response = self.client.get(reverse('agenda:show_specific_calendar_year',
+                                           kwargs={"year": self.year}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'agenda/calendar_year.html')
+
+    def test_show_calendar(self):
         response = self.client.get(reverse('agenda:show_calendar'))
         self.assertRedirects(response, reverse('agenda:show_specific_calendar',
                                                kwargs={"year": datetime.datetime.now().year,
                                                        "month": datetime.datetime.now().month}))
 
-    def test_show_specific_calendar_for_logged_user(self):
-        self.client.login(username=self.username, password=self.password)
+    def test_show_specific_calendar(self):
         response = self.client.get(reverse('agenda:show_specific_calendar',
                                            kwargs={"year": self.year, "month": self.month}))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'agenda/calendar.html')
+        self.assertTemplateUsed(response, 'agenda/calendar_month.html')
 
-    def test_show_calendar_day_for_logged_user(self):
-        self.client.login(username=self.username, password=self.password)
+    def test_show_calendar_day(self):
         response = self.client.get(reverse('agenda:show_calendar_day'))
         self.assertRedirects(response, reverse('agenda:show_specific_calendar_day',
                                                kwargs={"year": datetime.datetime.now().year,
                                                        "month": datetime.datetime.now().month,
                                                        "day": datetime.datetime.now().day}))
 
-    def test_show_specific_calendar_day_for_logged_user(self):
-        self.client.login(username=self.username, password=self.password)
+    def test_show_specific_calendar_day(self):
         response = self.client.get(reverse('agenda:show_specific_calendar_day',
                                            kwargs={"year": self.year, "month": self.month, "day": self.day}))
         self.assertEqual(response.status_code, 200)

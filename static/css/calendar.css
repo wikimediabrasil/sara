@@ -1,7 +1,19 @@
 /* CALENDAR */
-.calendar { display: flex; flex-direction: column; height: 100vh; text-align: center; }
-.calendar_table {flex-grow: 1; background-color: var(--light-color); margin-bottom: 0; }
+.calendar { display: flex; flex-direction: column; text-align: center; min-height: 100%; height: auto; }
+.calendar_table { flex-grow: 1; background-color: var(--light-color); margin-bottom: 0; }
+.calendar_table:not(:last-of-type) { margin-bottom: 1em; }
+.calendar_table td { padding: 0; }
+.calendar_table th, td { width: calc(100%/7); }
 .day { width: 14.29%; padding:0 !important; }
+.day-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2em;
+  height: 2rem;
+  border-radius: 50%;
+  text-decoration: none;
+}
 .day-0 { display: none; }
 .align-middle { vertical-align: middle; }
 .slim { padding: 0 !important; color:var(--main-color); transition: all 300ms ease-in-out; }
@@ -9,8 +21,9 @@
 .slim a { display:block; height:100%; width:100%; padding: 1em 0; }
 .border-main { border: 1px solid var(--main-color) !important; }
 
+
 /* ACTIVITIES */
-.activity { width: 100%; }
+.activity { width: 100%; padding: 0.5em; }
 .activity-community { background-color: var(--rainbow-color-1); }
 .activity-education { background-color: var(--rainbow-color-3); }
 .activity-technology { background-color: var(--rainbow-color-5); }
@@ -42,3 +55,9 @@
 .activity-coordination:hover a { color: var(--light-color) !important; }
 .activity-communication:hover a { color: var(--light-color) !important; }
 .activity-fundraising:hover a { color: var(--light-color) !important; }
+
+@media screen and (max-width: 600px) {
+    .activity { width: 0.5em; height: 0.5em; border-radius: 100%; }
+    .mobile-dot { font-size: 0.5em; }
+    .calendar_table td { justify-items: center; padding: 0.5em 0; }
+}

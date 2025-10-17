@@ -199,18 +199,6 @@ def export_trimester_report(request):
 
 @login_required
 @permission_required("metrics.view_metric")
-def view_semester_report_per_area(request):
-    timespan_array = [
-        (datetime.date(datetime.datetime.today().year,1,1), datetime.date(datetime.datetime.today().year,6, 18)),
-        (datetime.date(datetime.datetime.today().year, 6, 19), datetime.date(datetime.datetime.today().year, 12, 31))
-    ]
-    for area in TeamArea.objects.all():
-        results = get_results_for_timespan(timespan_array, Q(project=Project.objects.get(current_poa=True), is_operation=True), Q(area_responsible=area), True)
-        print(results)
-
-
-@login_required
-@permission_required("metrics.view_metric")
 def export_trimester_report_by_by_area_responsible(request):
     buffer = StringIO()
 

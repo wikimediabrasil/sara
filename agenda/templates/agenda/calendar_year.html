@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ title }}{% endblock %}
+{% load calendartags %}
+
+{% block banner %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block scripts %}
+    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/bootstrap-table.min.js"></script>
+    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/extensions/mobile/bootstrap-table-mobile.min.js"></script>
+    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
+{% endblock %}
+{% block styles %}
+    <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/bootstrap-table.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/calendar.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="calendar">
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half logo">
+                <h1>{{ year }}</h1>
+            </div>
+        </div>
+        <table class="table table-striped calendar_table" style="margin-bottom: 0;">
+            <thead>
+            <tr>
+                {% previous_year_tag year as previous_year %}
+                {% next_year_tag year as next_year %}
+                <th class="slim" colspan="2">
+                    <a href="{{ previous_year }}" tabindex="0" target="_self" aria-label="{% translate 'Previous year' %}">
+                        <i class="fa-solid fa-backward"></i><span class="disappear"><br>{% translate 'Previous year' %}</span>
+                    </a>
+                </th>
+                <th class="slim">
+                    <a href="{% url 'agenda:show_specific_calendar_year' year=year %}" tabindex="0" target="_self" aria-label="{% translate 'This year' %}">
+                        <i class="fa-solid fa-calendar-day"></i><span class="disappear"><br>{% translate 'This year' %}</span>
+                    </a>
+                </th>
+                <th class="slim" colspan="2">
+                    <a href="{{ next_year }}" tabindex="0" target="_self" aria-label="{% translate 'Next year' %}">
+                        <i class="fa-solid fa-forward"></i><span class="disappear"><br>{% translate 'Next year' %}</span>
+                    </a>
+                </th>
+            </tr>
+            </thead>
+        </table>
+        {% for month_object in calendar %}
+            <table class="table table-striped calendar_table">
+                <thead>
+                <tr>
+                    <th colspan="7">
+                        <h2><a href="{% url 'agenda:show_specific_calendar' year=year month=month_object.month %}">{{ month_object.month_name }}</a></h2>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>{% trans "U" %}</th>
+                    <th>{% trans "M" %}</th>
+                    <th>{% trans "T" %}</th>
+                    <th>{% trans "W" %}</th>
+                    <th>{% trans "R" %}</th>
+                    <th>{% trans "F" %}</th>
+                    <th>{% trans "S" %}</th>
+                </tr>
+                {% for week in month_object.days %}
+                    <tr>
+                        {% for day in week %}
+                            <td>
+                                {% if day %}
+                                    {% if day.activities|length > 0 %}
+                                        <a href="{% url 'agenda:show_specific_calendar_day'  year=year month=month_object.month day=day.day %}" class="btn-circle border-main day-link">
+                                            {{ day.day }}
+                                        </a>
+                                    {% else %}
+                                        <span class="btn-circle day-link">{{ day.day }}</span>
+                                    {% endif %}
+                                    {% for activity in day.activities %}
+                                        <div class="activity mobile-dot activity-{{ activity.area_responsible.code|default:'unknown' }}">
+                                            <a class="disappear" href="{% url 'agenda:detail_event' event_id=activity.id %}">{{ activity.name }}</a>
+                                        </div>
+                                    {% empty %}
+                                        <div class="no-activity">-</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -15,6 +15,5 @@ urlpatterns = [
     path('metrics_reports/<int:metric_id>', views.metrics_reports, name='metrics_reports'),
     path("trimester", views.export_trimester_report, name="export_reports_per_trimester"),
     path("trimester/per_area", views.export_trimester_report_by_by_area_responsible, name="export_reports_per_area"),
-    path("report/per_area", views.view_semester_report_per_area, name="view_semester_report"),
     path("prepare_pdf", views.prepare_pdf, name="wmf_report"),
 ]
