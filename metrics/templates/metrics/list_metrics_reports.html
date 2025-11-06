@@ -27,7 +27,6 @@
                 <h1>{% trans metric.text %}</h1>
             {% endif %}
             {% if not forloop.last %}<br>{% endif %}
-            <h1>{% trans metric.text %}</h1>
             {% for metric_goal in values %}
                 <h3>{% trans metric_goal.text %}</h3>
                 <table id="reports_{{ metric.id }}"  class="table table-striped table-fixed table-sara metrics_table"
