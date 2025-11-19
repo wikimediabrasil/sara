@@ -754,14 +754,14 @@ def get_metrics(request):
         for project in Project.objects.filter(active=True).exclude(current_poa=True):
             metrics = Metric.objects.filter(project=project).values()
             if metrics:
-                projects.append({"project": project.text, "metrics": list(metrics)})
+                projects.append({"project": project.text, "metrics": list(metrics), "lang": user_lang})
 
     # FUNDINGS
     fundings_ids = request.GET.getlist("fundings[]")
     projects_ids = Project.objects.filter(Q(project_related__in=fundings_ids))
     for project in projects_ids:
         metrics = Metric.objects.filter(project=project).values().order_by('text')
-        projects.append({"project": project.text, "metrics": list(metrics)})
+        projects.append({"project": project.text, "metrics": list(metrics), "lang": user_lang})
 
     # INSTANCE
     instance = request.GET.get("instance")
@@ -773,7 +773,7 @@ def get_metrics(request):
         main_ = report.activity_associated.is_main_activity
 
         if metrics:
-            projects.append({"project": _("Other metrics"), "metrics": list(metrics)})
+            projects.append({"project": _("Other metrics"), "metrics": list(metrics), "lang": user_lang})
 
     if projects:
         return JsonResponse({"objects": projects, "main": main_})
