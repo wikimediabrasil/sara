@@ -205,6 +205,18 @@
                             <div class="w3-twothird formfield view-field">{% for technology in data.technologies_used.all %}{{ technology.name }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>
                         </div>
                     {% endif %}
+                    {% if data.donors %}
+                        <div class="w3-row">
+                            <div class="w3-third formfieldtitle">{% trans "Donors" %}</div>
+                            <div class="w3-twothird formfield view-field">{{ data.donors }}</div>
+                        </div>
+                    {% endif %}
+                    {% if data.submissions %}
+                        <div class="w3-row">
+                            <div class="w3-third formfieldtitle">{% trans "Submissions" %}</div>
+                            <div class="w3-twothird formfield view-field">{{ data.submissions }}</div>
+                        </div>
+                    {% endif %}
                 </div>
                 {% if data.wikipedia_created or data.wikipedia_edited or data.commons_created or data.commons_edited or data.wikidata_created or data.wikidata_edited or data.wikiversity_created or data.wikiversity_edited or data.wikibooks_created or data.wikibooks_edited or data.wikisource_created or data.wikisource_edited or data.wikinews_created or data.wikinews_edited or data.wikiquote_created or data.wikiquote_edited or data.wiktionary_created or data.wiktionary_edited or data.wikivoyage_created or data.wikivoyage_edited or data.wikispecies_created or data.wikispecies_edited or data.metawiki_created or data.metawiki_edited or data.mediawiki_created or data.mediawiki_edited %}
                     <h4 id="Wikimedia_projects">{% trans "Wikimedia projects" %}</h4>

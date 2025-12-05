@@ -73,7 +73,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             <p class="form-legend">{% translate "How many calls submissions is this activity reporting?" %}</p>
         </div>
         <div class="w3-twothird formfield">
-            <input type="number" min="0" value="{{ report_form.instance.donors }}" id="number_of_submissions" name="submissions"/>
+            <input type="number" min="0" value="{{ report_form.instance.submissions }}" id="number_of_submissions" name="submissions"/>
         </div>
     </div>
     <div class="w3-row">
