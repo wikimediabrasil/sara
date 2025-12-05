@@ -110,7 +110,8 @@ def show_metrics_per_project(request):
     context = {
         "poa_dataset": poa_dataset,
         "dataset": get_metrics_and_aggregate_per_project(project_query=Q(active=True, current_poa=False), lang=current_language),
-        "title": _("Show metrics per project")
+        "title": _("Show metrics per project"),
+        "show_index": True
     }
 
     return render(request, "metrics/list_metrics_per_project.html", context)
@@ -133,7 +134,7 @@ def show_metrics_for_specific_project(request, project_id):
     else:
         metrics_aggregated = get_metrics_and_aggregate_per_project(project_query=Q(pk=project_id), lang=current_language)
 
-    context = { "dataset": metrics_aggregated, "title": project.text }
+    context = { "dataset": metrics_aggregated, "title": project.text, "show_index": False }
 
     return render(request, "metrics/list_metrics_per_project.html", context)
 

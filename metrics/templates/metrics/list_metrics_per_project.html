@@ -29,16 +29,18 @@
 {% block content %}
     <div class="w3-row">
         <div class="w3-quarter index">
-            <div class="index-box">
-                <ul>
-                    {% for project_key, project_value in poa_dataset.items %}
-                        <li><a href="#{{ project_key }}" aria-label="{{ project_value.project }}">{{ project_value.project }}</a></li>
-                    {% endfor %}
-                    {% for project_key, project_value in dataset.items %}
-                        <li><a href="#{{ project_key }}" aria-label="{{ project_value.project }}">{{ project_value.project }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
+            {% if show_index %}
+                <div class="index-box">
+                    <ul>
+                        {% for project_key, project_value in poa_dataset.items %}
+                            <li><a href="#{{ project_key }}" aria-label="{{ project_value.project }}">{{ project_value.project }}</a></li>
+                        {% endfor %}
+                        {% for project_key, project_value in dataset.items %}
+                            <li><a href="#{{ project_key }}" aria-label="{{ project_value.project }}">{{ project_value.project }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
             <div class="w3-container" style="margin-top: 1em">
                 <button class="custombutton" type="button" onClick="window.print()">{% trans "Print" %}</button>
             </div>
