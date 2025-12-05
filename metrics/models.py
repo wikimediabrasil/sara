@@ -11,6 +11,7 @@ class Project(models.Model):
     active = models.BooleanField(default=True)
     current_poa = models.BooleanField(default=False)
     main_funding = models.BooleanField(default=False)
+    counts_for_main_funding = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = _("Project")

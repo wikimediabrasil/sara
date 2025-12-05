@@ -71,7 +71,8 @@ def prepare_pdf(request, *args, **kwargs):
                                             Q(project=main_project),
                                             Q(),
                                             True,
-                                            "en")
+                                            "en",
+                                            True)
 
     metrics = []
     refs = []
@@ -99,15 +100,16 @@ def prepare_pdf(request, *args, **kwargs):
 def show_metrics_per_project(request):
     current_language = get_language()
     poa_project = Project.objects.get(current_poa=True)
-    operational_dataset = get_metrics_and_aggregate_per_project(Q(current_poa=True), Q(is_operation=True), lang=current_language)
+    operational_dataset = get_metrics_and_aggregate_per_project(project_query=Q(current_poa=True), metric_query=Q(is_operation=True), lang=current_language)
 
-    poa_dataset = get_metrics_and_aggregate_per_project(Q(current_poa=True), Q(boolean_type=True), "Occurrence", lang=current_language)
+    poa_dataset = get_metrics_and_aggregate_per_project(project_query=Q(current_poa=True), metric_query=Q(boolean_type=True), field="Occurrence", lang=current_language)
+
     if poa_dataset and operational_dataset:
         poa_dataset[poa_project.id]["project_metrics"] += operational_dataset[poa_project.id]["project_metrics"]
 
     context = {
         "poa_dataset": poa_dataset,
-        "dataset": get_metrics_and_aggregate_per_project(Q(active=True, current_poa=False), lang=current_language),
+        "dataset": get_metrics_and_aggregate_per_project(project_query=Q(active=True, current_poa=False), lang=current_language),
         "title": _("Show metrics per project")
     }
 
@@ -121,15 +123,15 @@ def show_metrics_for_specific_project(request, project_id):
     project = Project.objects.get(pk=project_id)
 
     if project.current_poa:
-        operational_dataset = get_metrics_and_aggregate_per_project(Q(current_poa=True), Q(is_operation=True),
+        operational_dataset = get_metrics_and_aggregate_per_project(project_query=Q(current_poa=True), metric_query=Q(is_operation=True),
                                                                     lang=current_language)
 
-        metrics_aggregated = get_metrics_and_aggregate_per_project(Q(current_poa=True), Q(boolean_type=True),
-                                                                   "Occurrence", lang=current_language)
+        metrics_aggregated = get_metrics_and_aggregate_per_project(project_query=Q(current_poa=True), metric_query=Q(boolean_type=True),
+                                                                   field="Occurrence", lang=current_language)
         if metrics_aggregated and operational_dataset:
             metrics_aggregated[project.id]["project_metrics"] += operational_dataset[project.id]["project_metrics"]
     else:
-        metrics_aggregated = get_metrics_and_aggregate_per_project(Q(pk=project_id), lang=current_language)
+        metrics_aggregated = get_metrics_and_aggregate_per_project(project_query=Q(pk=project_id), lang=current_language)
 
     context = { "dataset": metrics_aggregated, "title": project.text }
 
@@ -141,7 +143,7 @@ def show_metrics_for_specific_project(request, project_id):
 def show_detailed_metrics_per_project(request):
     context = {
         "poa_dataset": {},
-        "dataset": get_metrics_and_aggregate_per_project(Q(active=True)),
+        "dataset": get_metrics_and_aggregate_per_project(project_query=Q(active=True)),
         "title": _("Show metrics per project")
     }
     return render(request, "metrics/list_metrics_per_project.html", context)
@@ -234,11 +236,15 @@ def get_results_divided_by_trimester(buffer, area=None, with_goal=False):
     poa_results = get_results_for_timespan(timespan_array,
                                            Q(project=Project.objects.get(current_poa=True), is_operation=True),
                                            report_query,
-                                           with_goal)
+                                           with_goal,
+                                           "en",
+                                           False)
     main_results = get_results_for_timespan(timespan_array,
                                             Q(project=Project.objects.get(main_funding=True)),
                                             report_query,
-                                            with_goal)
+                                            with_goal,
+                                            "en",
+                                            True)
 
     poa_wikitext = construct_wikitext(poa_results, header +
                                       "!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n")
@@ -252,7 +258,7 @@ def get_results_divided_by_trimester(buffer, area=None, with_goal=False):
     buffer.write(footer)
 
 
-def get_results_for_timespan(timespan_array, metric_query=Q(), report_query=Q(), with_goal=False, lang="pt"):
+def get_results_for_timespan(timespan_array, metric_query=Q(), report_query=Q(), with_goal=False, lang="pt", is_main_funding=False):
     results = []
     for metric in Metric.objects.filter(metric_query).order_by("activity_id", "id"):
         done_row = []
@@ -261,7 +267,7 @@ def get_results_for_timespan(timespan_array, metric_query=Q(), report_query=Q(),
         supplementary_query = Q()
         for time_ini, time_end in timespan_array:
             supplementary_query = Q(end_date__gte=time_ini) & Q(end_date__lte=time_end) & report_query
-            goal, done, final = get_goal_and_done_for_metric(metric, supplementary_query=supplementary_query)
+            goal, done, final = get_goal_and_done_for_metric(metric, supplementary_query=supplementary_query, is_main_funding=is_main_funding)
             for key, value in goal.items():
                 if value != 0:
                     done_row.append(done[key]) if done[key] else done_row.append("-")
@@ -320,7 +326,7 @@ def construct_wikitext(results, wikitext):
     return wikitext
 
 
-def get_metrics_and_aggregate_per_project(project_query=Q(active=True), metric_query=Q(), field=None, lang=""):
+def get_metrics_and_aggregate_per_project(project_query=Q(active=True), metric_query=Q(), supplementary_query=Q(), field=None, lang=""):
     aggregated_metrics_and_results = {}
 
     for project in Project.objects.filter(project_query).order_by("-current_poa", "-main_funding"):
@@ -332,7 +338,7 @@ def get_metrics_and_aggregate_per_project(project_query=Q(active=True), metric_q
             else:
                 q_filter = Q(project=project) & metric_query
             for metric in Metric.objects.filter(q_filter):
-                goal, done, final = get_goal_and_done_for_metric(metric)
+                goal, done, final = get_goal_and_done_for_metric(metric, supplementary_query, project.main_funding)
 
                 if field and goal[field] != 0:
                     result_metrics = {field: {"goal": goal[field], "done": done[field], "final": final}}
@@ -361,9 +367,15 @@ def get_metrics_and_aggregate_per_project(project_query=Q(active=True), metric_q
     return aggregated_metrics_and_results
 
 
-def get_goal_and_done_for_metric(metric, supplementary_query=Q()):
+def get_goal_and_done_for_metric(metric, supplementary_query=Q(), is_main_funding=False):
     query = Q(metrics_related__in=[metric]) & supplementary_query
     reports = Report.objects.filter(query)
+    if is_main_funding:
+        reports = reports.exclude(
+            (Q(activity_associated__area__project__counts_for_main_funding=False) | Q(funding_associated__project__counts_for_main_funding=False)) &
+            ~(Q(activity_associated__id=1) & Q(funding_associated__project__counts_for_main_funding=True)) &
+            ~(Q(activity_associated__id=1) & Q(funding_associated__isnull=True))
+        )
     goal = get_goal_for_metric(metric)
     done = get_done_for_report(reports, metric)
     final = is_there_a_final_report(reports)
