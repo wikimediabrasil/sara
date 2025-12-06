@@ -14,6 +14,10 @@ urlpatterns = [
     path('update_metrics', views.update_metrics_relations, name='update_metrics'),
     path('metrics_reports/<int:metric_id>', views.metrics_reports, name='metrics_reports'),
     path("trimester", views.export_trimester_report, name="export_reports_per_trimester"),
-    path("trimester/per_area", views.export_trimester_report_by_by_area_responsible, name="export_reports_per_area"),
+    path("trimester/per_area", views.export_trimester_report_by_area, name="export_reports_trimester_per_area"),
+    path("semester", views.export_semester_report, name="export_reports_per_semester"),
+    path("semester/per_area", views.export_semester_report_by_area, name="export_reports_per_semester_per_area"),
+    path("yearly", views.export_year_report, name="export_reports_per_year"),
+    path("yearly/per_area", views.export_year_report_by_area, name="export_reports_per_year_per_area"),
     path("prepare_pdf", views.prepare_pdf, name="wmf_report"),
 ]

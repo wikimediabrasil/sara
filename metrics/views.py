@@ -189,66 +189,90 @@ def metrics_reports(request, metric_id):
 
 @login_required
 @permission_required("metrics.view_metric")
+def export_timespan_report(request, timeframe="trimester", by_area=False):
+    buffer = StringIO()
+
+    if by_area:
+        for area in TeamArea.objects.all():
+            get_results_divided_by_timespan(buffer, area, False, timeframe)
+    else:
+        get_results_divided_by_timespan(buffer, None, False, timeframe)
+
+    response = HttpResponse(buffer.getvalue())
+    response["Content-Type"] = "text/plain; charset=UTF-8"
+    response["Content-Disposition"] = f'attachment; filename="{timeframe}_report.txt"'
+
+    return response
+
+
+def get_timespan_array(timeframe):
+    year = datetime.datetime.today().year
+
+    config = settings.REPORT_TIMESPANS.get(timeframe)
+    if not config:
+        raise ValueError(f"Invalid timeframe: {timeframe}")
+
+    spans = [ (datetime.date(year, start[0], start[1]), datetime.date(year, end[0], end[1])) for start, end in config["periods"] ]
+    total = config.get("total")
+    if total:
+        spans.append((datetime.date(year, total[0][0], total[0][1]), datetime.date(year, total[1][0], total[1][1])))
+
+    return spans
+
+
+def get_header_columns(timeframe):
+    labels = settings.REPORT_TIMESPANS[timeframe]["labels"]
+    columns = " !! ".join(labels)
+    return f"!Activity !! Metrics !! {columns} !! Total !! References\n|-\n"
+
+
 def export_trimester_report(request):
-    buffer = StringIO()
-
-    get_results_divided_by_trimester(buffer, None, False)
-
-    response = HttpResponse(buffer.getvalue())
-    response['Content-Type'] = 'text/plain; charset=UTF-8'
-    response['Content-Disposition'] = 'attachment; filename="trimester_report.txt"'
-
-    return response
-
-@login_required
-@permission_required("metrics.view_metric")
-def export_trimester_report_by_by_area_responsible(request):
-    buffer = StringIO()
-
-    for area in TeamArea.objects.all():
-        get_results_divided_by_trimester(buffer, area, False)
-
-    response = HttpResponse(buffer.getvalue())
-    response['Content-Type'] = 'text/plain; charset=UTF-8'
-    response['Content-Disposition'] = 'attachment; filename="trimester_report.txt"'
-
-    return response
+    return export_timespan_report(request, "trimester", False)
 
 
-def get_results_divided_by_trimester(buffer, area=None, with_goal=False):
-    timespan_array = [
-        (datetime.date(datetime.datetime.today().year, 1, 1), datetime.date(datetime.datetime.today().year, 3, 31)),
-        (datetime.date(datetime.datetime.today().year, 4, 1), datetime.date(datetime.datetime.today().year, 6, 18)),
-        (datetime.date(datetime.datetime.today().year, 6, 19), datetime.date(datetime.datetime.today().year, 9, 20)),
-        (datetime.date(datetime.datetime.today().year, 9, 21), datetime.date(datetime.datetime.today().year, 12, 31)),
-        (datetime.date(datetime.datetime.today().year, 1, 1), datetime.date(datetime.datetime.today().year, 12, 31))
-    ]
+def export_trimester_report_by_area(request):
+    return export_timespan_report(request, "trimester", True)
+
+
+def export_semester_report(request):
+    return export_timespan_report(request, "semester", False)
+
+
+def export_semester_report_by_area(request):
+    return export_timespan_report(request, "semester", True)
+
+
+def export_year_report(request):
+    return export_timespan_report(request, "year", False)
+
+
+def export_year_report_by_area(request):
+    return export_timespan_report(request, "year", True)
+
+
+def get_results_divided_by_timespan(buffer, area=None, with_goal=False, timeframe="trimester"):
+    timespan_array = get_timespan_array(timeframe)
+
     if area:
         report_query = Q(area_responsible=area)
-        header = ("==" + area.text + "==\n<div class='wmb_report_table_container bd-" + area.color_code +
-                  "'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-" + area.color_code +
-                  " co-" + area.color_code + "' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n")
+        header = (
+            "==" + area.text + "==\n"
+            "<div class='wmb_report_table_container bd-" + area.color_code + "'>\n"
+            "{| class='wikitable wmb_report_table'\n"
+            "! colspan='8' class='bg-" + area.color_code + " co-" + area.color_code +
+            "' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n"
+        )
         footer = "|}\n</div>\n"
     else:
         report_query = Q()
         header = "{| class='wikitable wmb_report_table'\n"
         footer = "|}\n"
 
-    poa_results = get_results_for_timespan(timespan_array,
-                                           Q(project=Project.objects.get(current_poa=True), is_operation=True),
-                                           report_query,
-                                           with_goal,
-                                           "en",
-                                           False)
-    main_results = get_results_for_timespan(timespan_array,
-                                            Q(project=Project.objects.get(main_funding=True)),
-                                            report_query,
-                                            with_goal,
-                                            "en",
-                                            True)
+    poa_results = get_results_for_timespan(timespan_array, Q(project=Project.objects.get(current_poa=True), is_operation=True), report_query, with_goal, "en", False)
+    main_results = get_results_for_timespan(timespan_array, Q(project=Project.objects.get(main_funding=True)), report_query, with_goal, "en", True)
 
-    poa_wikitext = construct_wikitext(poa_results, header +
-                                      "!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n")
+    poa_wikitext = construct_wikitext(poa_results, header + get_header_columns(timeframe))
+
     main_wikitext = construct_wikitext(main_results, "")
 
     poa_wikitext = shorten_duplicate_refs(poa_wikitext)
@@ -257,6 +281,78 @@ def get_results_divided_by_trimester(buffer, area=None, with_goal=False):
     buffer.write(poa_wikitext)
     buffer.write(main_wikitext)
     buffer.write(footer)
+#
+#
+# @login_required
+# @permission_required("metrics.view_metric")
+# def export_trimester_report(request):
+#     buffer = StringIO()
+#
+#     get_results_divided_by_trimester(buffer, None, False)
+#
+#     response = HttpResponse(buffer.getvalue())
+#     response['Content-Type'] = 'text/plain; charset=UTF-8'
+#     response['Content-Disposition'] = 'attachment; filename="trimester_report.txt"'
+#
+#     return response
+#
+# @login_required
+# @permission_required("metrics.view_metric")
+# def export_trimester_report_by_by_area_responsible(request):
+#     buffer = StringIO()
+#
+#     for area in TeamArea.objects.all():
+#         get_results_divided_by_trimester(buffer, area, False)
+#
+#     response = HttpResponse(buffer.getvalue())
+#     response['Content-Type'] = 'text/plain; charset=UTF-8'
+#     response['Content-Disposition'] = 'attachment; filename="trimester_report.txt"'
+#
+#     return response
+#
+#
+# def get_results_divided_by_trimester(buffer, area=None, with_goal=False):
+#     timespan_array = [
+#         (datetime.date(datetime.datetime.today().year, 1, 1), datetime.date(datetime.datetime.today().year, 3, 31)),
+#         (datetime.date(datetime.datetime.today().year, 4, 1), datetime.date(datetime.datetime.today().year, 6, 18)),
+#         (datetime.date(datetime.datetime.today().year, 6, 19), datetime.date(datetime.datetime.today().year, 9, 20)),
+#         (datetime.date(datetime.datetime.today().year, 9, 21), datetime.date(datetime.datetime.today().year, 12, 31)),
+#         (datetime.date(datetime.datetime.today().year, 1, 1), datetime.date(datetime.datetime.today().year, 12, 31))
+#     ]
+#     if area:
+#         report_query = Q(area_responsible=area)
+#         header = ("==" + area.text + "==\n<div class='wmb_report_table_container bd-" + area.color_code +
+#                   "'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-" + area.color_code +
+#                   " co-" + area.color_code + "' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n")
+#         footer = "|}\n</div>\n"
+#     else:
+#         report_query = Q()
+#         header = "{| class='wikitable wmb_report_table'\n"
+#         footer = "|}\n"
+#
+#     poa_results = get_results_for_timespan(timespan_array,
+#                                            Q(project=Project.objects.get(current_poa=True), is_operation=True),
+#                                            report_query,
+#                                            with_goal,
+#                                            "en",
+#                                            False)
+#     main_results = get_results_for_timespan(timespan_array,
+#                                             Q(project=Project.objects.get(main_funding=True)),
+#                                             report_query,
+#                                             with_goal,
+#                                             "en",
+#                                             True)
+#
+#     poa_wikitext = construct_wikitext(poa_results, header +
+#                                       "!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n")
+#     main_wikitext = construct_wikitext(main_results, "")
+#
+#     poa_wikitext = shorten_duplicate_refs(poa_wikitext)
+#     main_wikitext = shorten_duplicate_refs(main_wikitext)
+#
+#     buffer.write(poa_wikitext)
+#     buffer.write(main_wikitext)
+#     buffer.write(footer)
 
 
 def get_results_for_timespan(timespan_array, metric_query=Q(), report_query=Q(), with_goal=False, lang="pt", is_main_funding=False):
