@@ -268,7 +268,7 @@ def get_results_divided_by_timespan(buffer, area=None, with_goal=False, timefram
         header = "{| class='wikitable wmb_report_table'\n"
         footer = "|}\n"
 
-    poa_results = get_results_for_timespan(timespan_array, Q(project=Project.objects.get(current_poa=True), is_operation=True), report_query, with_goal, "en", False)
+    poa_results = get_results_for_timespan(timespan_array, Q(project=Project.objects.get(current_poa=True), is_operation=True), report_query, with_goal, "en", True)
     main_results = get_results_for_timespan(timespan_array, Q(project=Project.objects.get(main_funding=True)), report_query, with_goal, "en", True)
 
     poa_wikitext = construct_wikitext(poa_results, header + get_header_columns(timeframe))
