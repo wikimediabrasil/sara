@@ -29,12 +29,14 @@
                 {% if perms.users.change_userprofile %}<div class="w3-half"><a href="{% url 'user:profile' user_id=user.id %}"><button class="custombutton" type="button">{% translate "Edit your profile" %}</button></a></div>{% endif %}
                 {% if perms.auth.add_user %}<div class="w3-half"><a href="{% url 'user:register' %}"><button class="custombutton" type="button">{% translate "Register new user" %}</button></a></div>{% endif %}
                 {% if user.is_authenticated %}<div class="w3-half"><a href="{% url 'bug:list_bugs' %}"><button class="custombutton" type="button">{% translate "Register bugs" %}</button></a></div>{% endif %}
+                {% if perms.auth.add_user %}<div class="w3-half"><a href="{% url 'metrics:export_reports_per_semester' %}"><button class="custombutton btn-export" type="button">{% trans "Export semester report" %}</button></a></div>{% endif %}
+                {% if perms.auth.add_user %}<div class="w3-half"><a href="{% url 'metrics:export_reports_per_semester_per_area' %}"><button class="custombutton btn-export" type="button">{% trans "Export semester report per area" %}</button></a></div>{% endif %}
             </div>
         </div>
         <div class="w3-row block-section">
             <div class="w3-quarter disappear">&nbsp;</div>
             <div class="w3-half">
-                <div><a href="{% url 'metrics:about' %}"><button class="custombutton" type="button">{% translate "About S.A.R.A." %}</button></a></div>
+                <div><a href="{% url 'metrics:about' %}"><button class="custombutton btn-readonly" type="button">{% translate "About S.A.R.A." %}</button></a></div>
             </div>
         </div>
     </div>

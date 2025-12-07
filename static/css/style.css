@@ -301,11 +301,11 @@ canvas {
     border-width: 0;
     margin: 0.25em 0;
 }
-.btn-view { background-color: var(--success-color); }
-.btn-update { background-color: var(--main-color); }
-.btn-delete { background-color: var(--error-color); }
-.btn-export { background-color: var(--attention-color); }
-.btn-readonly { background-color: var(--grey-color); }
+.btn-view { background-color: var(--success-color) !important; color: var(--dark-color) !important; }
+.btn-update { background-color: var(--main-color) !important; }
+.btn-delete { background-color: var(--error-color) !important; }
+.btn-export { background-color: var(--attention-color) !important; color: var(--dark-color) !important; }
+.btn-readonly { background-color: var(--grey-color) !important; }
 
 .custombutton {
     background-color: var(--main-color);
@@ -321,7 +321,7 @@ canvas {
 .custombutton:hover, .custombutton-wide:hover {
     scale: 97%;
     background-color: var(--light-color) !important;
-    color: var(--main-color);
+    color: var(--main-color) !important;
     cursor: pointer;
 }
 .custombutton-wide {
