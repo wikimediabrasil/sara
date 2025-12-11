@@ -264,7 +264,7 @@ def get_results_divided_by_timespan(buffer, area=None, with_goal=False, timefram
         )
         footer = "|}\n</div>\n"
     else:
-        report_query = Q()
+        report_query = Q(area_responsible__project__main_funding=True)
         header = "{| class='wikitable wmb_report_table'\n"
         footer = "|}\n"
 
