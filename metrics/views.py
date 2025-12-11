@@ -193,7 +193,7 @@ def export_timespan_report(request, timeframe="trimester", by_area=False):
     buffer = StringIO()
 
     if by_area:
-        for area in TeamArea.objects.all():
+        for area in TeamArea.objects.filter(project__main_funding=True):
             get_results_divided_by_timespan(buffer, area, False, timeframe)
     else:
         get_results_divided_by_timespan(buffer, None, False, timeframe)

@@ -6,11 +6,12 @@ from django.db.models.signals import post_save
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group
 
-
 class TeamArea(models.Model):
     text = models.CharField(max_length=420)
     code = models.CharField(max_length=105)
     color_code = models.CharField(max_length=2)
+
+    project = models.ManyToManyField("metrics.Project",blank=True, related_name="team_areas")
 
     class Meta:
         verbose_name = _("Team area")
