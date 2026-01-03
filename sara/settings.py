@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_admin_logs',
     'django_select2',
-    'social_django'
+    'social_django',
+    'modeltranslation'
 ]
 
 MIDDLEWARE = [
@@ -129,11 +130,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = False
-
-LANGUAGES = [
-    ('en', _('English')),
-    ('pt-br', _('Brazilian Portuguese')),
-]
 
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),

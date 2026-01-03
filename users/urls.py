@@ -4,9 +4,9 @@ from . import views
 app_name = "users"
 
 urlpatterns = [
-    path("<int:user_id>/profile", views.update_profile, name="profile"),
-    path("register", views.register, name="register"),
-    path('accounts/login', views.login_oauth, name='login'),
-    path('oauth/', include('social_django.urls', namespace='social')),
-    path('logout', views.logout_oauth, name='logout'),
+    path("accounts/login", views.login_oauth, name="login"),
+    path("oauth/", include("social_django.urls", namespace="social")),
+    path("logout/", views.logout_oauth, name="logout"),
+    path("<str:username>/edit", views.update_profile, name="update_profile"),
+    path("<str:username>", views.detail_profile, name="view_profile"),
 ]

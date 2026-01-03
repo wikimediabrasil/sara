@@ -3,7 +3,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
 from django.core.exceptions import ValidationError
-from django.db.models import RestrictedError
+from django.db.models import RestrictedError, ProtectedError
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.admin import User
 from django.test.client import RequestFactory
@@ -21,14 +21,13 @@ class TeamAreaModelTests(TestCase):
     def setUp(self):
         self.text = "Team Area"
         self.code = "team_area"
-        self.color_code = "t1"
         self.team_area = TeamArea.objects.create(text=self.text, code=self.code)
 
     def test_str_method(self):
         self.assertEqual(str(self.team_area), self.text)
 
     def test_clean_method(self):
-        team_area2 = TeamArea.objects.create(text="Team Area 2", code="team_area_2", color_code="t2")
+        team_area2 = TeamArea.objects.create(text="Team Area 2", code="team_area_2")
         team_area2.full_clean()
 
         with self.assertRaises(ValidationError):
@@ -83,15 +82,18 @@ class PositionModelTest(TestCase):
     def test_str_method(self):
         self.assertEqual(str(self.position), self.text)
 
-    def test_deleting_team_area_deletes_position_as_well(self):
-        self.assertEqual(Position.objects.count(), 1)
-        self.area_associated.delete()
-        self.assertEqual(Position.objects.count(), 0)
+    def test_position_creation(self):
+        self.assertEqual(self.position.text, "Position")
+        self.assertEqual(self.position.type, self.group)
+        self.assertEqual(self.position.area_associated, self.area_associated)
 
-    def test_deleting_group_deletes_position_as_well(self):
-        self.assertEqual(Position.objects.count(), 1)
-        self.group.delete()
-        self.assertEqual(Position.objects.count(), 0)
+    def test_protect_on_group_delete(self):
+        with self.assertRaises(ProtectedError):
+            self.group.delete()
+
+    def test_protect_on_area_delete(self):
+        with self.assertRaises(ProtectedError):
+            self.area_associated.delete()
 
 
 class UserProfileModelTest(TestCase):
@@ -112,15 +114,6 @@ class UserProfileModelTest(TestCase):
         self.user_profile.professional_wiki_handle = professional_wiki_handle
         self.assertTrue(str(self.user_profile), professional_wiki_handle)
 
-    def test_clean_method(self):
-        with self.assertRaises(ValidationError):
-            user = User.objects.create(username="username2",
-                                       email="email2@email.com",
-                                       first_name="First Name 2",
-                                       last_name="Last Name 2")
-            user_profile = UserProfile.objects.filter(user=user).first()
-            user_profile.full_clean()
-
 
 class UserProfileViewTest(TestCase):
     def setUp(self):
@@ -128,97 +121,59 @@ class UserProfileViewTest(TestCase):
         self.password = "password"
         self.user = User.objects.create_user(username=self.username, password=self.password)
         self.user_profile = UserProfile.objects.filter(user=self.user).first()
+        self.view_userprofile_permission = Permission.objects.get(codename="view_userprofile")
+        self.view_user_permission = Permission.objects.get(codename="view_user")
+        self.change_userprofile_permission = Permission.objects.get(codename="change_userprofile")
+        self.change_user_permission = Permission.objects.get(codename="change_user")
+        self.user.user_permissions.add(self.view_userprofile_permission)
+        self.user.user_permissions.add(self.view_user_permission)
+        self.user.user_permissions.add(self.change_userprofile_permission)
+        self.user.user_permissions.add(self.change_user_permission)
 
-    def test_user_profile_is_only_accessible_by_logged_users(self):
-        response = self.client.get(reverse('user:profile', kwargs={"user_id": self.user.pk}))
-        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('user:profile', kwargs={'user_id': self.user.pk})}")
+    def test_user_profile_is_not_accessible_by_not_logged_in_users(self):
+        response = self.client.get(reverse('users:view_profile', kwargs={"username": self.user.username}))
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('users:view_profile', kwargs={'username': self.user.username})}")
 
-    def test_user_profile_view_get(self):
+    def test_user_profile_is_not_accessible_by_logged_in_users_without_permission(self):
+        self.user.user_permissions.remove(self.view_user_permission)
+        self.user.user_permissions.remove(self.view_userprofile_permission)
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('user:profile', kwargs={"user_id": self.user.pk}))
+        response = self.client.get(reverse('users:view_profile', kwargs={"username": self.user.username}))
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('users:view_profile', kwargs={'username': self.user.username})}")
+
+    def test_user_profile_is_accessible_by_logged_in_users_with_view_permission(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.get(reverse('users:view_profile', kwargs={"username": self.user.username}))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'users/profile.html')
+        self.assertTemplateUsed(response, 'users/detail_profile.html')
 
-    def test_user_profile_view_post(self):
+    def test_user_profile_post(self):
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('user:profile', kwargs={"user_id": self.user.pk}))
+        response = self.client.get(reverse('users:update_profile', kwargs={"username": self.user.username}))
 
-        self.assertIsNone(self.user_profile.professional_wiki_handle)
+        self.assertEqual(self.user_profile.professional_wiki_handle, "")
         self.assertEqual(response.status_code, 200)
         data = {"professional_wiki_handle": "Handle"}
 
-        response = self.client.post(reverse('user:profile', kwargs={"user_id": self.user.pk}), data=data)
+        response = self.client.post(reverse('users:update_profile', kwargs={"username": self.user.username}), data=data)
         self.assertContains(response, _("Changes done successfully!"))
 
         user_profile = UserProfile.objects.get(user=self.user)
         self.assertIsNotNone(user_profile.professional_wiki_handle)
 
-    def test_user_profile_view_post_with_invalid_parameters_fails(self):
+    def test_user_profile_post_with_invalid_parameters_fails(self):
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('user:profile', kwargs={"user_id": self.user.pk}))
+        response = self.client.get(reverse('users:update_profile', kwargs={"username": self.user.username}))
 
-        self.assertIsNone(self.user_profile.professional_wiki_handle)
+        self.assertEqual(self.user_profile.professional_wiki_handle, "")
         self.assertEqual(response.status_code, 200)
         data = {"professional_wiki_handle": ""}
 
-        response = self.client.post(reverse('user:profile', kwargs={"user_id": self.user.pk}), data=data)
+        response = self.client.post(reverse('users:update_profile', kwargs={"username": self.user.username}), data=data)
         self.assertContains(response, _("Something went wrong!"))
 
         user_profile = UserProfile.objects.get(user=self.user)
-        self.assertIsNone(user_profile.professional_wiki_handle)
-
-
-class RegisterViewTest(TestCase):
-    def setUp(self):
-        self.username = "username"
-        self.password = "password"
-        self.user = User.objects.create_user(username=self.username, password=self.password)
-        self.permission = Permission.objects.get(codename="add_user")
-        self.user.user_permissions.add(self.permission)
-
-    def test_register_get_view_is_not_accessed_by_users_without_permission(self):
-        self.user.user_permissions.remove(self.permission)
-        self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("user:register"))
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('user:register')}")
-
-    def test_register_get_view_is_accessed_by_users_with_permission(self):
-        self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("user:register"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "users/register.html")
-
-    def test_register_post_view_succeeds_in_new_user_creation(self):
-        self.client.login(username=self.username, password=self.password)
-        data = {
-            "username": "new_user",
-            "email": "email@email.com",
-            "first_name": "First Name",
-            "last_name": "Last Name",
-            "password1": "(<|&+86]:;C#QZ#I",
-            "password2": "(<|&+86]:;C#QZ#I",
-        }
-
-        response = self.client.post(reverse("user:register"), data=data)
-        self.assertEqual(response.status_code, 302)
-        user = User.objects.get(username=data["username"])
-        self.assertRedirects(response, reverse('user:profile', kwargs={"user_id":user.pk}))
-
-    def test_register_post_view_fails_in_new_user_creation_with_invalid_parameters(self):
-        self.client.login(username=self.username, password=self.password)
-        data = {
-            "username": "new_user",
-            "email": "email@email.com",
-            "first_name": "",
-            "last_name": "Last Name",
-            "password1": "(<|&+86]:;C#QZ#I",
-            "password2": "(<|&+86]:;C#QZ#I",
-        }
-
-        response = self.client.post(reverse("user:register"), data=data)
-        self.assertContains(response, _("Unsuccessful registration. Invalid information."))
-        self.assertFalse(User.objects.filter(username=data["username"]).exists())
+        self.assertEqual(user_profile.professional_wiki_handle, "")
 
 
 class AccountUserAdminTest(TestCase):

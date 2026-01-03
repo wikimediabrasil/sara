@@ -1,5 +1,5 @@
 /* FORMS */
-.userform { padding: 1em !important; }
+.user_form { padding: 1em !important; }
 .formfield { margin-bottom: 1em; }
 .formfield span { vertical-align: top; }
 .formfield input, select, textarea {
@@ -13,7 +13,7 @@
     overflow-y: auto;
     overflow-x: auto;
 }
-.formfieldtitle { font-family: var(--main-font); font-weight: bold; }
+.field_title { font-family: var(--main-font); font-weight: bold; }
 .form-legend { font-size: small; color: var(--grey-color); }
 #homepage_buttons div:nth-child(odd) { padding-right: 1em; }
 #homepage_buttons div:nth-child(even) { padding-left: 1em; }

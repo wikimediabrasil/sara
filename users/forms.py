@@ -3,40 +3,44 @@ from django.contrib.auth.models import User, Group
 from .models import UserProfile
 from django.contrib.auth.forms import UserCreationForm
 
+"""
+Forms related to user creation and profile management.
+
+Includes:
+- Basic User name editing
+- Full UserProfile editing
+- Extended user creation with required personal data
+"""
+
 
 class UserForm(forms.ModelForm):
+    """Edit basic User identity fields."""
     class Meta:
         model = User
         fields = ("first_name", "last_name")
 
 
 class UserProfileForm(forms.ModelForm):
+    """Form for managing organization-specific user profile data."""
     class Meta:
         model = UserProfile
         fields = "__all__"
-        widgets = {
-            "professional_wiki_handle": forms.TextInput(attrs={'required': True})
-        }
+        exclude = ['user']
+        required_css_class = 'required'
+
+    def __init__(self, *args, **kwargs):
+        request_user = kwargs.pop("request_user", None)
+        super().__init__(*args, **kwargs)
+
+        # Only superusers can change another user's position
+        if not (request_user and request_user.is_superuser):
+            self.fields["position"].disabled = True
+
+        self.fields['professional_wiki_handle'].required = True
 
     def save(self, commit=True):
+        # Allow deferred save when profile is linked elsewhere
         user_profile = super(UserProfileForm, self).save(commit=False)
         if commit:
             user_profile.save()
         return user_profile
-
-
-class NewUserForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-    first_name = forms.CharField(required=True)
-    last_name = forms.CharField(required=True)
-
-    class Meta:
-        model = User
-        fields = ("username", "email", "first_name", "last_name", "password1", "password2")
-
-    def save(self, commit=True):
-        user = super(NewUserForm, self).save(commit=False)
-        user.email = self.cleaned_data['email']
-        if commit:
-            user.save()
-        return user

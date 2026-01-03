@@ -85,7 +85,7 @@
         <div class="nav_bottom">
             {% if perms.users.change_userprofile %}
                 <div class="nav_block">
-                    <a href="{% url 'user:profile' user_id=user.id %}" aria-label="{% translate 'User profile' %}">
+                    <a href="{% url 'users:update_profile' username=user.username %}" aria-label="{% translate 'User profile' %}">
                         <i class="nav_icon fa-solid fa-user-gear"></i>
                         <span class="nav_btn_title">{% translate "Profile" %}<br>{{ user.professional_wiki_handle }}</span>
                     </a>

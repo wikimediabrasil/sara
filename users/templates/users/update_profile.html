@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block styles %}<link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">{% endblock %}
+{% block footer %}{% endblock %}
+{% block banner %}
+    <div class="w3-row">
+        <div class="w3-quarter disappear">&nbsp;</div>
+        <div class="w3-half">
+            <div class="w3-third">&nbsp;</div>
+            <div class="w3-twothird">
+                <div style="width:100px; height: 100px; border-radius:50%; overflow: hidden; margin-left: auto; margin-right: auto;">
+                    {% if profile_form.instance.photograph %}
+                        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/{{ profile_form.instance.photograph }}?width=200px"
+                             alt="{{ profile_form.instance.first_name }} {{ profile_form.instance.last_name }}"
+                             style="width: 100%;">
+                    {% else %}
+                        <img src="{% static 'images/placeholder.svg' %}" alt="{% translate "Placeholder" %}"
+                             width="100px">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block content %}
+    <div class="w3-container">
+        <div class="w3-row">
+            <div class="user_form">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="w3-row">
+                        <div class="w3-quarter disappear">&nbsp;</div>
+                        <div class="w3-half">
+                            <fieldset disabled="disabled">
+                                <legend>Campos fixos</legend>
+                                <label class="w3-third field_title" for="user">
+                                    {% trans "User" %}
+                                </label>
+                                <div class="w3-twothird formfield">
+                                    <input type="text" name="user" value="{{ user.username }}" maxlength="150" id="user" disabled="disabled">
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
+                    <div class="w3-row">
+                        <div class="w3-quarter disappear">&nbsp;</div>
+                        <div class="w3-half">
+                            {% for field in user_form %}
+                                <label class="w3-third field_title" for="id_{{ field.name }}">
+                                    {{ field.label }} {% if field.field.required %} *{% endif %}
+                                </label>
+                                <div class="w3-twothird formfield">{{ field }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="w3-row">
+                        <div class="w3-quarter disappear">&nbsp;</div>
+                        <div class="w3-half">
+                            {% for field in profile_form %}
+                                <label class="w3-third field_title" for="id_{{ field.name }}">
+                                    {{ field.label }}{% if field.field.required %} *{% endif %}
+                                </label>
+                                <div class="w3-twothird formfield">
+                                    {{ field }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="w3-row">
+                        <div class="w3-quarter disappear">&nbsp;</div>
+                        <div class="w3-half">
+                            <div class="w3-third note field_title">
+                                {% translate "* Required fields" %}
+                            </div>
+                            <div class="w3-twothird formfield">
+                                <button class="submitbutton" type="submit">{% translate "Submit" %}</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+{% block title %}{{ title }}{% endblock %}
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">{% endblock %}
+
+{% block banner %}
+    <div class="w3-row">
+        <div class="w3-quarter disappear">&nbsp;</div>
+        <div class="w3-half">
+            <div class="w3-third field_title logo">
+                <div style="width:100px; height: 100px; border-radius:50%; overflow: hidden; margin-left: auto; margin-right: auto;">
+                    {% if user.profile.photograph %}
+                        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/{{ user.profile.photograph }}?width=200px"
+                             alt="{% trans 'photograph of' %} {{ user.username }}" style="width: 100%;">
+                    {% else %}
+                        <img src="{% static 'images/placeholder.svg' %}" alt="{% translate "Placeholder" %}"
+                             width="100px">
+                    {% endif %}
+                </div>
+            </div>
+            <div class="w3-twothird logo"><h1>{{ user.username }}</h1></div>
+        </div>
+    </div>
+{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+    <div class="w3-container user_form">
+        {% if user.first_name and user.last_name %}
+            <div class="w3-row">
+                <div class="w3-quarter disappear">&nbsp;</div>
+                <div class="w3-half">
+                    <div class="w3-third field_title">{% trans "Name" %}</div>
+                    <div class="w3-twothird formfield view-field">
+                        {{ user.first_name }}{% if user.last_name %} {{ user.last_name }}{% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Gender" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.gender %}{{ user.profile.gender }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Professional username" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.professional_wiki_handle %}{{ user.profile.professional_wiki_handle }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Personal username" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.personal_wiki_handle %}{{ user.profile.personal_wiki_handle }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Photograph filename" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.photograph %}{{ user.profile.photograph }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Position" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.position %}{{ user.profile.position }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Twitter" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.twitter %}{{ user.profile.twitter }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Facebook" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.facebook %}{{ user.profile.facebook }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Instagram" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.instagram %}{{ user.profile.instagram }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Wikidata item" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.wikidata_item %}{{ user.profile.wikidata_item }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "LinkedIn" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.linkedin %}{{ user.profile.linkedin }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Lattes" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.lattes %}{{ user.profile.lattes }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "ORCID" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.orcid %}{{ user.profile.orcid }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Google Scholar" %}</div>
+                <div class="w3-twothird formfield view-field">
+                    {% if user.profile.google_scholar %}{{ user.profile.google_scholar }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear ">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Actions" %}</div>
+                <div class="w3-twothird">
+                    {% if can_edit %}
+                        <a href="{% url 'user:update_profile' username=user.username %}" aria-label="{% trans 'Update' %}">
+                            <button class="custom_button btn-update" type="button"><i class="fa-solid fa-pen"></i> {% trans 'Update' %}</button>
+                        </a>
+                    {% endif %}
+                    {% if can_delete %}
+                        <a href="{% url 'user:update_profile' username=user.username %}" aria-label="{% trans 'Delete' %}">
+                            <button class="custom_button btn-delete" type="button"><i class="fa-solid fa-times"></i> {% trans 'Delete' %}</button>
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'user:update_profile' username=user.username %}" aria-label="{% trans 'Contact' %}">
+                        <button class="custom_button btn-export" type="button"><i class="fa-solid fa-envelope"></i> {% trans 'Contact' %}</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
