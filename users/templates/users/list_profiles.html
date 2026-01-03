@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "Users" %}{% endblock %}
+{% block scripts %}
+    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/bootstrap-table.min.js"></script>
+    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/extensions/mobile/bootstrap-table-mobile.min.js"></script>
+    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
+    <script>
+      $(function () {
+        $('#users').bootstrapTable();
+      })
+
+      function datesSorter(a, b) {
+        if (new Date(a) < new Date(b)) return 1;
+        if (new Date(a) > new Date(b)) return -1;
+        return 0;
+      }
+
+      $(function () {
+        $('[class*="bootstrap-table-filter-control-"]').wrap("<label style='width: 100%'></label>");
+      })
+    </script>
+{% endblock %}
+{% block styles %}
+    <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap-table/1.21.2/bootstrap-table.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">
+{% endblock %}
+{% block banner %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+    <div class="user_form">
+        <div class="w3-row">
+            <div class="w3-row">
+                <div class="w3-twothird formfield" style="text-align: center"><h1>{% trans "Users" %}</h1></div>
+                <div class="w3-third formfield" style="text-align: center">&nbsp;</div>
+                <div class="w3-third formfield"><input id="customSearch" type="search" placeholder="{% trans 'Search' %}" aria-label="{% trans 'Search' %}" autocomplete="off" ></div>
+            </div>
+            <table id="users" class="table table-striped" style="background-color: var(--light-color)"
+                   data-mobile-responsive="true"
+                   data-check-on-init="true"
+                   data-filter-control="true"
+                   data-show-search-clear-button="true"
+                   data-search="true"
+                   data-search-selector="#customSearch">
+                <thead style="background-color: var(--main-color); color:var(--light-color); border: 1px solid var(--light-color)">
+                    <tr>
+                        <th data-field="id" data-sortable="true">{% trans "ID" %}</th>
+                        <th data-field="username" data-sortable="true">{% trans "Username" %}</th>
+                        <th data-field="name" data-sorter="true" data-sortable="true">{% trans "Name" %}</th>
+                        <th data-field="position" data-sortable="true" data-filter-control="select">{% trans "Position" %}</th>
+                        <th data-field="team_area" data-sortable="true" data-filter-control="select">{% trans "Team area" %}</th>
+                        <th data-field="actions">{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.first_name }} {{ user.last_name }}</td>
+                            <td>{{ user.profile.position|default:"—" }}</td>
+                            <td>{{ user.profile.team_area|default:"—" }}</td>
+                            <td style="white-space: nowrap;">
+                                <a title="{% trans 'View' %}" href="{% url 'users:view_profile' username=user.username %}"><button title="{% trans 'View' %}" type="button" class="btn-circle btn-view"><i class="fa-solid fa-eye"></i></button></a>
+                                <a title="{% trans 'Update' %}" href="{% url 'users:update_profile' username=user.username %}"><button title="{% trans 'Update' %}" type="button" class="btn-circle btn-update"><i class="fa-solid fa-pen"></i></button></a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5">{% trans "No users found." %}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

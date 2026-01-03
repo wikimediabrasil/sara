@@ -1,7 +1,7 @@
 from django.db import transaction
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.decorators import permission_required, user_passes_test
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.utils.translation import gettext as _
 from .forms import UserProfileForm, UserForm
@@ -107,6 +107,15 @@ def detail_profile(request, username):
     can_edit = can_delete or request_user == user
     context = {"user": user, "title": username, "can_edit": can_edit, "can_delete": can_delete}
     return render(request, "users/detail_profile.html", context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def list_profiles(request):
+    can_edit = request.user.is_superuser
+    users = User.objects.all()
+    sorted_users = users.order_by("-is_staff", "username")
+    context = {"users": sorted_users, "can edit": can_edit}
+    return render(request, "users/list_profiles.html", context)
 
 
 def login_oauth(request):

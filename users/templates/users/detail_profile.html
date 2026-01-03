@@ -163,16 +163,16 @@
                 <div class="w3-third field_title">{% trans "Actions" %}</div>
                 <div class="w3-twothird">
                     {% if can_edit %}
-                        <a href="{% url 'user:update_profile' username=user.username %}" aria-label="{% trans 'Update' %}">
+                        <a href="{% url 'users:update_profile' username=user.username %}" aria-label="{% trans 'Update' %}">
                             <button class="custom_button btn-update" type="button"><i class="fa-solid fa-pen"></i> {% trans 'Update' %}</button>
                         </a>
                     {% endif %}
                     {% if can_delete %}
-                        <a href="{% url 'user:update_profile' username=user.username %}" aria-label="{% trans 'Delete' %}">
+                        <a href="{% url 'users:update_profile' username=user.username %}" aria-label="{% trans 'Delete' %}">
                             <button class="custom_button btn-delete" type="button"><i class="fa-solid fa-times"></i> {% trans 'Delete' %}</button>
                         </a>
                     {% endif %}
-                    <a href="{% url 'user:update_profile' username=user.username %}" aria-label="{% trans 'Contact' %}">
+                    <a href="{% url 'users:update_profile' username=user.username %}" aria-label="{% trans 'Contact' %}">
                         <button class="custom_button btn-export" type="button"><i class="fa-solid fa-envelope"></i> {% trans 'Contact' %}</button>
                     </a>
                 </div>
