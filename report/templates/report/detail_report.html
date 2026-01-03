@@ -36,7 +36,7 @@
             {% if data.locked and not perms.report.can_edit_locked_report %}
                 <div class="w3-container" style="margin-top: 1em">
                     <a href="{% url 'report:update_report' report_id=data.id %}" aria-label="{% trans 'Update' %}">
-                        <button class="custombutton" type="button">
+                        <button class="custom_button" type="button">
                             <i class="fa-solid fa-lock"></i> {% trans "Update" %}
                         </button>
                     </a>
@@ -44,7 +44,7 @@
             {% else %}
                 <div class="w3-container" style="margin-top: 1em">
                     <a href="{% url 'report:update_report' report_id=data.id %}" aria-label="{% trans 'Update' %}">
-                        <button class="custombutton" type="button">
+                        <button class="custom_button" type="button">
                             <i class="fa-solid fa-lock-open"></i> {% trans "Update" %}
                         </button>
                     </a>
@@ -52,64 +52,64 @@
             {% endif %}
             <div class="w3-container" style="margin-top: 1em">
                 <a href="{% url 'report:export_report' report_id=data.id %}" aria-label="{% trans 'Export' %}">
-                    <button class="custombutton" type="button" style="background-color: var(--attention-color); color:black;">
+                    <button class="custom_button" type="button" style="background-color: var(--attention-color); color:black;">
                         {% trans "Export" %}
                     </button>
                 </a>
             </div>
             <div class="w3-container" style="margin-top: 1em">
                 <a href="{% url 'report:delete_report' report_id=data.id %}" aria-label="{% trans 'Delete' %}">
-                    <button class="custombutton" type="button" style="background-color: var(--error-color);">
+                    <button class="custom_button" type="button" style="background-color: var(--error-color);">
                         {% trans "Delete" %}
                     </button>
                 </a>
             </div>
         </div>
-        <div class="w3-threequarter userform">
+        <div class="w3-threequarter user_form">
             <div class="w3-row"><h2>{% blocktrans with id_=data.id %}Report nº {{ id_ }}{% endblocktrans %}{% if data.partial_report %} {% translate "(Partial)" %}{% endif %}</h2></div>
             <div class="w3-container">
                 <h3 id="Administrative">{% trans "Administrative" %}</h3>
                 <div class="w3-row">
-                    <div class="w3-third formfieldtitle">{% trans "Description" %}</div>
+                    <div class="w3-third field_title">{% trans "Description" %}</div>
                     <div class="w3-twothird formfield view-field">{{ data.description }}</div>
                 </div>
                 <div class="w3-row">
-                    <div class="w3-third formfieldtitle">{% trans "Activity associated" %}</div>
+                    <div class="w3-third field_title">{% trans "Activity associated" %}</div>
                     <div class="w3-twothird formfield view-field">{{ data.activity_associated.text }} ({{ data.activity_associated.code }})</div>
                 </div>
                 <div class="w3-row">
-                    <div class="w3-third formfieldtitle">{% trans "Area responsible" %}</div>
+                    <div class="w3-third field_title">{% trans "Area responsible" %}</div>
                     <div class="w3-twothird formfield view-field">{{ data.area_responsible }}</div>
                 </div>
                 {% if data.area_activated.count %}
                     <div class="w3-row">
-                        <div class="w3-third formfieldtitle">{% trans "Areas activated" %}</div>
+                        <div class="w3-third field_title">{% trans "Areas activated" %}</div>
                         <div class="w3-twothird formfield view-field">{% for area in data.area_activated.all %}{{ area.text }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>
                     </div>
                 {% endif %}
                 <div class="w3-row">
-                    <div class="w3-third formfieldtitle">{% trans "Initial date" %}</div>
+                    <div class="w3-third field_title">{% trans "Initial date" %}</div>
                     <div class="w3-twothird formfield view-field">{{ data.initial_date }}</div>
                 </div>
                 {% if data.end_date %}
                     <div class="w3-row">
-                        <div class="w3-third formfieldtitle">{% trans "End date" %}</div>
+                        <div class="w3-third field_title">{% trans "End date" %}</div>
                         <div class="w3-twothird formfield view-field">{{ data.end_date }}</div>
                     </div>
                 {% endif %}
                 {% if data.funding_associated.count %}
                     <div class="w3-row">
-                        <div class="w3-third formfieldtitle">{% trans "Funding associated" %}</div>
+                        <div class="w3-third field_title">{% trans "Funding associated" %}</div>
                         <div class="w3-twothird formfield view-field">
                             {% for funding in data.funding_associated.all %}{{ funding.name }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
                         </div>
                     </div>
                 {% endif %}
                 <div class="w3-row">
-                    <div class="w3-third formfieldtitle">{% trans "Links" %}</div>
+                    <div class="w3-third field_title">{% trans "Links" %}</div>
                     <div class="w3-twothird formfield">
                         <div class="view-field">{{ data.links|linebreaksbr }}</div>
-                        {% if data.private_links %}<div class="w3-row formfieldtitle">{% translate "At least one of the links is not public and/or should not be published on Meta" %}</div>{% endif %}
+                        {% if data.private_links %}<div class="w3-row field_title">{% translate "At least one of the links is not public and/or should not be published on Meta" %}</div>{% endif %}
                     </div>
                 </div>
             </div>
@@ -117,42 +117,42 @@
                 <div class="w3-container">
                     <h3 id="Operational">{% trans "Operational" %}</h3>
                     {% for operation in operations %}
-                        <div class="w3-third formfieldtitle">
+                        <div class="w3-third field_title">
                             <h4 id="Wikimedia_projects">{{ operation.metric.activity }}</h4>
                         </div>
                         <div class="w3-twothird">
                             <h5>{{ operation.metric }}</h5>
                             <div class="w3-row">
                                 {% if operation.number_of_events %}
-                                    <div class="formfieldtitle">{% translate "Number of events" %}</div>
+                                    <div class="field_title">{% translate "Number of events" %}</div>
                                     <div class="formfield view-field">{{ operation.number_of_events }}</div>
                                 {% endif %}
                                 {% if operation.number_of_resources %}
-                                    <div class="formfieldtitle">{% translate "Number of resources" %}</div>
+                                    <div class="field_title">{% translate "Number of resources" %}</div>
                                     <div class="formfield view-field">{{ operation.number_of_resources }}</div>
                                 {% endif %}
                                 {% if operation.number_of_partnerships_activated %}
-                                    <div class="formfieldtitle">{% translate "Number of partnerships activated" %}</div>
+                                    <div class="field_title">{% translate "Number of partnerships activated" %}</div>
                                     <div class="formfield view-field">{{ operation.number_of_partnerships_activated }}</div>
                                 {% endif %}
                                 {% if operation.number_of_new_partnerships %}
-                                    <div class="formfieldtitle">{% translate "Number of new partnerships" %}</div>
+                                    <div class="field_title">{% translate "Number of new partnerships" %}</div>
                                     <div class="formfield view-field">{{ operation.number_of_new_partnerships }}</div>
                                 {% endif %}
                                 {% if operation.number_of_new_followers %}
-                                    <div class="formfieldtitle">{% translate "Number of new followers" %}</div>
+                                    <div class="field_title">{% translate "Number of new followers" %}</div>
                                     <div class="formfield view-field">{{ operation.number_of_new_followers }}</div>
                                 {% endif %}
                                 {% if operation.number_of_mentions %}
-                                    <div class="formfieldtitle">{% translate "Number of mentions" %}</div>
+                                    <div class="field_title">{% translate "Number of mentions" %}</div>
                                     <div class="formfield view-field">{{ operation.number_of_mentions }}</div>
                                 {% endif %}
                                 {% if operation.number_of_people_reached_through_social_media %}
-                                    <div class="formfieldtitle">{% translate "Number of people reached through social media" %}</div>
+                                    <div class="field_title">{% translate "Number of people reached through social media" %}</div>
                                     <div class="formfield view-field">{{ operation.number_of_people_reached_through_social_media }}</div>
                                 {% endif %}
                                 {% if operation.number_of_community_communications %}
-                                    <div class="formfieldtitle">{% translate "Number of community communications" %}</div>
+                                    <div class="field_title">{% translate "Number of community communications" %}</div>
                                     <div class="formfield view-field">{{ operation.number_of_community_communications }}</div>
                                 {% endif %}
                             </div>
@@ -165,55 +165,55 @@
                     <h3 id="Quantitative">{% trans "Quantitative" %}</h3>
                     {% if data.metrics_related %}
                         <div class="w3-row">
-                            <div class="w3-third formfieldtitle">{% trans "Metrics related" %}</div>
+                            <div class="w3-third field_title">{% trans "Metrics related" %}</div>
                             <div class="w3-twothird formfield view-field">{% for metric in data.metrics_related.all %}{% if LANGUAGE_CODE == "en" %}{{ metric.text_en }}{% else %}{{ metric.text }}{% endif %}{% if not forloop.last %}<br>{% endif %}{% endfor %}</div>
                         </div>
                     {% endif %}
                     {% if data.participants %}
                         <div class="w3-row">
-                            <div class="w3-third formfieldtitle">{% trans "Number of participants" %}</div>
+                            <div class="w3-third field_title">{% trans "Number of participants" %}</div>
                             <div class="w3-twothird formfield view-field">{{ data.participants }}</div>
                         </div>
                     {% endif %}
                     {% if data.feedbacks %}
                         <div class="w3-row">
-                            <div class="w3-third formfieldtitle">{% trans "Number of feedbacks" %}</div>
+                            <div class="w3-third field_title">{% trans "Number of feedbacks" %}</div>
                             <div class="w3-twothird formfield view-field">{{ data.feedbacks }}</div>
                         </div>
                     {% endif %}
                     {% if data.editors.count %}
                         <div class="w3-row">
-                            <div class="w3-third formfieldtitle">{% trans "Editors" %}</div>
+                            <div class="w3-third field_title">{% trans "Editors" %}</div>
                             <div class="w3-twothird formfield view-field">{% for editor in data.editors.all %}{{ editor.username }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>
                         </div>
                     {% endif %}
                     {% if data.organizers.count %}
                         <div class="w3-row">
-                            <div class="w3-third formfieldtitle">{% trans "Organizers" %}</div>
+                            <div class="w3-third field_title">{% trans "Organizers" %}</div>
                             <div class="w3-twothird formfield view-field">{% for organizer in data.organizers.all %}{{ organizer.name }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>
                         </div>
                     {% endif %}
                     {% if data.partners_activated.count %}
                         <div class="w3-row">
-                            <div class="w3-third formfieldtitle">{% trans "Partnerships activated" %}</div>
+                            <div class="w3-third field_title">{% trans "Partnerships activated" %}</div>
                             <div class="w3-twothird formfield view-field">{% for partners in data.partners_activated.all %}{{ partners.name }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>
                         </div>
                     {% endif %}
                     {% if data.technologies_used.count %}
                         <div class="w3-row">
-                            <div class="w3-third formfieldtitle">{% trans "Technologies used" %}</div>
+                            <div class="w3-third field_title">{% trans "Technologies used" %}</div>
                             <div class="w3-twothird formfield view-field">{% for technology in data.technologies_used.all %}{{ technology.name }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>
                         </div>
                     {% endif %}
                     {% if data.donors %}
                         <div class="w3-row">
-                            <div class="w3-third formfieldtitle">{% trans "Donors" %}</div>
+                            <div class="w3-third field_title">{% trans "Donors" %}</div>
                             <div class="w3-twothird formfield view-field">{{ data.donors }}</div>
                         </div>
                     {% endif %}
                     {% if data.submissions %}
                         <div class="w3-row">
-                            <div class="w3-third formfieldtitle">{% trans "Submissions" %}</div>
+                            <div class="w3-third field_title">{% trans "Submissions" %}</div>
                             <div class="w3-twothird formfield view-field">{{ data.submissions }}</div>
                         </div>
                     {% endif %}
@@ -221,98 +221,98 @@
                 {% if data.wikipedia_created or data.wikipedia_edited or data.commons_created or data.commons_edited or data.wikidata_created or data.wikidata_edited or data.wikiversity_created or data.wikiversity_edited or data.wikibooks_created or data.wikibooks_edited or data.wikisource_created or data.wikisource_edited or data.wikinews_created or data.wikinews_edited or data.wikiquote_created or data.wikiquote_edited or data.wiktionary_created or data.wiktionary_edited or data.wikivoyage_created or data.wikivoyage_edited or data.wikispecies_created or data.wikispecies_edited or data.metawiki_created or data.metawiki_edited or data.mediawiki_created or data.mediawiki_edited %}
                     <h4 id="Wikimedia_projects">{% trans "Wikimedia projects" %}</h4>
                     <div class="w3-row">
-                        <div class="w3-third formfieldtitle">{% trans "Project" %}</div>
-                        <div class="w3-third formfieldtitle disappear">{% trans "Created" %}</div>
-                        <div class="w3-third formfieldtitle disappear">{% trans "Edited" %}</div>
+                        <div class="w3-third field_title">{% trans "Project" %}</div>
+                        <div class="w3-third field_title disappear">{% trans "Created" %}</div>
+                        <div class="w3-third field_title disappear">{% trans "Edited" %}</div>
                     </div>
                     <div class="w3-container">
                         {% if data.wikipedia_created or data.wikipedia_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "Wikipedia" %}</div>
+                                <div class="w3-third field_title">{% trans "Wikipedia" %}</div>
                                 <div class="w3-third form-left">{{ data.wikipedia_created }}</div>
                                 <div class="w3-third form-right">{{ data.wikipedia_edited }}</div>
                             </div>
                         {% endif %}
                         {% if data.commons_created or data.commons_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "Wikimedia Commons" %}</div>
+                                <div class="w3-third field_title">{% trans "Wikimedia Commons" %}</div>
                                 <div class="w3-third form-left">{{ data.commons_created }}</div>
                                 <div class="w3-third form-right">{{ data.commons_edited }}</div>
                             </div>
                         {% endif %}
                         {% if data.wikidata_created or data.wikidata_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "Wikidata" %}</div>
+                                <div class="w3-third field_title">{% trans "Wikidata" %}</div>
                                 <div class="w3-third form-left">{{ data.wikidata_created }}</div>
                                 <div class="w3-third form-right">{{ data.wikidata_edited }}</div>
                             </div>
                         {% endif %}
                         {% if data.wikiversity_created or data.wikiversity_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "Wikiversity" %}</div>
+                                <div class="w3-third field_title">{% trans "Wikiversity" %}</div>
                                 <div class="w3-third form-left">{{ data.wikiversity_created }}</div>
                                 <div class="w3-third form-right">{{ data.wikiversity_edited }}</div>
                             </div>
                         {% endif %}
                         {% if data.wikibooks_created or data.wikibooks_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "Wikibooks" %}</div>
+                                <div class="w3-third field_title">{% trans "Wikibooks" %}</div>
                                 <div class="w3-third form-left">{{ data.wikibooks_created }}</div>
                                 <div class="w3-third form-right">{{ data.wikibooks_edited }}</div>
                             </div>
                         {% endif %}
                         {% if data.wikisource_created or data.wikisource_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "Wikisource" %}</div>
+                                <div class="w3-third field_title">{% trans "Wikisource" %}</div>
                                 <div class="w3-third form-left">{{ data.wikisource_created }}</div>
                                 <div class="w3-third form-right">{{ data.wikisource_edited }}</div>
                             </div>
                         {% endif %}
                         {% if data.wikinews_created or data.wikinews_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "Wikinews" %}</div>
+                                <div class="w3-third field_title">{% trans "Wikinews" %}</div>
                                 <div class="w3-third form-left">{{ data.wikinews_created }}</div>
                                 <div class="w3-third form-right">{{ data.wikinews_edited }}</div>
                             </div>
                         {% endif %}
                         {% if data.wikiquote_created or data.wikiquote_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "Wikiquote" %}</div>
+                                <div class="w3-third field_title">{% trans "Wikiquote" %}</div>
                                 <div class="w3-third form-left">{{ data.wikiquote_created }}</div>
                                 <div class="w3-third form-right">{{ data.wikiquote_edited }}</div>
                             </div>
                         {% endif %}
                         {% if data.wiktionary_created or data.wiktionary_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "Wiktionary" %}</div>
+                                <div class="w3-third field_title">{% trans "Wiktionary" %}</div>
                                 <div class="w3-third form-left">{{ data.wiktionary_created }}</div>
                                 <div class="w3-third form-right">{{ data.wiktionary_edited }}</div>
                             </div>
                         {% endif %}
                         {% if data.wikivoyage_created or data.wikivoyage_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "Wikivoyage" %}</div>
+                                <div class="w3-third field_title">{% trans "Wikivoyage" %}</div>
                                 <div class="w3-third form-left">{{ data.wikivoyage_created }}</div>
                                 <div class="w3-third form-right">{{ data.wikivoyage_edited }}</div>
                             </div>
                         {% endif %}
                         {% if data.wikispecies_created or data.wikispecies_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "Wikispecies" %}</div>
+                                <div class="w3-third field_title">{% trans "Wikispecies" %}</div>
                                 <div class="w3-third form-left">{{ data.wikispecies_created }}</div>
                                 <div class="w3-third form-right">{{ data.wikispecies_edited }}</div>
                             </div>
                         {% endif %}
                         {% if data.metawiki_created or data.metawiki_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "Metawiki" %}</div>
+                                <div class="w3-third field_title">{% trans "Metawiki" %}</div>
                                 <div class="w3-third form-left">{{ data.metawiki_created }}</div>
                                 <div class="w3-third form-right">{{ data.metawiki_edited }}</div>
                             </div>
                         {% endif %}
                         {% if data.mediawiki_created or data.mediawiki_edited %}
                             <div class="w3-row formfield view-field">
-                                <div class="w3-third formfieldtitle">{% trans "MediaWiki" %}</div>
+                                <div class="w3-third field_title">{% trans "MediaWiki" %}</div>
                                 <div class="w3-third form-left">{{ data.mediawiki_created }}</div>
                                 <div class="w3-third form-right">{{ data.mediawiki_edited }}</div>
                             </div>
@@ -323,7 +323,7 @@
             {% if data.directions_related.count %}
                 <div class="w3-container">
                     <h3 id="Strategic">{% trans "Strategic" %}</h3>
-                    <div class="w3-third formfieldtitle">{% trans "Directions associated" %}</div>
+                    <div class="w3-third field_title">{% trans "Directions associated" %}</div>
                     <div class="w3-twothird">
                         {% for direction in data.directions_related.all %}
                             <div class="w3-row formfield view-field">{{ direction.text }}</div>
@@ -336,7 +336,7 @@
                     <h3 id="Learning">{% trans "Learning" %}</h3>
                     {% if data.learning_questions_related.count %}
                         <div class="w3-row">
-                            <div class="w3-third formfieldtitle">{% trans "Strategic learning questions" %}</div>
+                            <div class="w3-third field_title">{% trans "Strategic learning questions" %}</div>
                             <div class="w3-twothird">
                                 {% for question in data.learning_questions_related.all %}
                                     <div class="w3-row formfield view-field">{{ question.text }}</div>
@@ -345,7 +345,7 @@
                     {% endif %}
                     {% if data.learning %}
                         <div class="w3-row">
-                            <div class="w3-third formfieldtitle">{% trans "Learning of the activity" %}</div>
+                            <div class="w3-third field_title">{% trans "Learning of the activity" %}</div>
                             <div class="w3-twothird formfield view-field">{{ data.learning|linebreaksbr }}</div>
                         </div>
                     {% endif %}

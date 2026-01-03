@@ -17,23 +17,23 @@
 {% block content %}
     <div class="w3-container">
         <div class="w3-row">
-            <div class="userform">
+            <div class="user_form">
                 <form method="post">
                     {% csrf_token %}
                     <div class="w3-row">
-                        <label class="w3-third formfieldtitle" for="id_name">{% trans "Name" %}*</label>
+                        <label class="w3-third field_title" for="id_name">{% trans "Name" %}*</label>
                         <div class="w3-twothird formfield"><input type="text" name="name" maxlength="420" required="" id="id_name"></div>
                     </div>
                     <div class="w3-row">
-                        <label class="w3-third formfieldtitle" for="id_initial_date">{% trans "Initial date" %}*</label>
+                        <label class="w3-third field_title" for="id_initial_date">{% trans "Initial date" %}*</label>
                         <div class="w3-twothird formfield"><input type="date" name="initial_date" required="" id="id_initial_date"></div>
                     </div>
                     <div class="w3-row">
-                        <label class="w3-third formfieldtitle" for="id_end_date">{% trans "End date" %}*</label>
+                        <label class="w3-third field_title" for="id_end_date">{% trans "End date" %}*</label>
                         <div class="w3-twothird formfield"><input type="date" name="end_date" required="" id="id_end_date"></div>
                     </div>
                     <div class="w3-row">
-                        <label class="w3-third formfieldtitle" for="id_area_responsible">{% trans "Area responsible" %}*</label>
+                        <label class="w3-third field_title" for="id_area_responsible">{% trans "Area responsible" %}*</label>
                         <div class="w3-twothird formfield">
                             <select class="select-with-text" name="area_responsible" id="id_area_responsible" required>
                                 <option value="">------</option>
@@ -44,7 +44,7 @@
                         </div>
                     </div>
                     <div class="w3-row">
-                        <label class="w3-third formfieldtitle" for="id_area_involved">{% trans "Area involved" %}</label>
+                        <label class="w3-third field_title" for="id_area_involved">{% trans "Area involved" %}</label>
                         <div class="w3-twothird formfield">
                             <select class="select-with-text" name="area_involved" id="id_area_involved" multiple>
                                 {% for area in eventform.fields.area_involved.queryset %}
@@ -54,7 +54,7 @@
                         </div>
                     </div>
                     <div class="w3-row">
-                        <label class="w3-third formfieldtitle" for="id_metric_associated">{% trans "Metrics associated" %}</label>
+                        <label class="w3-third field_title" for="id_metric_associated">{% trans "Metrics associated" %}</label>
                         <div class="w3-twothird formfield">
                             <select class="select-with-text" name="metric_associated" id="id_metric_associated" multiple>
                                 {% for metric in eventform.fields.metric_associated.queryset %}
@@ -64,7 +64,7 @@
                         </div>
                     </div>
                     <div class="w3-row">
-                        <div class="w3-third note formfieldtitle">
+                        <div class="w3-third note field_title">
                             {% translate "* Required fields" %}
                         </div>
                         <div class="w3-twothird formfield">

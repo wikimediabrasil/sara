@@ -7,14 +7,14 @@
 {% block content %}
     <div class="w3-container">
         <div class="w3-row">
-            <div class="userform">
+            <div class="user_form">
                 <form method="post">
                     {% csrf_token %}
                     <div class="w3-row">
                         <div class="w3-quarter disappear">&nbsp;</div>
                         <div class="w3-half">
                             {% for field in obsform %}
-                                <label class="w3-third formfieldtitle" for="id_{{ field.name }}">
+                                <label class="w3-third field_title" for="id_{{ field.name }}">
                                     {{ field.label }}{% if field.field.required %}*{% endif %}
                                 </label>
                                 <div class="w3-twothird formfield">
@@ -26,7 +26,7 @@
                     <div class="w3-row">
                         <div class="w3-quarter disappear">&nbsp;</div>
                         <div class="w3-half">
-                            <div class="w3-third note formfieldtitle">
+                            <div class="w3-third note field_title">
                                 {% translate "* Required fields" %}
                             </div>
                             <div class="w3-twothird formfield">

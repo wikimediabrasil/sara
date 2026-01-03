@@ -14,11 +14,11 @@
 {% block banner %}{% endblock %}
 {% block footer %}{% endblock %}
 {% block content %}
-    <div class="w3-container userform">
+    <div class="w3-container user_form">
         <h1 style="margin-bottom: 1em;">{{ event.name }}</h1>
         <div class="w3-row">
             <div class="w3-third">
-                <label class="formfieldtitle" for="links">{% translate "Initial date" %}</label>
+                <label class="field_title" for="links">{% translate "Initial date" %}</label>
             </div>
             <div class="w3-twothird formfield">
                 <input class="w3-row formfield" value="{{ event.initial_date|date:'Y-m-d' }}" readonly>
@@ -26,7 +26,7 @@
         </div>
         <div class="w3-row">
             <div class="w3-third">
-                <label class="formfieldtitle" for="links">{% translate "End date" %}</label>
+                <label class="field_title" for="links">{% translate "End date" %}</label>
             </div>
             <div class="w3-twothird formfield">
                 <input class="w3-row formfield" value="{{ event.end_date|date:'Y-m-d' }}" readonly>

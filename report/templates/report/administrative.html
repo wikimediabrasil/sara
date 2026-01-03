@@ -2,7 +2,7 @@
 <div class="w3-container">
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="activity_associated">{% translate "Activity associated" %}*</label>
+            <label class="field_title" for="activity_associated">{% translate "Activity associated" %}*</label>
             <p class="form-legend">{% translate "Which is the activity or project you are reporting?" %}</p>
         </div>
         <div class="w3-twothird formfield">
@@ -29,7 +29,7 @@
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="area_responsible">{% translate "Area responsible" %}*</label>
+            <label class="field_title" for="area_responsible">{% translate "Area responsible" %}*</label>
             <p class="form-legend">{% translate "Which is the management responsible for this activity?" %}</p>
         </div>
         <div class="w3-twothird formfield">
@@ -43,7 +43,7 @@
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="area_activated">{% translate "Areas activated" %}</label>
+            <label class="field_title" for="area_activated">{% translate "Areas activated" %}</label>
             <p class="form-legend">{% translate "Which other management participated in the organization or execution of this activity?" %}</p>
         </div>
         <div class="w3-twothird formfield">
@@ -56,28 +56,28 @@
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="initial_date">{% translate "Initial date" %}*</label>
+            <label class="field_title" for="initial_date">{% translate "Initial date" %}*</label>
             <p class="form-legend">{% translate "Date the activity started" %}</p>
         </div>
         <div class="w3-twothird formfield"><input id="initial_date" name="initial_date" type="date" value="{{ report_form.instance.initial_date|date:'Y-m-d' }}" required/></div>
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="end_date">{% translate "End date" %}</label>
+            <label class="field_title" for="end_date">{% translate "End date" %}</label>
             <p class="form-legend">{% translate "Date the activity ended" %}</p>
         </div>
         <div class="w3-twothird formfield"><input id="end_date" name="end_date" type="date" value="{{ report_form.instance.end_date|date:'Y-m-d' }}"/></div>
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="description">{% translate "Description" %}*</label>
+            <label class="field_title" for="description">{% translate "Description" %}*</label>
             <p class="form-legend">{% translate "Concise title for the report" %}</p>
         </div>
         <div class="w3-twothird formfield"><input id="description" name="description" type="text" value="{{ report_form.instance.description }}" required/></div>
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="funding_associated">{% translate "Funding associated" %}</label>
+            <label class="field_title" for="funding_associated">{% translate "Funding associated" %}</label>
             <p class="form-legend">{% translate "Is this activity associated with a specific fund?" %}</p>
         </div>
         <div class="w3-twothird formfield">
@@ -90,7 +90,7 @@
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="links">{% translate "Links" %}*</label>
+            <label class="field_title" for="links">{% translate "Links" %}*</label>
             <p class="form-legend">{% translate "Insert all relevant links to support this activity" %}</p>
         </div>
         <div class="w3-twothird formfield">

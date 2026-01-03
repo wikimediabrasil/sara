@@ -42,11 +42,11 @@
                 </div>
             {% endif %}
             <div class="w3-container" style="margin-top: 1em">
-                <button class="custombutton" type="button" onClick="window.print()">{% trans "Print" %}</button>
+                <button class="custom_button" type="button" onClick="window.print()">{% trans "Print" %}</button>
             </div>
             <div class="w3-container" style="margin-top: 1em">
                 <a href="{% url 'metrics:per_project' %}" aria-label="{% trans 'Go back' %}">
-                    <button class="custombutton" type="button" style="background-color: var(--grey-color);">
+                    <button class="custom_button" type="button" style="background-color: var(--grey-color);">
                         {% trans "Go back" %}
                     </button>
                 </a>

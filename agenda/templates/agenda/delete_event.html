@@ -5,7 +5,7 @@
 {% block banner %}{% endblock %}
 {% block footer %}{% endblock %}
 {% block content %}
-    <div class="w3-container userform">
+    <div class="w3-container user_form">
         <h2>{% blocktrans with id_=event.id %}Delete activity nº {{ id_ }}?{% endblocktrans %}</h2>
         <div style="font-size: 1.5em; line-height: 1.5em;">
             {% blocktrans with name=event.name %}<i>"{{ name }}"</i>{% endblocktrans %}
@@ -14,7 +14,7 @@
             <br><br>
             <form method="post">
                 {% csrf_token %}
-                <button id="delete_button" type="submit" class="custombutton" value="Delete">{% trans "Delete" %}</button>
+                <button id="delete_button" type="submit" class="custom_button" value="Delete">{% trans "Delete" %}</button>
             </form>
         </div>
     </div>

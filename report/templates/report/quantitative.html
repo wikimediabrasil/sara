@@ -2,14 +2,14 @@
 <div class="w3-container">
     <div class="w3-row" id="metrics">
         <div class="w3-third">
-            <label class="formfieldtitle" for="metrics_formfield">{% translate "Metrics" %}*</label>
+            <label class="field_title" for="metrics_formfield">{% translate "Metrics" %}*</label>
             <p class="form-legend">{% translate "Which are the metrics associated with this report?" %}</p>
         </div>
         <div class="w3-twothird formfield" id="metrics_to_select"></div>
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="number_of_participants">{% translate "Number of participants" %}</label>
+            <label class="field_title" for="number_of_participants">{% translate "Number of participants" %}</label>
             <p class="form-legend">{% translate "Number of people attending remote or in-person events, participating in in-person meetings, programs, and trainings" %}</p>
         </div>
         <div class="w3-twothird formfield">
@@ -18,7 +18,7 @@
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="number_of_feedbacks">{% translate "Number of feedbacks" %}</label>
+            <label class="field_title" for="number_of_feedbacks">{% translate "Number of feedbacks" %}</label>
             <p class="form-legend">{% translate "Number of responses to community consultations or inquiries about activities" %}</p>
         </div>
         <div class="w3-twothird formfield">
@@ -27,7 +27,7 @@
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="editors">{% translate "Editors" %}</label>
+            <label class="field_title" for="editors">{% translate "Editors" %}</label>
             <p class="form-legend">{% translate "List of usernames of people registered for an activity" %} <b>{% translate "One per line" %}</b></p>
         </div>
         <div class="w3-twothird formfield">
@@ -37,7 +37,7 @@ Username 2">{% if report_form.instance.id %}{% for editor in report_form.instanc
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="organizers">{% translate "Organizers" %}</label>
+            <label class="field_title" for="organizers">{% translate "Organizers" %}</label>
             <p class="form-legend">{% translate "List of usernames (or full names if they don't have usernames) of people who organized the activity" %} <b>{% translate "One per line" %}</b></p>
         </div>
         <div class="w3-twothird formfield">
@@ -47,7 +47,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="partners_activated">{% translate "Partnerships activated" %}</label>
+            <label class="field_title" for="partners_activated">{% translate "Partnerships activated" %}</label>
             <p class="form-legend">{% translate "Which are the formal collaborative relationships activated in this activity?" %}</p>
         </div>
         <div class="w3-twothird formfield">
@@ -60,7 +60,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="number_of_donors">{% translate "Number of new donors" %}</label>
+            <label class="field_title" for="number_of_donors">{% translate "Number of new donors" %}</label>
             <p class="form-legend">{% translate "How many new donors this activity is recruiting?" %}</p>
         </div>
         <div class="w3-twothird formfield">
@@ -69,7 +69,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="number_of_submissions">{% translate "Number of calls submissions" %}</label>
+            <label class="field_title" for="number_of_submissions">{% translate "Number of calls submissions" %}</label>
             <p class="form-legend">{% translate "How many calls submissions is this activity reporting?" %}</p>
         </div>
         <div class="w3-twothird formfield">
@@ -78,7 +78,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
     </div>
     <div class="w3-row">
         <div class="w3-third">
-            <label class="formfieldtitle" for="technologies_used">{% translate "Technologies used" %}</label>
+            <label class="field_title" for="technologies_used">{% translate "Technologies used" %}</label>
             <p class="form-legend">{% translate "Which are the technologies used in this activity?" %}</p>
         </div>
         <div class="w3-twothird formfield">
@@ -92,7 +92,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
     <div class="w3-container">
         <h3 id="Wikimedia projects">{% translate "Wikimedia projects" %}</h3>
         <div class="w3-third">
-            <div class="formfieldtitle">{% translate "Which projects are you reporting?" %}</div>
+            <div class="field_title">{% translate "Which projects are you reporting?" %}</div>
             <p class="form-legend">{% translate "Select only the ones that apply and you have records" %}</p>
         </div>
         <div class="w3-twothird">
@@ -176,7 +176,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </label>
         </div>
         <div class="w3-row invisible_field wikipedia">
-            <div class="w3-third formfieldtitle">{% translate "Wikipedia" %}</div>
+            <div class="w3-third field_title">{% translate "Wikipedia" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="wikipedia_created" name="wikipedia_created" type="number" min="0" value="{{ report_form.instance.wikipedia_created }}"/>
                 <small><label for="wikipedia_created">{% translate "Created" %}</label></small>
@@ -187,7 +187,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </div>
         </div>
         <div class="w3-row invisible_field commons">
-            <div class="w3-third formfieldtitle">{% translate "Wikimedia Commons" %}</div>
+            <div class="w3-third field_title">{% translate "Wikimedia Commons" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="commons_created" name="commons_created" type="number" min="0" value="{{ report_form.instance.commons_created }}"/>
                 <small><label for="commons_created">{% translate "Created" %}</label></small>
@@ -198,7 +198,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </div>
         </div>
         <div class="w3-row invisible_field wikidata">
-            <div class="w3-third formfieldtitle">{% translate "Wikidata" %}</div>
+            <div class="w3-third field_title">{% translate "Wikidata" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="wikidata_created" name="wikidata_created" type="number" min="0" value="{{ report_form.instance.wikidata_created }}"/>
                 <small><label for="wikidata_created">{% translate "Created" %}</label></small>
@@ -209,7 +209,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </div>
         </div>
         <div class="w3-row invisible_field wikiversity">
-            <div class="w3-third formfieldtitle">{% translate "Wikiversity" %}</div>
+            <div class="w3-third field_title">{% translate "Wikiversity" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="wikiversity_created" name="wikiversity_created" type="number" min="0" value="{{ report_form.instance.wikiversity_created }}"/>
                 <small><label for="wikiversity_created">{% translate "Created" %}</label></small>
@@ -220,7 +220,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </div>
         </div>
         <div class="w3-row invisible_field wikisource">
-            <div class="w3-third formfieldtitle">{% translate "Wikisource" %}</div>
+            <div class="w3-third field_title">{% translate "Wikisource" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="wikisource_created" name="wikisource_created" type="number" min="0" value="{{ report_form.instance.wikisource_created }}"/>
                 <small><label for="wikisource_created">{% translate "Created" %}</label></small>
@@ -231,7 +231,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </div>
         </div>
         <div class="w3-row invisible_field wikibooks">
-            <div class="w3-third formfieldtitle">{% translate "Wikibooks" %}</div>
+            <div class="w3-third field_title">{% translate "Wikibooks" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="wikibooks_created" name="wikibooks_created" type="number" min="0" value="{{ report_form.instance.wikibooks_created }}"/>
                 <small><label for="wikibooks_created">{% translate "Created" %}</label></small>
@@ -242,7 +242,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </div>
         </div>
         <div class="w3-row invisible_field wikinews">
-            <div class="w3-third formfieldtitle">{% translate "Wikinews" %}</div>
+            <div class="w3-third field_title">{% translate "Wikinews" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="wikinews_created" name="wikinews_created" type="number" min="0" value="{{ report_form.instance.wikinews_created }}"/>
                 <small><label for="wikinews_created">{% translate "Created" %}</label></small>
@@ -253,7 +253,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </div>
         </div>
         <div class="w3-row invisible_field wikiquote">
-            <div class="w3-third formfieldtitle">{% translate "Wikiquote" %}</div>
+            <div class="w3-third field_title">{% translate "Wikiquote" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="wikiquote_created" name="wikiquote_created" type="number" min="0" value="{{ report_form.instance.wikiquote_created }}"/>
                 <small><label for="wikiquote_created">{% translate "Created" %}</label></small>
@@ -264,7 +264,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </div>
         </div>
         <div class="w3-row invisible_field wiktionary">
-            <div class="w3-third formfieldtitle">{% translate "Wiktionary" %}</div>
+            <div class="w3-third field_title">{% translate "Wiktionary" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="wiktionary_created" name="wiktionary_created" type="number" min="0" value="{{ report_form.instance.wiktionary_created }}"/>
                 <small><label for="wiktionary_created">{% translate "Created" %}</label></small>
@@ -275,7 +275,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </div>
         </div>
         <div class="w3-row invisible_field wikivoyage">
-            <div class="w3-third formfieldtitle">{% translate "Wikivoyage" %}</div>
+            <div class="w3-third field_title">{% translate "Wikivoyage" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="wikivoyage_created" name="wikivoyage_created" type="number" min="0" value="{{ report_form.instance.wikivoyage_created }}"/>
                 <small><label for="wikivoyage_created">{% translate "Created" %}</label></small>
@@ -286,7 +286,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </div>
         </div>
         <div class="w3-row invisible_field wikispecies">
-            <div class="w3-third formfieldtitle">{% translate "Wikispecies" %}</div>
+            <div class="w3-third field_title">{% translate "Wikispecies" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="wikispecies_created" name="wikispecies_created" type="number" min="0" value="{{ report_form.instance.wikispecies_created }}"/>
                 <small><label for="wikispecies_created">{% translate "Created" %}</label></small>
@@ -297,7 +297,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </div>
         </div>
         <div class="w3-row invisible_field metawiki">
-            <div class="w3-third formfieldtitle">{% translate "MetaWiki" %}</div>
+            <div class="w3-third field_title">{% translate "MetaWiki" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="metawiki_created" name="metawiki_created" type="number" min="0" value="{{ report_form.instance.metawiki_created }}"/>
                 <small><label for="metawiki_created">{% translate "Created" %}</label></small>
@@ -308,7 +308,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             </div>
         </div>
         <div class="w3-row invisible_field mediawiki">
-            <div class="w3-third formfieldtitle">{% translate "MediaWiki" %}</div>
+            <div class="w3-third field_title">{% translate "MediaWiki" %}</div>
             <div class="w3-third formfield form-left">
                 <input id="mediawiki_created" name="mediawiki_created" type="number" min="0" value="{{ report_form.instance.mediawiki_created }}"/>
                 <small><label for="mediawiki_created">{% translate "Created" %}</label></small>
@@ -327,7 +327,7 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             <button type="button" class="tablinks submitbutton" onclick="openTab(this, 'Strategic')">{% translate "Fill strategic report" %}</button>
         </div>
         <div id="submit_report_from_quantitative" class="w3-half formfield form-right invisible_field">
-            <button id="submit_from_quantitative_button" class="custombutton" type="submit">{% translate "Submit" %}</button>
+            <button id="submit_from_quantitative_button" class="custom_button" type="submit">{% translate "Submit" %}</button>
         </div>
     </div>
 </div>

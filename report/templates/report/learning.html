@@ -4,13 +4,13 @@
     <h3 id="Theory of Change">{% translate "Theory of Change" %}</h3>
     <div class="w3-container formfield">
         <div class="w3-row">
-            <h4 class="formfieldtitle">{% translate "Strategic learning questions related to the activity being reported" %}*</h4>
+            <h4 class="field_title">{% translate "Strategic learning questions related to the activity being reported" %}*</h4>
             <p class="form-legend">{% translate "Which are the strategic learning questions this activity tries to answer?" %} <b>{% translate "Select a maximum of 3" %}</b></p>
         </div>
         <fieldset id="strategic_questions_fieldset" class="subcontainer">
             <legend>{% translate "Strategic learning questions related to the activity being reported" %}</legend>
             {% for learning_area in report_form.fields.learning_questions_related.choices %}
-                <div class="w3-container formfieldtitle" style="color:var(--main-color);">{{ learning_area.0 }}</div>
+                <div class="w3-container field_title" style="color:var(--main-color);">{{ learning_area.0 }}</div>
                 {% for learning_question in learning_area.1 %}
                     <label class="select-container">{{ learning_question.1 }}
                         <input type="checkbox" class="rank-choice"
@@ -25,12 +25,12 @@
         </fieldset>
     </div>
     <div class="w3-container formfield">
-        <p class="formfieldtitle">{% translate "Strategic learning questions selected" %}</p>
+        <p class="field_title">{% translate "Strategic learning questions selected" %}</p>
         <fieldset class="selected-choices"></fieldset>
     </div>
     <div id="learning_container" class="w3-container formfield">
         <div class="w3-row">
-            <label class="formfieldtitle" for="learning">{% translate "Learning" %}*</label>
+            <label class="field_title" for="learning">{% translate "Learning" %}*</label>
             <p class="form-legend">{% translate "What did you learn from this activity?" %} <b>{% translate "Type at least 500 characters" %}</b></p>
         </div>
         <textarea type="text" id="learning" name="learning" rows="10" placeholder="{% translate "Describe the learning with this activity and how it relates with the strategy axis and directions" %}" onkeyup="countCharacters()">{{ report_form.instance.learning }}</textarea>
@@ -38,11 +38,11 @@
     </div>
     <div class="w3-row">
         <div id="back_strategy" class="w3-half formfield form-left">
-            <button type="button" class="tablinks custombutton"
+            <button type="button" class="tablinks custom_button"
                     onclick="openTab(this, 'Strategy')">{% translate "Go back to strategy report" %}</button>
         </div>
         <div class="w3-half formfield form-right">
-            <button id="submit_report" class="custombutton" type="submit">{% translate "Submit" %}</button>
+            <button id="submit_report" class="custom_button" type="submit">{% translate "Submit" %}</button>
         </div>
     </div>
     <script>

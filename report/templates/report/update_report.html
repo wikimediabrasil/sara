@@ -26,7 +26,7 @@
                 <button id="nav_Learning" class="tablinks" onclick="openTab(this, 'Learning')">{% translate "Learning" %}</button>
                 <button id="nav_submit_report" class="tablinks" type="submit">{% translate "Submit" %}</button>
             </div>
-            <div class="w3-row userform">
+            <div class="w3-row user_form">
                 <form id="report" method="post">
                     {% csrf_token %}
                     <div class="w3-container">
@@ -220,7 +220,7 @@
                         let inner_html = "<fieldset id='metrics_fieldset' class='subcontainer'><div style='overflow-y:scroll; max-height:200px'>";
                         if (response["objects"]) {
                             response["objects"].forEach(function (projectEl) {
-                                inner_html += "<div class='w3-container formfieldtitle' style='color:var(--main-color);'>"+projectEl["project"]+"</div>"
+                                inner_html += "<div class='w3-container field_title' style='color:var(--main-color);'>"+projectEl["project"]+"</div>"
                                 projectEl["metrics"].forEach(function (metric) {
                                     let checked = "";
                                     let button_type = "checkbox"
