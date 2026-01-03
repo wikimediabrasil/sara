@@ -307,7 +307,7 @@ canvas {
 .btn-export { background-color: var(--attention-color) !important; color: var(--dark-color) !important; }
 .btn-readonly { background-color: var(--grey-color) !important; }
 
-.custombutton {
+.custom_button {
     background-color: var(--main-color);
     border-radius: 0.5em;
     border: none;
@@ -318,13 +318,13 @@ canvas {
     text-align: center;
     transition: all 300ms ease-in-out;
 }
-.custombutton:hover, .custombutton-wide:hover {
+.custom_button:hover, .custom_button-wide:hover {
     scale: 97%;
     background-color: var(--light-color) !important;
     color: var(--main-color) !important;
     cursor: pointer;
 }
-.custombutton-wide {
+.custom_button-wide {
     background-color: var(--dark-color);
     border-radius: 0.5em;
     border: none;

@@ -4,7 +4,7 @@
     <h3 id="Strategy Axis">{% translate "Strategy Axes" %}</h3>
     <div class="w3-container formfield">
         <div class="w3-row">
-            <h4 class="formfieldtitle">{% translate "Directions related to the activity being reported" %}*</h4>
+            <h4 class="field_title">{% translate "Directions related to the activity being reported" %}*</h4>
             <p class="form-legend">{% translate "Which are the directions that guided this activity?" %}</p>
         </div>
         <fieldset class="subcontainer" id="directions_fieldset">
@@ -12,7 +12,7 @@
                 <legend>{% translate "Directions related to the activity being reported" %}</legend>
             </div>
             {% for strategic_axis in report_form.fields.directions_related.choices %}
-                <div class="w3-container formfieldtitle" style="color:var(--main-color);">{{ strategic_axis.0 }}</div>
+                <div class="w3-container field_title" style="color:var(--main-color);">{{ strategic_axis.0 }}</div>
                 {% for direction in strategic_axis.1 %}
                     <label class="select-container">{{ direction.1 }}
                         <input type="checkbox" name="directions_related" value="{{ direction.0 }}" {% if direction.0 in directions_related_set %}checked{% endif %}>
@@ -24,10 +24,10 @@
     </div>
     <div class="w3-row">
         <div id="back_quantitative"class="w3-half formfield form-left">
-            <button type="button" class="tablinks custombutton" onclick="openTab(this, 'Quantitative')">{% translate "Go back to quantitative report" %}</button>
+            <button type="button" class="tablinks custom_button" onclick="openTab(this, 'Quantitative')">{% translate "Go back to quantitative report" %}</button>
         </div>
         <div id="next_learning"class="w3-half formfield form-right">
-            <button type="button" class="tablinks custombutton" onclick="openTab(this, 'Learning')">{% translate "Fill learning report" %}</button>
+            <button type="button" class="tablinks custom_button" onclick="openTab(this, 'Learning')">{% translate "Fill learning report" %}</button>
         </div>
     </div>
 </div>
