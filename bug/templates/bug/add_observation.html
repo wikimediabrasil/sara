@@ -4,38 +4,36 @@
 {% block styles %}<link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">{% endblock %}
 {% block banner %}{% endblock %}
 {% block footer %}{% endblock %}
+{% block title %}{% blocktrans with id_=bug_id %}Add observation for Bug No. {{ id_ }}{% endblocktrans %}{% endblock %}
 {% block content %}
-    <div class="w3-container">
-        <div class="w3-row">
-            <div class="user_form">
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="w3-row">
-                        <div class="w3-quarter disappear">&nbsp;</div>
-                        <div class="w3-half">
-                            {% for field in obsform %}
-                                <label class="w3-third field_title" for="id_{{ field.name }}">
-                                    {{ field.label }}{% if field.field.required %}*{% endif %}
-                                </label>
-                                <div class="w3-twothird formfield">
-                                    {{ field }}
-                                </div>
-                            {% endfor %}
+    <div class="w3-container user_form">
+        <div class="w3-quarter disappear">&nbsp;</div>
+        <div class="w3-half">
+            <form method="post">
+                {% csrf_token %}
+                <div class="w3-row">
+                    <div class="w3-third">&nbsp;</div>
+                    <div class="w3-twothird"><h1>{% blocktrans with id_=bug_id %}Observation for Bug No. {{ id_ }}{% endblocktrans %}</h1></div>
+                </div>
+                <div class="w3-row">
+                    {% for field in obs_form %}
+                        <label class="w3-third field_title" for="id_{{ field.name }}">
+                            {{ field.label }}{% if field.field.required %}*{% endif %}
+                        </label>
+                        <div class="w3-twothird formfield">
+                            {{ field }}
                         </div>
+                    {% endfor %}
+                </div>
+                <div class="w3-row">
+                    <div class="w3-third note field_title">
+                        {% translate "* Required fields" %}
                     </div>
-                    <div class="w3-row">
-                        <div class="w3-quarter disappear">&nbsp;</div>
-                        <div class="w3-half">
-                            <div class="w3-third note field_title">
-                                {% translate "* Required fields" %}
-                            </div>
-                            <div class="w3-twothird formfield">
-                                <button class="submitbutton" type="submit">{% translate "Submit" %}</button>
-                            </div>
-                        </div>
+                    <div class="w3-twothird formfield">
+                        <button class="submit_button" type="submit">{% translate "Submit" %}</button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 {% endblock %}

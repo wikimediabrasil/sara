@@ -13,7 +13,7 @@
                     <div class="w3-row">
                         <div class="w3-quarter disappear">&nbsp;</div>
                         <div class="w3-half">
-                            {% for field in bugform %}
+                            {% for field in bug_form %}
                                 <label class="w3-third field_title" for="id_{{ field.name }}">
                                     {{ field.label }}{% if field.field.required %}*{% endif %}
                                 </label>
@@ -30,7 +30,7 @@
                                 {% translate "* Required fields" %}
                             </div>
                             <div class="w3-twothird formfield">
-                                <button class="submitbutton" type="submit">{% translate "Submit" %}</button>
+                                <button class="submit_button" type="submit">{% translate "Submit" %}</button>
                             </div>
                         </div>
                     </div>

@@ -25,7 +25,7 @@
                 </div>
                 <div class="w3-third formfield" style="text-align: center">
                     <div class="w3-quarter disappear">&nbsp;</div>
-                    <div class="w3-half" style="text-align: center"><a title="{% trans 'Add bug report' %}" href="{% url 'bug:create_bug' %}"><button type="button" class="submitbutton btn-update"><i class="fa-solid fa-plus"></i> {% trans 'Add bug report' %}</button></a></div>
+                    <div class="w3-half" style="text-align: center"><a title="{% trans 'Add bug report' %}" href="{% url 'bug:create_bug' %}"><button type="button" class="submit_button btn-update"><i class="fa-solid fa-plus"></i> {% trans 'Add bug report' %}</button></a></div>
                 </div>
                 <div class="w3-third formfield"><input id="customSearch" type="search" placeholder="{% trans 'Search' %}" aria-label="{% trans 'Search' %}" autocomplete="off" ></div>
             </div>
@@ -42,7 +42,7 @@
                     <th data-field="title" data-sortable="true">{% trans "Title" %}</th>
                     <th data-field="date_of_report" data-sorter="datesSorter" data-sortable="true">{% trans "Date of report" %}</th>
                     <th data-field="reporter" data-sortable="true" data-filter-control="select">{% trans "Reporter" %}</th>
-                    <th data-field="type_of_bug" data-sortable="true" data-filter-control="select">{% trans "Type" %}</th>
+                    <th data-field="bug_type" data-sortable="true" data-filter-control="select">{% trans "Type" %}</th>
                     <th data-field="status" data-sortable="true" data-filter-control="select">{% trans "Status" %}</th>
                 </tr>
                 </thead>
@@ -53,7 +53,7 @@
                         <td><a href="{% url 'bug:detail_bug' bug_id=data.id %}" title="{{ data.title }}">{{ data.title }}</a></td>
                         <td>{{ data.date_of_report|date:'Y-m-d' }}</td>
                         <td>{{ data.reporter.user.first_name }}</td>
-                        <td>{{ data.get_type_of_bug_display }}</td>
+                        <td>{{ data.get_bug_type_display }}</td>
                         <td>{{ data.get_status_display }}</td>
                     </tr>
                 {% endfor %}

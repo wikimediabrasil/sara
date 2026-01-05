@@ -4,48 +4,53 @@
 {% block styles %}<link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">{% endblock %}
 {% block banner %}{% endblock %}
 {% block footer %}{% endblock %}
+{% block title %}{% blocktrans with id_=data.id %}Bug No. {{ id_ }}{% endblocktrans %}{% endblock %}
 {% block content %}
-    <div class="w3-container">
-        <div class="w3-third">&nbsp;</div>
-        <div class="w3-third user_form">
-            <h2>{% blocktrans with id_=data.id %}Bug nº {{ id_ }}{% endblocktrans %}</h2>
+    <div class="w3-container user_form">
+        <div class="w3-quarter">&nbsp;</div>
+        <div class="w3-half">
+            <h1>{% blocktrans with id_=data.id %}Bug No. {{ id_ }}{% endblocktrans %}</h1>
             <div class="w3-container">
                 {% if data.title %}
                     <div class="w3-row">
                         <div class="w3-third field_title">{% trans "Title" %}</div>
-                        <div class="w3-twothird formfield">{{ data.title }}</div>
+                        <div class="w3-twothird formfield view-field">{{ data.title }}</div>
                     </div>
                 {% endif %}
-                <div class="w3-row">
-                    <div class="w3-third field_title">{% trans "Description" %}</div>
-                    <div class="w3-twothird formfield">{{ data.description }}</div>
-                </div>
-                <div class="w3-row">
-                    <div class="w3-third field_title">{% trans "Date of report" %}</div>
-                    <div class="w3-twothird formfield">{{ data.date_of_report }}</div>
-                </div>
+                {% if data.description %}
+                    <div class="w3-row">
+                        <div class="w3-third field_title">{% trans "Description" %}</div>
+                        <div class="w3-twothird formfield view-field">{{ data.description|linebreaksbr }}</div>
+                    </div>
+                {% endif %}
+                {% if data.report_date %}
+                    <div class="w3-row">
+                        <div class="w3-third field_title">{% trans "Date of report" %}</div>
+                        <div class="w3-twothird formfield view-field">{{ data.report_date }}</div>
+                    </div>
+                {% endif %}
                 {% if data.update_date %}
                     <div class="w3-row">
                         <div class="w3-third field_title">{% trans "Update date" %}</div>
-                        <div class="w3-twothird formfield">{{ data.update_date }}</div>
+                        <div class="w3-twothird formfield view-field">{{ data.update_date }}</div>
                     </div>
                 {% endif %}
-                <div class="w3-row">
-                    <div class="w3-third field_title">{% trans "Reporter" %}</div>
-                    <div class="w3-twothird formfield">{{ data.reporter }}</div>
-                </div>
-                <div class="w3-row">
-                    <div class="w3-third field_title">{% trans "Status" %}</div>
-                    <div class="w3-twothird formfield">{{ data.get_status_display }}</div>
-                </div>
-                <div class="w3-row">
-                    <div class="w3-third field_title">{% trans "Type" %}</div>
-                    <div class="w3-twothird formfield">{{ data.get_type_of_bug_display }}</div>
-                </div>
-                {% if data.observation %}
+                {% if data.reporter %}
                     <div class="w3-row">
-                        <div class="w3-third field_title">{% trans "Observation" %}</div>
-                        <div class="w3-twothird formfield">{{ data.observation }}</div>
+                        <div class="w3-third field_title">{% trans "Reporter" %}</div>
+                        <div class="w3-twothird formfield view-field">{{ data.reporter }}</div>
+                    </div>
+                {% endif %}
+                {% if data.status %}
+                    <div class="w3-row">
+                        <div class="w3-third field_title">{% trans "Status" %}</div>
+                        <div class="w3-twothird formfield view-field">{{ data.get_status_display }}</div>
+                    </div>
+                {% endif %}
+                {% if data.bug_type %}
+                    <div class="w3-row">
+                        <div class="w3-third field_title">{% trans "Type" %}</div>
+                        <div class="w3-twothird formfield view-field">{{ data.get_bug_type_display }}</div>
                     </div>
                 {% endif %}
                 {% if perms.bug.change_bug %}
@@ -53,9 +58,20 @@
                         <div class="w3-third note field_title">&nbsp;</div>
                         <div class="w3-twothird formfield">
                             <a href="{% url 'bug:edit_bug' bug_id=data.id %}" tabindex="0" target="_self" aria-label="{% translate 'Update' %}">
-                                <button class="submitbutton" type="button">{% translate "Update" %}</button>
+                                <button class="submit_button" type="button">{% translate "Update" %}</button>
                             </a>
                         </div>
+                    </div>
+                {% endif %}
+                <h2>{% trans "Observation" %}</h2>
+                {% if data.observation %}
+                    <div class="w3-row">
+                        <div class="w3-third field_title">{% trans "Observation" %}</div>
+                        <div class="w3-twothird formfield view-field">{{ data.observation.observation|linebreaksbr }}</div>
+                    </div>
+                    <div class="w3-row">
+                        <div class="w3-third field_title">{% trans "Answer date" %}</div>
+                        <div class="w3-twothird formfield view-field">{{ data.observation.answer_date }}</div>
                     </div>
                 {% endif %}
                 {% if perms.bug.add_obs %}
@@ -64,11 +80,11 @@
                         <div class="w3-twothird formfield">
                             {% if data.observation %}
                                 <a href="{% url 'bug:edit_obs' bug_id=data.id %}" tabindex="0" target="_self" aria-label="{% translate 'Edit observation' %}">
-                                    <button class="submitbutton" type="button">{% translate "Edit observation" %}</button>
+                                    <button class="submit_button" type="button">{% translate "Edit observation" %}</button>
                                 </a>
                             {% else %}
                                 <a href="{% url 'bug:add_obs' bug_id=data.id %}" tabindex="0" target="_self" aria-label="{% translate 'Add observation' %}">
-                                    <button class="submitbutton" type="button">{% translate "Add observation" %}</button>
+                                    <button class="submit_button" type="button">{% translate "Add observation" %}</button>
                                 </a>
                             {% endif %}
                         </div>
