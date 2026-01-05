@@ -546,7 +546,7 @@ msgid "Add bug report"
 msgstr "Adicionar relatório de bug"
 
 #: .\bug\views.py:24
-msgid "Reported sucessfully!"
+msgid "Reported successfully!"
 msgstr "Registrado com sucesso!"
 
 #: .\bug\views.py:47
@@ -562,7 +562,7 @@ msgid "Changes made successfully!"
 msgstr "Mudanças feitas com sucesso!"
 
 #: .\bug\views.py:125
-msgid "Answered sucessfully!"
+msgid "Answered successfully!"
 msgstr "Respondido com sucesso!"
 
 #: .\metrics\models.py:16 .\report\templates\report\detail_report.html:224
