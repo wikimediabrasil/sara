@@ -37,7 +37,7 @@
                         <div class="w3-twothird formfield">
                             <select class="select-with-text" name="area_responsible" id="id_area_responsible" required>
                                 <option value="">------</option>
-                                {% for area in eventform.fields.area_responsible.queryset %}
+                                {% for area in event_form.fields.area_responsible.queryset %}
                                     <option value="{{ area.id }}">{{ area.text }}</option>
                                 {% endfor %}
                             </select>
@@ -47,7 +47,7 @@
                         <label class="w3-third field_title" for="id_area_involved">{% trans "Area involved" %}</label>
                         <div class="w3-twothird formfield">
                             <select class="select-with-text" name="area_involved" id="id_area_involved" multiple>
-                                {% for area in eventform.fields.area_involved.queryset %}
+                                {% for area in event_form.fields.area_involved.queryset %}
                                     <option value="{{ area.id }}">{{ area.text }}</option>
                                 {% endfor %}
                             </select>
@@ -57,7 +57,7 @@
                         <label class="w3-third field_title" for="id_metric_associated">{% trans "Metrics associated" %}</label>
                         <div class="w3-twothird formfield">
                             <select class="select-with-text" name="metric_associated" id="id_metric_associated" multiple>
-                                {% for metric in eventform.fields.metric_associated.queryset %}
+                                {% for metric in event_form.fields.metric_associated.queryset %}
                                     <option value="{{ metric.id }}">{% if LANGUAGE_CODE == "en" %}{{ metric.text_en }}{% else %}{{ metric.text }}{% endif %}</option>
                                 {% endfor %}
                             </select>
@@ -68,7 +68,7 @@
                             {% translate "* Required fields" %}
                         </div>
                         <div class="w3-twothird formfield">
-                            <button class="submitbutton" type="submit">{% translate "Submit" %}</button>
+                            <button class="submit_button" type="submit">{% translate "Submit" %}</button>
                         </div>
                     </div>
                 </form>

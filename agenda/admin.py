@@ -1,4 +1,6 @@
-from django.contrib import admin
-from agenda.models import Event
+from django.conf import settings
 
-admin.site.register(Event)
+if settings.ENABLE_AGENDA_APP:
+    from django.contrib import admin
+    from agenda.models import Event
+    admin.site.register(Event)

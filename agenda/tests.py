@@ -1,16 +1,21 @@
 import datetime
+from io import StringIO
 from django.test import TestCase, RequestFactory
 from django.urls import reverse
-from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group
-from unittest.mock import patch, MagicMock
+from django.core.exceptions import ValidationError
+from django.core.management import call_command
+from django.db import IntegrityError, transaction
+from django.core import mail
+from unittest.mock import patch
 
-from metrics.models import Metric, Activity
 from agenda.models import Event
+from agenda.services import send_event_reports
 from users.models import User, UserProfile, TeamArea, Position
 from agenda.views import get_activities_soon_to_be_finished, get_activities_already_finished,\
     get_activities_about_to_kickoff, show_list_of_reports_of_specific_area, show_list_of_reports_of_area
+from agenda.templatetags.calendartags import date_tag, next_month_tag, previous_month_tag, next_year_tag, \
+    previous_year_tag, next_day_tag, previous_day_tag
 
 
 class EventModelTests(TestCase):
@@ -49,6 +54,34 @@ class EventModelTests(TestCase):
         with self.assertRaises(ValidationError):
             event.name = ""
             event.full_clean()
+
+    def test_event_date_validation(self):
+        event = Event(
+            name="Valid",
+            initial_date=datetime.date(2025, 1, 10),
+            end_date=datetime.date(2025, 1, 10),
+            area_responsible=self.area_responsible,
+        )
+        event.full_clean()
+
+        invalid_event = Event(
+            name="Invalid",
+            initial_date=datetime.date(2025, 1, 10),
+            end_date=datetime.date(2025, 1, 9),
+            area_responsible=self.area_responsible,
+        )
+
+        with self.assertRaises(ValidationError):
+            invalid_event.full_clean()
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                Event.objects.create(
+                    name="Invalid DB",
+                    initial_date=datetime.date(2025, 1, 10),
+                    end_date=datetime.date(2025, 1, 9),
+                    area_responsible=self.area_responsible,
+                )
 
 
 class EventViewTests(TestCase):
@@ -222,18 +255,13 @@ class EventEmailTests(TestCase):
         self.name = "Event"
         self.initial_date = datetime.date.today()
         self.end_date = self.initial_date + datetime.timedelta(7)
-        self.area_responsible = TeamArea.objects.create(text="Area responsible", code="Ar code", color_code="AR")
-        self.area_involved = TeamArea.objects.create(text="Area involved", code="Ai code", color_code="AI")
-        self.activity_associated = Activity.objects.create(text="Activity", area_responsible=self.area_responsible)
-        self.metric_associated = Metric.objects.create(text="Metric", activity=self.activity_associated)
+        self.area_responsible = TeamArea.objects.create(text="Area responsible", code="Ar code")
         self.event = Event.objects.create(
             name=self.name,
             initial_date=self.initial_date,
             end_date=self.end_date,
-            area_responsible=self.area_responsible,
-            activity_associated=self.activity_associated)
-
-        self.event.metric_associated.add(self.metric_associated)
+            area_responsible=self.area_responsible
+        )
         self.event.save()
 
     def test_get_activities_soon_to_be_finished_returns_events_near_the_end(self):
@@ -247,6 +275,7 @@ class EventEmailTests(TestCase):
         self.assertQuerySetEqual(events, Event.objects.none())
 
     def test_if_get_activities_soon_to_be_finished_returns_empty_queryset_if_events_already_finished(self):
+        self.event.initial_date = datetime.date.today() - datetime.timedelta(2)
         self.event.end_date = datetime.date.today() - datetime.timedelta(1)
         self.event.save()
         events = get_activities_soon_to_be_finished(self.area_responsible)
@@ -272,7 +301,6 @@ class EventEmailTests(TestCase):
         events = get_activities_already_finished(self.area_responsible)
         self.assertQuerySetEqual(events, Event.objects.none())
 
-
     def test_get_activities_about_to_kickoff_returns_events_with_start_in_near_future(self):
         self.event.initial_date = datetime.date.today() + datetime.timedelta(1)
         self.event.save()
@@ -281,6 +309,7 @@ class EventEmailTests(TestCase):
 
     def test_if_events_are_too_far_away_get_activities_about_to_kickoff_returns_empty_queryset(self):
         self.event.initial_date += datetime.timedelta(60)
+        self.event.end_date += datetime.timedelta(60)
         self.event.save()
         events = get_activities_about_to_kickoff(self.area_responsible)
         self.assertQuerySetEqual(events, Event.objects.none())
@@ -295,8 +324,8 @@ class EventEmailTests(TestCase):
         group = Group.objects.create(name="Manager")
         position = Position.objects.create(text="Position", type=group, area_associated=self.area_responsible)
         user = User.objects.create_user(username="Username", password="Password")
-        user.userprofile.position = position
-        user.userprofile.save()
+        user.profile.position = position
+        user.profile.save()
 
         response = self.client.get(reverse('agenda:send_email'))
         self.assertEqual(response.status_code, 302)
@@ -305,8 +334,8 @@ class EventEmailTests(TestCase):
         group = Group.objects.create(name="Manager")
         position = Position.objects.create(text="Position", type=group, area_associated=self.area_responsible)
         user = User.objects.create_user(username="Username", password="Password")
-        user.userprofile.position = position
-        user.userprofile.save()
+        user.profile.position = position
+        user.profile.save()
         user.email = "to@example.com"
         user.save()
 
@@ -317,8 +346,8 @@ class EventEmailTests(TestCase):
         group = Group.objects.create(name="Manager")
         position = Position.objects.create(text="Position", type=group, area_associated=self.area_responsible)
         user = User.objects.create_user(username="Username", password="Password")
-        user.userprofile.position = position
-        user.userprofile.save()
+        user.profile.position = position
+        user.profile.save()
         user.email = "to@example.com"
         user.save()
 
@@ -331,8 +360,8 @@ class EventEmailTests(TestCase):
         group = Group.objects.create(name="Manager")
         position = Position.objects.create(text="Position", type=group, area_associated=self.area_responsible)
         user = User.objects.create_user(username="Username", password="Password")
-        user.userprofile.position = position
-        user.userprofile.save()
+        user.profile.position = position
+        user.profile.save()
         user.email = "to@example.com"
         user.save()
 
@@ -342,15 +371,66 @@ class EventEmailTests(TestCase):
         response = self.client.get(reverse('agenda:send_email'))
         self.assertEqual(response.status_code, 302)
 
-    def test_trying_to_send_email_when_manager_hasnt_email_fails(self):
+    def test_trying_to_send_email_when_manager_has_not_email_fails(self):
         group = Group.objects.create(name="Manager")
         position = Position.objects.create(text="Position", type=group, area_associated=self.area_responsible)
         user = User.objects.create_user(username="Username", password="Password")
-        user.userprofile.position = position
-        user.userprofile.save()
+        user.profile.position = position
+        user.profile.save()
 
         response = self.client.get(reverse('agenda:send_email'))
         self.assertEqual(response.status_code, 302)
+
+    def test_manager_with_no_relevant_events_does_not_receive_email(self):
+        self.event.delete()
+        Event.objects.create(
+            name=self.name,
+            initial_date=datetime.date.today() + datetime.timedelta(99),
+            end_date=datetime.date.today() + datetime.timedelta(100),
+            area_responsible=self.area_responsible
+        )
+
+        group = Group.objects.create(name="Manager")
+
+        # Position
+        position = Position.objects.create(
+            text="Manager position",
+            type=group,
+            area_associated=self.area_responsible,
+        )
+
+        # User
+        user = User.objects.create_user(
+            username="manager",
+            email="manager@test.com",
+            password="pass",
+            is_active=True,
+        )
+
+        # UserProfile
+        user.profile.position = position
+        user.profile.save()
+
+        # Event outside reporting windows
+        Event.objects.create(
+            name="Old event",
+            area_responsible=self.area_responsible,
+            initial_date=datetime.datetime.now().date() - datetime.timedelta(days=120),
+            end_date=datetime.datetime.now().date() - datetime.timedelta(days=100),
+        )
+
+        send_event_reports()
+
+        self.assertEqual(len(mail.outbox), 0)
+
+    @patch("agenda.management.commands.send_event_reports.send_event_reports")
+    def test_command_calls_service_and_outputs_success(self, mock_send):
+        out = StringIO()
+
+        call_command("send_event_reports", stdout=out)
+
+        mock_send.assert_called_once()
+        self.assertIn("Reports sent", out.getvalue())
 
 
 class ListReportsTests(TestCase):
@@ -412,3 +492,88 @@ class ListReportsTests(TestCase):
         response = show_list_of_reports_of_area(request)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse("agenda:specific_area_activities"))
+
+
+class CalendarTagTest(TestCase):
+    def setUp(self):
+        self.today = datetime.today()
+        self.current_date = date(self.today.year, 6, 15)
+        self.current_tomorrow = self.current_date + timedelta(days=1)
+        self.current_yesterday = self.current_date - timedelta(days=1)
+        self.current_next_month = date(self.current_date.year, 7, 15)
+        self.current_last_month = date(self.current_date.year, 5, 15)
+        self.current_next_year = date(self.current_date.year + 1, 6, 15)
+        self.current_last_year = date(self.current_date.year - 1, 6, 15)
+
+    def test_returns_filtered_events(self):
+        area = TeamArea.objects.create(text="Area", code="area", color_code="ar")
+        event = Event.objects.create(
+            name="Test Event",
+            initial_date = self.current_date,
+            end_date = self.current_tomorrow,
+            area_responsible = area,
+        )
+        result = date_tag(self.current_date.year, self.current_date.month, self.current_date.day)
+        self.assertEqual(list(result), [event])
+
+    def test_returns_empty_string_if_no_event(self):
+        result = date_tag(2025, 10, 15)
+        self.assertEqual(result , "")
+
+    def test_returns_empty_if_day_is_zero(self):
+        result = date_tag(2025, 10, 0)
+        self.assertEqual(result , "")
+
+    def test_returns_empty_if_day_is_none(self):
+        result = date_tag(2025, 10, None)
+        self.assertEqual(result , "")
+
+    def test_next_month_tag_normal_case(self):
+        url = next_month_tag(2025, 10)
+        expected = reverse('agenda:show_specific_calendar', kwargs={'year': 2025, 'month': 11})
+        self.assertEqual(url, expected)
+
+    def test_next_month_tag_wraps_to_next_year(self):
+        url = next_month_tag(2025, 12)
+        expected = reverse('agenda:show_specific_calendar', kwargs={'year': 2026, 'month': 1})
+        self.assertEqual(url, expected)
+
+    def test_previous_month_tag_normal_case(self):
+        url = previous_month_tag(2025, 10)
+        expected = reverse('agenda:show_specific_calendar', kwargs={'year': 2025, 'month': 9})
+        self.assertEqual(url, expected)
+
+    def test_previous_month_tag_wraps_to_previous_year(self):
+        url = previous_month_tag(2025, 1)
+        expected = reverse('agenda:show_specific_calendar', kwargs={'year': 2024, 'month': 12})
+        self.assertEqual(url, expected)
+
+    def test_next_year_tag(self):
+        url = next_year_tag(2025)
+        expected = reverse('agenda:show_specific_calendar_year', kwargs={'year': 2026})
+        self.assertEqual(url, expected)
+
+    def test_previous_year_tag(self):
+        url = previous_year_tag(2025)
+        expected = reverse('agenda:show_specific_calendar_year', kwargs={'year': 2024})
+        self.assertEqual(url, expected)
+
+    def test_next_day_tag_normal_case(self):
+        url = next_day_tag(2025, 10, 17)
+        expected = reverse('agenda:show_specific_calendar_day', kwargs={'year': 2025, 'month': 10, 'day': 18})
+        self.assertEqual(url, expected)
+
+    def test_next_day_tag_wraps_to_next_month(self):
+        url = next_day_tag(2025, 1, 31)
+        expected = reverse('agenda:show_specific_calendar_day', kwargs={'year': 2025, 'month': 2, 'day': 1})
+        self.assertEqual(url, expected)
+
+    def test_previous_day_tag_normal_case(self):
+        url = previous_day_tag(2025, 10, 17)
+        expected = reverse('agenda:show_specific_calendar_day', kwargs={'year': 2025, 'month': 10, 'day': 16})
+        self.assertEqual(url, expected)
+
+    def test_previous_day_tag_wraps_to_previous_month(self):
+        url = previous_day_tag(2025, 3, 1)
+        expected = reverse('agenda:show_specific_calendar_day', kwargs={'year': 2025, 'month': 2, 'day': 28})
+        self.assertEqual(url, expected)

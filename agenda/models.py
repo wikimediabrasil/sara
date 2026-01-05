@@ -2,7 +2,6 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from users.models import TeamArea
-from metrics.models import Metric, Activity
 
 
 # CALENDAR OF EVENTS
@@ -12,10 +11,9 @@ class Event(models.Model):
 
     Attributes:
         - name: Title of the event
-        - initial_date: Date of the begining of the event
+        - initial_date: Date of the beginning of the event
         - end_date: Date of the ending of the event
         - area_responsible: Area responsible for the event
-        - area_involved: Areas involved in/activated for the event
 
     Meta:
         - verbose_name: A human-readable name for the model (singular).
@@ -23,19 +21,23 @@ class Event(models.Model):
 
     Methods:
         - __str__: Returns a string representation of the event, including the name and date range.
-        - clean: Validates that the event has a name, initial date, and end date.
+        - clean: Validates that the event has an initial date earlier of the end date.
     """
-    name = models.CharField(max_length=420)
-    initial_date = models.DateField()
-    end_date = models.DateField()
-    area_responsible = models.ForeignKey(TeamArea, on_delete=models.RESTRICT, related_name="area_responsible")
-    area_involved = models.ManyToManyField(TeamArea, related_name="area_involved", blank=True)
-    metric_associated = models.ManyToManyField(Metric, related_name="event_metrics", blank=True)
-    activity_associated = models.ForeignKey(Activity, on_delete=models.RESTRICT, related_name="event_activity", null=True, blank=True)
+    name = models.CharField(_("Name"), max_length=420, help_text=_("Title of the event"))
+    initial_date = models.DateField(_("Initial date"), help_text="Date of the beginning of the event")
+    end_date = models.DateField(_("End date"), help_text="Date of the ending of the event")
+    area_responsible = models.ForeignKey(TeamArea, on_delete=models.RESTRICT, related_name="events", verbose_name=_("Area responsible"), help_text="Area responsible for the event")
 
     class Meta:
         verbose_name = _("Event")
         verbose_name_plural = _("Events")
+        ordering = ["initial_date"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(end_date__gte=models.F("initial_date")),
+                name="event_end_date_after_start_date",
+            ),
+        ]
 
     def __str__(self):
         if self.end_date == self.initial_date:
@@ -45,5 +47,7 @@ class Event(models.Model):
                 self.end_date.strftime("%d/%b") + ")"
 
     def clean(self):
-        if not self.name or not self.initial_date or not self.end_date:
-            raise ValidationError(_("Every event needs a name, a date of beginning and ending"))
+        if self.end_date < self.initial_date:
+            raise ValidationError(
+                {"end_date": _("End date must be after start date.")}
+            )

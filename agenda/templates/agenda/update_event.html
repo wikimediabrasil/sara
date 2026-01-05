@@ -14,22 +14,22 @@
                     {% csrf_token %}
                     <div class="w3-row">
                         <label class="w3-third field_title" for="id_name">{% trans "Name" %}*</label>
-                        <div class="w3-twothird formfield"><input type="text" name="name" maxlength="420" required="" id="id_name" value="{{ eventform.instance.name }}"></div>
+                        <div class="w3-twothird formfield"><input type="text" name="name" maxlength="420" required="" id="id_name" value="{{ event_form.instance.name }}"></div>
                     </div>
                     <div class="w3-row">
                         <label class="w3-third field_title" for="id_initial_date">{% trans "Initial date" %}*</label>
-                        <div class="w3-twothird formfield"><input type="date" name="initial_date" required="" id="id_initial_date" value="{{ eventform.instance.initial_date|date:'Y-m-d' }}"></div>
+                        <div class="w3-twothird formfield"><input type="date" name="initial_date" required="" id="id_initial_date" value="{{ event_form.instance.initial_date|date:'Y-m-d' }}"></div>
                     </div>
                     <div class="w3-row">
                         <label class="w3-third field_title" for="id_end_date">{% trans "End date" %}*</label>
-                        <div class="w3-twothird formfield"><input type="date" name="end_date" required="" id="id_end_date" value="{{ eventform.instance.end_date|date:'Y-m-d' }}"></div>
+                        <div class="w3-twothird formfield"><input type="date" name="end_date" required="" id="id_end_date" value="{{ event_form.instance.end_date|date:'Y-m-d' }}"></div>
                     </div>
                     <div class="w3-row">
                         <label class="w3-third field_title" for="id_area_responsible">{% trans "Area responsible" %}*</label>
                         <div class="w3-twothird formfield">
                             <select class="select-with-text" name="area_responsible" id="id_area_responsible">
-                                {% for area in eventform.fields.area_responsible.queryset %}
-                                    <option value="{{ area.id }}" {% if area == eventform.instance.area_responsible %}selected{% endif %}>{{ area.text }}</option>
+                                {% for area in event_form.fields.area_responsible.queryset %}
+                                    <option value="{{ area.id }}" {% if area == event_form.instance.area_responsible %}selected{% endif %}>{{ area.text }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -38,8 +38,8 @@
                         <label class="w3-third field_title" for="id_area_involved">{% trans "Area involved" %}*</label>
                         <div class="w3-twothird formfield">
                             <select class="select-with-text" name="area_involved" id="id_area_involved" multiple>
-                                {% for area in eventform.fields.area_involved.queryset %}
-                                    <option value="{{ area.id }}" {% if area == eventform.instance.area_responsible %}selected{% endif %}>{{ area.text }}</option>
+                                {% for area in event_form.fields.area_involved.queryset %}
+                                    <option value="{{ area.id }}" {% if area == event_form.instance.area_responsible %}selected{% endif %}>{{ area.text }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -49,7 +49,7 @@
                             {% translate "* Required fields" %}
                         </div>
                         <div class="w3-twothird formfield">
-                            <button class="submitbutton" type="submit">{% translate "Submit" %}</button>
+                            <button class="submit_button" type="submit">{% translate "Submit" %}</button>
                         </div>
                     </div>
                 </form>

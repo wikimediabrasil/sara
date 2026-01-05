@@ -1,20 +1,17 @@
 import calendar
 import datetime
 from datetime import date, timedelta
-
 from django.db import transaction
 from django.contrib import messages
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils.translation import gettext as _
-from django.core.mail import EmailMessage
-from django.template.loader import get_template
 from django.db.models import Q
-from django.conf import settings
 
-from agenda.forms import EventForm
+from users.models import TeamArea, UserProfile
 from agenda.models import Event
-from users.models import TeamArea, UserProfile, Position
+from agenda.forms import EventForm
+from agenda.services import send_event_reports, build_message_about_reports
 
 
 # YEAR CALENDAR
@@ -43,7 +40,10 @@ def show_specific_calendar_year(request, year):
     start = date(year, 1, 1)
     end = date(year, 12, 31)
 
-    all_events = (Event.objects.filter(Q(initial_date__lte=end) & Q(end_date__gte=start)).select_related("area_responsible").order_by("initial_date", "end_date"))
+    all_events = (Event.objects.filter(Q(initial_date__lte=end) & Q(end_date__gte=start))
+                  .select_related("area_responsible")
+                  .order_by("initial_date", "end_date"))
+
     events_by_date = {}
     for event in all_events:
         current = max(event.initial_date, start)
@@ -110,7 +110,9 @@ def show_specific_calendar(request, year, month):
     last_day = calendar.monthrange(year, month)[1]
     end = date(year, month, last_day)
 
-    all_events = (Event.objects.filter(Q(initial_date__lte=end) & Q(end_date__gte=start)).select_related("area_responsible").order_by("initial_date", "end_date"))
+    all_events = (Event.objects.filter(Q(initial_date__lte=end) & Q(end_date__gte=start))
+                  .select_related("area_responsible")
+                  .order_by("initial_date", "end_date"))
     events_by_date = {}
     for event in all_events:
         current = max(event.initial_date, start)
@@ -179,7 +181,9 @@ def show_specific_calendar_day(request, year, month, day):
 
     month_name = _(calendar.month_name[month])
 
-    all_events = (Event.objects.filter(Q(initial_date__lte=current_day) & Q(end_date__gte=current_day)).select_related("area_responsible").order_by("initial_date", "end_date"))
+    all_events = (Event.objects.filter(Q(initial_date__lte=current_day) & Q(end_date__gte=current_day))
+                  .select_related("area_responsible")
+                  .order_by("initial_date", "end_date"))
 
     context = { "year": year, "month": month, "day": day, "month_name": month_name, "activities": all_events, "title": _("Calendar %(day)s/%(month_name)s/%(year)s") % {"day": day, "month_name": month_name, "year": year}}
     return render(request, "agenda/calendar_day.html", context)
@@ -217,7 +221,7 @@ def add_event(request):
     else:
         event_form = EventForm()
 
-    context = {"eventform": event_form, "title": _("Add event")}
+    context = {"event_form": event_form, "title": _("Add event")}
     return render(request, "agenda/add_event.html", context)
 
 
@@ -229,7 +233,7 @@ def list_events(request):
 
 
 def detail_event(request, event_id):
-    event = Event.objects.get(pk=event_id)
+    event = get_object_or_404(Event, pk=event_id)
     context = {"event": event}
     return render(request, "agenda/detail_event.html", context)
 
@@ -271,48 +275,13 @@ def update_event(request, event_id):
     else:
         event_form = EventForm(instance=event)
 
-    context = {"eventform": event_form, "event_id": event_id, "title": _("Update event %(event_id)s") % {"event_id": event_id}}
+    context = {"event_form": event_form, "event_id": event_id, "title": _("Update event %(event_id)s") % {"event_id": event_id}}
     return render(request, "agenda/update_event.html", context)
 
 
-# SEND EMAIL ABOUT EVENT
 def send_email(request):
-    html_template_path = "agenda/email_template.html"
-
-    areas = TeamArea.objects.filter(team_area_of_position__type__name="Manager")
-    for area in areas:
-        manager = UserProfile.objects.filter(user__is_active=True, position__area_associated=area, position__type__name="Manager").first()
-        if manager:
-            manager_email = manager.user.email
-
-            if manager_email:
-                upcoming_reports = get_activities_soon_to_be_finished(area)
-                late_reports = get_activities_already_finished(area)
-                about_to_kickoff = get_activities_about_to_kickoff(area)
-
-                context_data = {
-                    "late_reports": build_message_about_reports(late_reports),
-                    "upcoming_reports": build_message_about_reports(upcoming_reports),
-                    "about_to_kickoff": build_message_about_reports(about_to_kickoff),
-                    "manager": manager,
-                    "area": area
-                }
-
-                if upcoming_reports or late_reports or about_to_kickoff:
-                    email_html_template = get_template(html_template_path).render(context_data)
-
-                    email_msg = EmailMessage(
-                        subject = _("SARA Report- %(area)s") % {"area": area},
-                        body = email_html_template,
-                        from_email = settings.EMAIL_HOST_USER,
-                        to = [manager_email],
-                        reply_to = [settings.EMAIL_HOST_USER],
-                        bcc = [settings.EMAIL_COORDINATOR]
-                    )
-                    email_msg.content_subtype = "html"
-                    email_msg.send(fail_silently=False)
-            else:
-                pass
+    if send_event_reports:
+        send_event_reports()
     return redirect(reverse("metrics:index"))
 
 
@@ -327,8 +296,7 @@ def show_list_of_reports_of_specific_area(request, area_id=None):
 
     today_boy = (datetime.date.today() - datetime.date(datetime.date.today().year, 1, 1)).days
     today_eoy = (datetime.date(datetime.date.today().year, 12, 31) - datetime.date.today()).days
-    no_report = Q()
-    past_activities = get_activities_already_finished(area, delta=today_boy, no_report=no_report)
+    past_activities = get_activities_already_finished(area, delta=today_boy)
     future_activities = get_activities_soon_to_be_finished(area, delta=today_eoy)
 
     context = {
@@ -356,13 +324,13 @@ def get_activities_soon_to_be_finished(area, delta=14):
     return events
 
 
-def get_activities_already_finished(area, delta=28, no_report=Q(activity_associated__report_activity__isnull=True)):
+def get_activities_already_finished(area, delta=28):
     today = datetime.date.today()
     interval = max(today - timedelta(delta), datetime.date(today.year, 1, 1))
     query = Q(end_date__lte=today - timedelta(1), # Before today
               end_date__gte=interval, # After the interval
               area_responsible=area, # Under a specific manager responsibility
-              ) & no_report
+              )
     events = Event.objects.filter(query).distinct()
     return events
 
@@ -376,25 +344,3 @@ def get_activities_about_to_kickoff(area, delta=14):
               )
     events = Event.objects.filter(query)
     return events
-
-
-def build_message_about_reports(events):
-    message = ""
-
-    for event in events:
-        if event.end_date == event.initial_date:
-            date_string = event.initial_date.strftime("%d/%m")
-        else:
-            date_string = event.initial_date.strftime("%d/%m") + " - " + event.end_date.strftime("%d/%m")
-
-        message += _("<li><a href='https://sara-wmb.toolforge.org/calendar/%(year)s/%(month)s/%(day)s'>%(name)s (%(date_string)s)</a></li>") % {
-            "year": event.initial_date.year,
-            "month": event.initial_date.month,
-            "day": event.initial_date.day,
-            "name": event.name,
-            "date_string": date_string}
-
-    if message:
-        message = "<ul>\n" + message + "</ul>"
-
-    return message
