@@ -56,7 +56,7 @@ fieldset input { background-color: var(--main-lighter-color) !important }
     cursor: pointer;
     transition: 0.3s;
 }
-.submitbutton {
+.submit_button {
     background-color: var(--main-color);
     border-radius: 0.5em;
     border: none;
@@ -67,7 +67,7 @@ fieldset input { background-color: var(--main-lighter-color) !important }
     text-align: center;
     transition: all 300ms ease-in-out;
 }
-.submitbutton:hover {
+.submit_button:hover {
     scale: 97%;
     background-color: var(--light-color);
     color: var(--main-color);
