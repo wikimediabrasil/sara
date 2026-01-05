@@ -3,7 +3,6 @@ from django.utils.translation import gettext as _
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from users.models import UserProfile, TeamArea
-from strategy.models import StrategicAxis
 
 
 class Project(models.Model):
@@ -27,7 +26,6 @@ class Project(models.Model):
 
 class Area(models.Model):
     text = models.CharField(max_length=420)
-    related_axis = models.ManyToManyField(StrategicAxis, related_name='areas', blank=True)
     project = models.ManyToManyField(Project, related_name="project_activity", blank=True)
     poa_area = models.BooleanField(default=False)
 
