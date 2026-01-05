@@ -18,8 +18,6 @@ from agenda.models import Event
 from metrics.views import get_metrics_and_aggregate_per_project, build_wiki_ref_for_reports, \
     show_metrics_for_specific_project, get_results_for_timespan
 from metrics.templatetags.metricstags import categorize, perc, bool_yesno, is_yesno, bool_yesnopartial
-from metrics.templatetags.calendartags import date_tag, next_month_tag, previous_month_tag, next_year_tag, \
-    previous_year_tag, next_day_tag, previous_day_tag
 from metrics.utils import render_to_pdf
 from metrics.link_utils import process_all_references, unwikify_link, replace_with_links, dewikify_url, wikify_link, \
     build_wikiref
@@ -948,91 +946,6 @@ class TagsTests(TestCase):
 
         result = is_yesno(1)
         self.assertFalse(result)
-
-
-class CalendarTagTest(TestCase):
-    def setUp(self):
-        self.today = datetime.today()
-        self.current_date = date(self.today.year, 6, 15)
-        self.current_tomorrow = self.current_date + timedelta(days=1)
-        self.current_yesterday = self.current_date - timedelta(days=1)
-        self.current_next_month = date(self.current_date.year, 7, 15)
-        self.current_last_month = date(self.current_date.year, 5, 15)
-        self.current_next_year = date(self.current_date.year + 1, 6, 15)
-        self.current_last_year = date(self.current_date.year - 1, 6, 15)
-
-    def test_returns_filtered_events(self):
-        area = TeamArea.objects.create(text="Area", code="area", color_code="ar")
-        event = Event.objects.create(
-            name="Test Event",
-            initial_date = self.current_date,
-            end_date = self.current_tomorrow,
-            area_responsible = area,
-        )
-        result = date_tag(self.current_date.year, self.current_date.month, self.current_date.day)
-        self.assertEqual(list(result), [event])
-
-    def test_returns_empty_string_if_no_event(self):
-        result = date_tag(2025, 10, 15)
-        self.assertEqual(result , "")
-
-    def test_returns_empty_if_day_is_zero(self):
-        result = date_tag(2025, 10, 0)
-        self.assertEqual(result , "")
-
-    def test_returns_empty_if_day_is_none(self):
-        result = date_tag(2025, 10, None)
-        self.assertEqual(result , "")
-
-    def test_next_month_tag_normal_case(self):
-        url = next_month_tag(2025, 10)
-        expected = reverse('agenda:show_specific_calendar', kwargs={'year': 2025, 'month': 11})
-        self.assertEqual(url, expected)
-
-    def test_next_month_tag_wraps_to_next_year(self):
-        url = next_month_tag(2025, 12)
-        expected = reverse('agenda:show_specific_calendar', kwargs={'year': 2026, 'month': 1})
-        self.assertEqual(url, expected)
-
-    def test_previous_month_tag_normal_case(self):
-        url = previous_month_tag(2025, 10)
-        expected = reverse('agenda:show_specific_calendar', kwargs={'year': 2025, 'month': 9})
-        self.assertEqual(url, expected)
-
-    def test_previous_month_tag_wraps_to_previous_year(self):
-        url = previous_month_tag(2025, 1)
-        expected = reverse('agenda:show_specific_calendar', kwargs={'year': 2024, 'month': 12})
-        self.assertEqual(url, expected)
-
-    def test_next_year_tag(self):
-        url = next_year_tag(2025)
-        expected = reverse('agenda:show_specific_calendar_year', kwargs={'year': 2026})
-        self.assertEqual(url, expected)
-
-    def test_previous_year_tag(self):
-        url = previous_year_tag(2025)
-        expected = reverse('agenda:show_specific_calendar_year', kwargs={'year': 2024})
-        self.assertEqual(url, expected)
-
-    def test_next_day_tag_normal_case(self):
-        url = next_day_tag(2025, 10, 17)
-        expected = reverse('agenda:show_specific_calendar_day', kwargs={'year': 2025, 'month': 10, 'day': 18})
-        self.assertEqual(url, expected)
-
-    def test_next_day_tag_wraps_to_next_month(self):
-        url = next_day_tag(2025, 1, 31)
-        expected = reverse('agenda:show_specific_calendar_day', kwargs={'year': 2025, 'month': 2, 'day': 1})
-        self.assertEqual(url, expected)
-
-    def test_previous_day_tag_normal_case(self):
-        url = previous_day_tag(2025, 10, 17)
-        expected = reverse('agenda:show_specific_calendar_day', kwargs={'year': 2025, 'month': 10, 'day': 16})
-        self.assertEqual(url, expected)
-
-    def test_previous_day_tag_wraps_to_previous_month(self):
-        url = previous_day_tag(2025, 3, 1)
-        expected = reverse('agenda:show_specific_calendar_day', kwargs={'year': 2025, 'month': 2, 'day': 28})
-        self.assertEqual(url, expected)
 
 
 class MetricsExportTests(TestCase):

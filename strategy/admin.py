@@ -1,5 +1,7 @@
-from django.contrib import admin
-from .models import StrategicAxis, Direction
+from django.conf import settings
 
-admin.site.register(StrategicAxis)
-admin.site.register(Direction)
+if settings.ENABLE_STRATEGY_APP:
+    from django.contrib import admin
+    from .models import StrategicAxis, Direction
+    admin.site.register(StrategicAxis)
+    admin.site.register(Direction)

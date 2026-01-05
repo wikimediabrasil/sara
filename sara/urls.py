@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 
@@ -23,11 +24,17 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
     path('user/', include('users.urls', namespace='user')),
-    path('calendar/', include('agenda.urls', namespace='agenda')),
     path('oauth/', include('social_django.urls', namespace='social')),
-    path('strategy', include('strategy.urls', namespace='strategy')),
     path('report/', include('report.urls', namespace='report')),
-    path('bug/', include('bug.urls', namespace='bug')),
 ]
+
+if settings.ENABLE_BUG_APP:
+    urlpatterns += [path('bug/', include('bug.urls', namespace='bug'))]
+
+if settings.ENABLE_AGENDA_APP:
+    urlpatterns += [path('calendar/', include('agenda.urls', namespace='agenda'))]
+
+if settings.ENABLE_STRATEGY_APP:
+    urlpatterns += [path('strategy', include('strategy.urls', namespace='strategy'))]
 
 urlpatterns += staticfiles_urlpatterns()
