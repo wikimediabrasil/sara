@@ -20,7 +20,7 @@ class Project(models.Model):
         __str__(): Returns the project title.
         clean(): Validates that `text` is not empty.
     """
-    text = models.CharField(_("Project"), max_length=420, unique=True, help_text=_("Project title"))
+    text = models.CharField(_("Project"), max_length=210, unique=True, help_text=_("Project title"))
     active_status = models.BooleanField(_("Active?"), default=True, help_text=_("Is the project active?"))
     current_poa = models.BooleanField(_("Current Plan of Activities"), default=False, help_text=_("Is this the current plan of activities?"))
     main_funding = models.BooleanField(_("Current Main Funding project?"), default=False, help_text=_("Is this the main funding project?"))
