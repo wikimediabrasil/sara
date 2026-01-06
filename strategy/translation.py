@@ -3,7 +3,7 @@ from .models import StrategicAxis, Direction, StrategicLearningQuestion, Evaluat
 
 
 @register(StrategicAxis)
-class StrategyAxisTranslationOptions(TranslationOptions):
+class StrategicAxisTranslationOptions(TranslationOptions):
     fields = ("text",)
 
 

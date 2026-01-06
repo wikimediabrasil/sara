@@ -50,6 +50,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='event',
-            constraint=models.CheckConstraint(condition=models.Q(('end_date__gte', models.F('initial_date'))), name='event_end_date_after_start_date'),
+            constraint=models.CheckConstraint(check=models.Q(('end_date__gte', models.F('initial_date'))), name='event_end_date_after_start_date'),
         ),
     ]
