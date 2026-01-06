@@ -404,7 +404,7 @@ def wikify_link(link):
     return f"[{link}]" if link != "-" else ""
 
 
-def build_wikiref(links, report_id):
+def build_wiki_ref(links, report_id):
     links = links.replace("\\r\\n", "\r\n").splitlines()
     formatted_links = []
     for link in links:

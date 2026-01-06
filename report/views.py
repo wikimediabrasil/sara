@@ -481,7 +481,7 @@ def export_funding(report_id=None, custom_query=Q()):
                      funding.value,
                      funding.project_id,
                      funding.project.text,
-                     funding.project.active,
+                     funding.project.active_status,
                      type_of_funding])
 
     df = pd.DataFrame(rows, columns=header).drop_duplicates().reset_index(drop=True)
@@ -746,12 +746,12 @@ def get_metrics(request):
     # ACTIVITY
     activity = request.GET.get("activity")
     if activity and activity != "1":
-        activity_project = Project.objects.get(project_activity__activities=int(activity), active=True)
+        activity_project = Project.objects.get(project_activity__activities=int(activity), active_status=True)
         metrics = Metric.objects.filter(activity_id=activity).values()
         main_ = Activity.objects.get(pk=int(activity)).is_main_activity
         projects.append({"project": activity_project.text, "metrics": list(metrics), "main": main_, "lang": user_lang})
     elif activity == "1":
-        for project in Project.objects.filter(active=True).exclude(current_poa=True):
+        for project in Project.objects.filter(active_status=True).exclude(current_poa=True):
             metrics = Metric.objects.filter(project=project).values()
             if metrics:
                 projects.append({"project": project.text, "metrics": list(metrics), "lang": user_lang})

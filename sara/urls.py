@@ -20,11 +20,12 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 
 urlpatterns = [
-    path('', include('metrics.urls', namespace='metrics')),
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
-    path('user/', include('users.urls', namespace='user')),
     path('oauth/', include('social_django.urls', namespace='social')),
+    path('user/', include('users.urls', namespace='user')),
+    path('strategy', include('strategy.urls', namespace='strategy')),
+    path('', include('metrics.urls', namespace='metrics')),
     path('report/', include('report.urls', namespace='report')),
 ]
 
@@ -33,8 +34,5 @@ if settings.ENABLE_BUG_APP:
 
 if settings.ENABLE_AGENDA_APP:
     urlpatterns += [path('calendar/', include('agenda.urls', namespace='agenda'))]
-
-if settings.ENABLE_STRATEGY_APP:
-    urlpatterns += [path('strategy', include('strategy.urls', namespace='strategy'))]
 
 urlpatterns += staticfiles_urlpatterns()

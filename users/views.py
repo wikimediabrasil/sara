@@ -114,7 +114,7 @@ def list_profiles(request):
     can_edit = request.user.is_superuser
     users = User.objects.all()
     sorted_users = users.order_by("-is_staff", "username")
-    context = {"users": sorted_users, "can edit": can_edit}
+    context = {"users": sorted_users, "can_edit": can_edit}
     return render(request, "users/list_profiles.html", context)
 
 

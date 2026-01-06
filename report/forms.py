@@ -4,10 +4,9 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from django.db.models import fields, Q, Case, When, Value, IntegerField
 from django.db.models.functions import Lower
-from .models import Report, StrategicLearningQuestion, LearningArea, AreaActivated, Funding, Partner, Technology,\
-    Editor, Organizer, OperationReport
+from report.models import Report, AreaActivated, Funding, Partner, Technology, Editor, Organizer, OperationReport
 from metrics.models import Area, Metric, Project
-from strategy.models import StrategicAxis
+from strategy.models import StrategicAxis, LearningArea
 from users.models import TeamArea, UserProfile
 
 from urllib.parse import quote
@@ -32,7 +31,7 @@ class NewReportForm(forms.ModelForm):
         self.fields["directions_related"].choices = directions_associated_as_choices()
         self.fields["learning_questions_related"].choices = learning_questions_as_choices()
         self.fields["area_responsible"].queryset = TeamArea.objects.order_by(Lower("text"))
-        self.fields["funding_associated"].queryset = Funding.objects.filter(project__active=True).order_by(Lower("name"))
+        self.fields["funding_associated"].queryset = Funding.objects.filter(project__active_status=True).order_by(Lower("name"))
         self.fields["area_activated"].queryset = AreaActivated.objects.order_by(Lower("text"))
         self.fields["partners_activated"].queryset = Partner.objects.order_by(Lower("name"))
         if self.instance.id:
@@ -212,7 +211,7 @@ def area_responsible_of_user(user):
 
 def activities_associated_as_choices():
     areas = []
-    area_list = Area.objects.filter(project__active=True).distinct().order_by("-poa_area", "text")
+    area_list = Area.objects.filter(project__active_status=True).distinct().order_by("-poa_area", "text")
     for area in area_list:
         activities = []
         for activity in area.activities.all():

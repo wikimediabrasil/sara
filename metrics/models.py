@@ -6,11 +6,25 @@ from users.models import UserProfile, TeamArea
 
 
 class Project(models.Model):
-    text = models.CharField(max_length=420)
-    active = models.BooleanField(default=True)
-    current_poa = models.BooleanField(default=False)
-    main_funding = models.BooleanField(default=False)
-    counts_for_main_funding = models.BooleanField(default=False)
+    """
+    Represents a project in the system.
+
+    Fields:
+        text (CharField): Title of the project. Must be unique.
+        active_status (BooleanField): Whether the project is currently active. Default: True.
+        current_poa (BooleanField): Marks if this project is the current Plan of Activities. Default: False.
+        main_funding (BooleanField): Indicates if this is the main funding project. Default: False.
+        counts_for_main_funding (BooleanField): If metrics from this project contribute to main funding metrics. Default: False.
+
+    Methods:
+        __str__(): Returns the project title.
+        clean(): Validates that `text` is not empty.
+    """
+    text = models.CharField(_("Project"), max_length=420, unique=True, help_text=_("Project title"))
+    active_status = models.BooleanField(_("Active?"), default=True, help_text=_("Is the project active?"))
+    current_poa = models.BooleanField(_("Current Plan of Activities"), default=False, help_text=_("Is this the current plan of activities?"))
+    main_funding = models.BooleanField(_("Current Main Funding project?"), default=False, help_text=_("Is this the main funding project?"))
+    counts_for_main_funding = models.BooleanField(_("Counts towards Main Funding project's metrics?"), default=False, help_text=_("Does this counts towards Main Funding project metrics?"))
 
     class Meta:
         verbose_name = _("Project")
@@ -25,9 +39,21 @@ class Project(models.Model):
 
 
 class Area(models.Model):
-    text = models.CharField(max_length=420)
-    project = models.ManyToManyField(Project, related_name="project_activity", blank=True)
-    poa_area = models.BooleanField(default=False)
+    """
+    Represents an area or category within a project. For example: Wiki Loves Minas Gerais
+
+    Fields:
+        text (CharField): Title of the area.
+        project (ManyToManyField): Projects associated with this area.
+        poa_area (BooleanField): Whether this area is part of the Plan of Activities. Default: False.
+
+    Methods:
+        __str__(): Returns the area title.
+        clean(): Validates that `text` is not empty.
+    """
+    text = models.CharField(_("Title"), max_length=420, help_text=_("Area title"))
+    project = models.ManyToManyField(Project, related_name="project_activity", blank=True, verbose_name=_("Project"))
+    poa_area = models.BooleanField(_("Part of the Plan of Activities?"), default=False, help_text=_("Is this area part of the Plan of Activities?"))
 
     class Meta:
         verbose_name = _("Area")
@@ -41,28 +67,26 @@ class Area(models.Model):
             raise ValidationError(_("You need to fill the text field"))
 
 
-class Objective(models.Model):
-    text = models.CharField(max_length=420)
-    area = models.ForeignKey(Area, on_delete=models.CASCADE, related_name='objectives', null=True)
-
-    class Meta:
-        verbose_name = _("Objective")
-        verbose_name_plural = _("Objectives")
-
-    def __str__(self):
-        return self.text
-
-    def clean(self):
-        if not self.text:
-            raise ValidationError(_("You need to fill the text field"))
-
-
 class Activity(models.Model):
-    text = models.CharField(max_length=420)
-    code = models.CharField(max_length=20, null=True)
-    area = models.ForeignKey(Area, on_delete=models.RESTRICT, related_name='activities', null=True)
-    is_main_activity = models.BooleanField(default=False)
-    area_responsible = models.ForeignKey(TeamArea, on_delete=models.RESTRICT, related_name='activity_manager', null=True, blank=True)
+    """
+    Represents an individual activity within an area.
+
+    Fields:
+        text (CharField): Title of the activity.
+        code (CharField): Optional code for the activity (max length 20).
+        area (ForeignKey): The area this activity belongs to.
+        is_main_activity (BooleanField): Marks if this is a main activity. Default: False.
+        area_responsible (ForeignKey): TeamArea responsible for this activity. Optional.
+
+    Methods:
+        __str__(): Returns the activity title.
+        clean(): Validates that `text` is not empty.
+    """
+    text = models.CharField(_("Title"), max_length=420, help_text=_("Activity title"))
+    code = models.CharField(_("Code"), max_length=20, null=True, blank=True, help_text=_("Activity code"))
+    area = models.ForeignKey(Area, on_delete=models.RESTRICT, related_name='activities', null=True, verbose_name=_("Area"))
+    is_main_activity = models.BooleanField(_(""), default=False, help_text=_("Is this the main activity?"))
+    area_responsible = models.ForeignKey(TeamArea, on_delete=models.RESTRICT, related_name='activity_manager', null=True, blank=True, verbose_name=_("Area responsible"))
 
     class Meta:
         verbose_name = _("Activity")
@@ -77,68 +101,135 @@ class Activity(models.Model):
 
 
 class Metric(models.Model):
-    text = models.CharField(max_length=420)
-    text_en = models.CharField(max_length=420, default="", blank=True)
+    """
+    Represents metrics associated with an activity and optionally linked to projects.
+    Metrics are divided into content, community, communication, financial, and other types.
 
-    # Content metrics
-    wikipedia_created = models.IntegerField(null=True, default=0)
-    wikipedia_edited = models.IntegerField(null=True, default=0)
-    commons_created = models.IntegerField(null=True, default=0)
-    commons_edited = models.IntegerField(null=True, default=0)
-    wikidata_created = models.IntegerField(null=True, default=0)
-    wikidata_edited = models.IntegerField(null=True, default=0)
-    wikiversity_created = models.IntegerField(null=True, default=0)
-    wikiversity_edited = models.IntegerField(null=True, default=0)
-    wikibooks_created = models.IntegerField(null=True, default=0)
-    wikibooks_edited = models.IntegerField(null=True, default=0)
-    wikisource_created = models.IntegerField(null=True, default=0)
-    wikisource_edited = models.IntegerField(null=True, default=0)
-    wikinews_created = models.IntegerField(null=True, default=0)
-    wikinews_edited = models.IntegerField(null=True, default=0)
-    wikiquote_created = models.IntegerField(null=True, default=0)
-    wikiquote_edited = models.IntegerField(null=True, default=0)
-    wiktionary_created = models.IntegerField(null=True, default=0)
-    wiktionary_edited = models.IntegerField(null=True, default=0)
-    wikivoyage_created = models.IntegerField(null=True, default=0)
-    wikivoyage_edited = models.IntegerField(null=True, default=0)
-    wikispecies_created = models.IntegerField(null=True, default=0)
-    wikispecies_edited = models.IntegerField(null=True, default=0)
-    metawiki_created = models.IntegerField(null=True, default=0)
-    metawiki_edited = models.IntegerField(null=True, default=0)
-    mediawiki_created = models.IntegerField(null=True, default=0)
-    mediawiki_edited = models.IntegerField(null=True, default=0)
+    Fields:
 
-    # Community metrics
-    number_of_editors = models.IntegerField(null=True, default=0)
-    number_of_editors_retained = models.IntegerField(null=True, default=0)
-    number_of_new_editors = models.IntegerField(null=True, default=0)
-    number_of_participants = models.IntegerField(null=True, default=0)
-    number_of_partnerships_activated = models.IntegerField(null=True, default=0)
-    number_of_new_partnerships = models.IntegerField(null=True, default=0)
-    number_of_organizers = models.IntegerField(null=True, default=0)
-    number_of_organizers_retained = models.IntegerField(null=True, default=0)
-    number_of_resources = models.IntegerField(null=True, default=0)
-    number_of_feedbacks = models.IntegerField(null=True, default=0)
-    number_of_events = models.IntegerField(null=True, default=0)
+    Identification:
+        text (CharField): Title of the metric.
+        activity (ForeignKey → Activity): Activity associated with the metric.
+        project (ManyToManyField → Project): Projects associated with the metric. Optional.
 
-    # Communication metrics
-    number_of_new_followers = models.IntegerField(null=True, default=0)
-    number_of_mentions = models.IntegerField(null=True, default=0)
-    number_of_community_communications = models.IntegerField(null=True, default=0)
-    number_of_people_reached_through_social_media = models.IntegerField(null=True, default=0)
+    Content Metrics:
+        wikipedia_created, wikipedia_edited, commons_created, commons_edited,
+        wikidata_created, wikidata_edited, wikiversity_created, wikiversity_edited,
+        wikibooks_created, wikibooks_edited, wikisource_created, wikisource_edited,
+        wikinews_created, wikinews_edited, wikiquote_created, wikiquote_edited,
+        wiktionary_created, wiktionary_edited, wikivoyage_created, wikivoyage_edited,
+        wikispecies_created, wikispecies_edited, metawiki_created, metawiki_edited,
+        mediawiki_created, mediawiki_edited (IntegerField): Number of items created/edited on each platform.
 
-    # Financial metrics
-    number_of_donors = models.IntegerField(null=True, default=0)
-    number_of_submissions = models.IntegerField(null=True, default=0)
+    Community Metrics:
+        number_of_editors, number_of_editors_retained, number_of_new_editors (IntegerField)
+        number_of_organizers, number_of_organizers_retained, number_of_new_organizers (IntegerField)
+        number_of_participants, number_of_feedbacks (IntegerField)
+        number_of_partnerships_activated, number_of_new_partnerships (IntegerField)
 
-    # Other metrics
-    boolean_type = models.BooleanField(default=False)
-    other_type = models.CharField(null=True, blank=True, max_length=420)
-    observation = models.CharField(null=True, blank=True, max_length=420)
-    is_operation = models.BooleanField(default=False)
+    Communication Metrics:
+        number_of_new_followers, number_of_mentions, number_of_community_communications,
+        number_of_people_reached_through_social_media (IntegerField)
 
-    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name="metrics")
-    project = models.ManyToManyField(Project, related_name="project_associated", blank=True)
+    Financial Metrics:
+        number_of_donors, number_of_submissions (IntegerField)
+
+    Other Metrics:
+        number_of_resources, number_of_events (IntegerField)
+        boolean_type (BooleanField)
+        other_type (CharField, optional)
+        observation (CharField, optional)
+        is_operation (BooleanField): Whether this metric corresponds to an operational metric.
+
+    Methods:
+        __str__(): Returns the metric title.
+        clean(): Validates that `text` is not empty.
+    """
+    # ==================================================================================================================
+    # IDENTIFICATION
+    # ==================================================================================================================
+    text = models.CharField(_("Title"), max_length=420, help_text=_("Metric title"))
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name="metrics", verbose_name=_("Activity"))
+    project = models.ManyToManyField(Project, related_name="project_associated", blank=True, verbose_name=_("Project"))
+
+    # ==================================================================================================================
+    # CONTENT METRICS
+    # ==================================================================================================================
+    wikipedia_created     = models.IntegerField(_("Created in Wikipedia"), null=True, default=0, help_text=_("Number of items created/edited on Wikipedia."))
+    wikipedia_edited      = models.IntegerField(_("Edited in Wikipedia"), null=True, default=0, help_text=_("Number of items edited on Wikipedia."))
+    commons_created       = models.IntegerField(_("Created in Wikimedia Commons"), null=True, default=0, help_text=_("Number of items created/edited on Wikimedia Commons."))
+    commons_edited        = models.IntegerField(_("Edited in Wikimedia Commons"), null=True, default=0, help_text=_("Number of items edited on Wikimedia Commons."))
+    wikidata_created      = models.IntegerField(_("Created in Wikidata"), null=True, default=0, help_text=_("Number of items created/edited on Wikidata."))
+    wikidata_edited       = models.IntegerField(_("Edited in Wikidata"), null=True, default=0, help_text=_("Number of items created/edited on Wikidata."))
+    wikiversity_created   = models.IntegerField(_("Created in Wikiversity"), null=True, default=0, help_text=_("Number of items created/edited on Wikiversity."))
+    wikiversity_edited    = models.IntegerField(_("Edited in Wikiversity"), null=True, default=0, help_text=_("Number of items created/edited on Wikiversity."))
+    wikibooks_created     = models.IntegerField(_("Created in Wikibooks"), null=True, default=0, help_text=_("Number of items created/edited on Wikibooks."))
+    wikibooks_edited      = models.IntegerField(_("Edited in Wikibooks"), null=True, default=0, help_text=_("Number of items created/edited on Wikibooks."))
+    wikisource_created    = models.IntegerField(_("Created in Wikisource"), null=True, default=0, help_text=_("Number of items created/edited on Wikisource."))
+    wikisource_edited     = models.IntegerField(_("Edited in Wikisource"), null=True, default=0, help_text=_("Number of items created/edited on Wikisource."))
+    wikinews_created      = models.IntegerField(_("Created in Wikinews"), null=True, default=0, help_text=_("Number of items created/edited on Wikinews."))
+    wikinews_edited       = models.IntegerField(_("Edited in Wikinews"), null=True, default=0, help_text=_("Number of items created/edited on Wikinews."))
+    wikiquote_created     = models.IntegerField(_("Created in Wikiquote"), null=True, default=0, help_text=_("Number of items created/edited on Wikiquote."))
+    wikiquote_edited      = models.IntegerField(_("Edited in Wikiquote"), null=True, default=0, help_text=_("Number of items created/edited on Wikiquote."))
+    wiktionary_created    = models.IntegerField(_("Created in Wiktionary"), null=True, default=0, help_text=_("Number of items created/edited on Wiktionary."))
+    wiktionary_edited     = models.IntegerField(_("Edited in Wiktionary"), null=True, default=0, help_text=_("Number of items created/edited on Wiktionary."))
+    wikivoyage_created    = models.IntegerField(_("Created in Wikivoyage"), null=True, default=0, help_text=_("Number of items created/edited on Wikivoyage."))
+    wikivoyage_edited     = models.IntegerField(_("Edited in Wikivoyage"), null=True, default=0, help_text=_("Number of items created/edited on Wikivoyage."))
+    wikispecies_created   = models.IntegerField(_("Created in Wikispecies"), null=True, default=0, help_text=_("Number of items created/edited on Wikispecies."))
+    wikispecies_edited    = models.IntegerField(_("Edited in Wikispecies"), null=True, default=0, help_text=_("Number of items created/edited on Wikispecies."))
+    metawiki_created      = models.IntegerField(_("Created in Meta-Wiki"), null=True, default=0, help_text=_("Number of items created/edited on Meta-Wiki."))
+    metawiki_edited       = models.IntegerField(_("Edited in Meta-Wiki"), null=True, default=0, help_text=_("Number of items created/edited on Meta-Wiki."))
+    mediawiki_created     = models.IntegerField(_("Created in Mediawiki"), null=True, default=0, help_text=_("Number of items created/edited on Mediawiki."))
+    mediawiki_edited      = models.IntegerField(_("Edited in Mediawiki"), null=True, default=0, help_text=_("Number of items created/edited on Mediawiki."))
+    incubator_created     = models.IntegerField(_("Created in Wikimedia Incubator"), null=True, default=0, help_text=_("Number of items created/edited on Wikimedia Incubator."))
+    incubator_edited      = models.IntegerField(_("Edited in Wikimedia Incubator"), null=True, default=0, help_text=_("Number of items created/edited on Wikimedia Incubator."))
+    wikifunctions_created = models.IntegerField(_("Created in WikiFunctions"), null=True, default=0, help_text=_("Number of items created/edited on WikiFunctions."))
+    wikifunctions_edited  = models.IntegerField(_("Edited in WikiFunctions"), null=True, default=0, help_text=_("Number of items created/edited on WikiFunctions."))
+
+    # ==================================================================================================================
+    # COMMUNITY METRICS
+    # ==================================================================================================================
+    # Editors
+    number_of_editors = models.IntegerField(_("Number of editors"), null=True, default=0, help_text=_("Number of editors"))
+    number_of_editors_retained = models.IntegerField(_("Number of editors retained"), null=True, default=0, help_text=_("Number of editors participating in more activities"))
+    number_of_new_editors = models.IntegerField(_("Number of new editors"), null=True, default=0, help_text=_("Number of editors recently registered"))
+
+    # Organizers
+    number_of_organizers = models.IntegerField(_("Number of organizers"), null=True, default=0, help_text=_("Number of organizers"))
+    number_of_organizers_retained = models.IntegerField(_("Number of organizers retained"), null=True, default=0, help_text=_("Number of organizers participating in more activities"))
+    number_of_new_organizers = models.IntegerField(_("Number of new organizers"), null=True, default=0, help_text=_("Number of organizers recently registered"))
+
+    # Participants
+    number_of_participants = models.IntegerField(_("Number of participants"), null=True, default=0, help_text=_("Number of participants"))
+    number_of_feedbacks = models.IntegerField(_("Number of feedbacks"), null=True, default=0, help_text=_("Number of feedbacks"))
+
+    # Partnerships
+    number_of_partnerships_activated = models.IntegerField(_("Number of partnerships activated"), null=True, default=0, help_text=_("Number of partnerships activated"))
+    number_of_new_partnerships = models.IntegerField(_("Number of new partnerships"), null=True, default=0, help_text=_("Number of new partnerships"))
+
+    # ==================================================================================================================
+    # COMMUNICATION METRICS
+    # ==================================================================================================================
+    number_of_new_followers = models.IntegerField(_("Number of new followers"), null=True, default=0, help_text=_("Number of new followers in social media"))
+    number_of_mentions = models.IntegerField(_("Number of mentions"), null=True, default=0, help_text=_("Media clipping"))
+    number_of_community_communications = models.IntegerField(_("Number of community communications"), null=True, default=0, help_text=_("Number of communications and newsletters"))
+    number_of_people_reached_through_social_media = models.IntegerField(_("Number of people reached through social media"), null=True, default=0, help_text=_("Number of people reached through social media"))
+
+    # ==================================================================================================================
+    # FINANCIAL METRICS
+    # ==================================================================================================================
+    number_of_donors = models.IntegerField(_("Number of donors"), null=True, default=0, help_text=_("Number of donors"))
+    number_of_submissions = models.IntegerField(_("Number of submissions"), null=True, default=0, help_text=_("Number of grants submissions"))
+
+    # ==================================================================================================================
+    # OTHER METRICS
+    # ==================================================================================================================
+    number_of_resources = models.IntegerField(_("Number of resources"), null=True, default=0, help_text=_("Number of resources produced"))
+    number_of_events = models.IntegerField(_("Number of events"), null=True, default=0, help_text=_("Number of activities"))
+    boolean_type = models.BooleanField(_("Boolean type?"), default=False, help_text=_("Boolean type metric"))
+    other_type = models.CharField(_("Other type?"), null=True, blank=True, max_length=420, help_text=_("Other type of metric"))
+    observation = models.CharField(_("Observation"), null=True, blank=True, max_length=420, help_text=_("Observation for this metric"))
+    is_operation = models.BooleanField(_("Operation?"), default=False, help_text=_("Is the metric an operation metric?"))
 
     class Meta:
         verbose_name = _("Metric")

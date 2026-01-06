@@ -42,6 +42,9 @@ PATTERNS = {
 }
 
 
+# ======================================================================================================================
+# ADMINISTRATIVE PAGES
+# ======================================================================================================================
 def index(request):
     context = {"title": _("Home")}
     return render(request, "metrics/home.html", context)
@@ -56,6 +59,9 @@ def show_activities_plan(request):
     return redirect(settings.POA_URL)
 
 
+# ======================================================================================================================
+# METRICS
+# ======================================================================================================================
 @login_required
 @permission_required("metrics.view_metric")
 def prepare_pdf(request, *args, **kwargs):
@@ -109,7 +115,7 @@ def show_metrics_per_project(request):
 
     context = {
         "poa_dataset": poa_dataset,
-        "dataset": get_metrics_and_aggregate_per_project(project_query=Q(active=True, current_poa=False), lang=current_language),
+        "dataset": get_metrics_and_aggregate_per_project(project_query=Q(active_status=True, current_poa=False), lang=current_language),
         "title": _("Show metrics per project"),
         "show_index": True
     }
@@ -144,7 +150,7 @@ def show_metrics_for_specific_project(request, project_id):
 def show_detailed_metrics_per_project(request):
     context = {
         "poa_dataset": {},
-        "dataset": get_metrics_and_aggregate_per_project(project_query=Q(active=True)),
+        "dataset": get_metrics_and_aggregate_per_project(project_query=Q(active_status=True)),
         "title": _("Show metrics per project")
     }
     return render(request, "metrics/list_metrics_per_project.html", context)
@@ -187,45 +193,21 @@ def metrics_reports(request, metric_id):
         return redirect(reverse('metrics:per_project'))
 
 
-@login_required
-@permission_required("metrics.view_metric")
-def export_timespan_report(request, timeframe="trimester", by_area=False):
-    buffer = StringIO()
+def update_metrics_relations(request):
+    main_funding = Project.objects.get(main_funding=True)
+    editors_filter = Q(number_of_editors__gt=0) | Q(number_of_editors_retained__gt=0) | Q(number_of_new_editors__gt=0)
+    editors_metrics = Metric.objects.filter(project=main_funding).filter(editors_filter)
+    reports = Report.objects.filter(Q(metrics_related__number_of_editors__gt=0))
+    for report in reports:
+        report.metrics_related.add(*editors_metrics)
+        report.save()
 
-    if by_area:
-        for area in TeamArea.objects.filter(project__main_funding=True):
-            get_results_divided_by_timespan(buffer, area, False, timeframe)
-    else:
-        get_results_divided_by_timespan(buffer, None, False, timeframe)
-
-    response = HttpResponse(buffer.getvalue())
-    response["Content-Type"] = "text/plain; charset=UTF-8"
-    response["Content-Disposition"] = f'attachment; filename="{timeframe}_report.txt"'
-
-    return response
+    return redirect(reverse("metrics:per_project"))
 
 
-def get_timespan_array(timeframe):
-    year = datetime.datetime.today().year
-
-    config = settings.REPORT_TIMESPANS.get(timeframe)
-    if not config:
-        raise ValueError(f"Invalid timeframe: {timeframe}")
-
-    spans = [ (datetime.date(year, start[0], start[1]), datetime.date(year, end[0], end[1])) for start, end in config["periods"] ]
-    total = config.get("total")
-    if total:
-        spans.append((datetime.date(year, total[0][0], total[0][1]), datetime.date(year, total[1][0], total[1][1])))
-
-    return spans
-
-
-def get_header_columns(timeframe):
-    labels = settings.REPORT_TIMESPANS[timeframe]["labels"]
-    columns = " !! ".join(labels)
-    return f"!Activity !! Metrics !! {columns} !! Total !! References\n|-\n"
-
-
+# ======================================================================================================================
+# EXPORT
+# ======================================================================================================================
 def export_trimester_report(request):
     return export_timespan_report(request, "trimester", False)
 
@@ -250,16 +232,58 @@ def export_year_report_by_area(request):
     return export_timespan_report(request, "year", True)
 
 
-def get_results_divided_by_timespan(buffer, area=None, with_goal=False, timeframe="trimester"):
+@login_required
+@permission_required("metrics.view_metric")
+def export_timespan_report(request, timeframe="trimester", by_area=False):
+    buffer = StringIO()
+
+    if by_area:
+        for area in TeamArea.objects.filter(project__main_funding=True):
+            get_results_divided_by_timespan(buffer, area, False, timeframe)
+    else:
+        get_results_divided_by_timespan(buffer, None, False, timeframe)
+
+    response = HttpResponse(buffer.getvalue())
+    response["Content-Type"] = "text/plain; charset=UTF-8"
+    response["Content-Disposition"] = f'attachment; filename="{timeframe}_report.txt"'
+
+    return response
+
+
+# ======================================================================================================================
+# FUNCTIONS
+# ======================================================================================================================
+def get_timespan_array(timeframe):
+    year = datetime.datetime.today().year
+
+    config = settings.REPORT_TIMESPANS.get(timeframe)
+    if not config:
+        raise ValueError(f"Invalid timeframe: {timeframe}")
+
+    spans = [ (datetime.date(year, start[0], start[1]), datetime.date(year, end[0], end[1])) for start, end in config["periods"] ]
+    total = config.get("total")
+    if total:
+        spans.append((datetime.date(year, total[0][0], total[0][1]), datetime.date(year, total[1][0], total[1][1])))
+
+    return spans
+
+
+def get_header_columns(timeframe):
+    labels = settings.REPORT_TIMESPANS[timeframe]["labels"]
+    columns = " !! ".join(labels)
+    return f"!Activity !! Metrics !! {columns} !! Total !! References\n|-\n"
+
+
+def get_results_divided_by_timespan(buffer, area=None, with_goal=False, timeframe="semester"):
     timespan_array = get_timespan_array(timeframe)
 
     if area:
         report_query = Q(area_responsible=area)
         header = (
             "==" + area.text + "==\n"
-            "<div class='wmb_report_table_container bd-" + area.color_code + "'>\n"
+            "<div class='wmb_report_table_container bd-" + area.code + "'>\n"
             "{| class='wikitable wmb_report_table'\n"
-            "! colspan='8' class='bg-" + area.color_code + " co-" + area.color_code +
+            "! colspan='8' class='bg-" + area.code + " co-" + area.code +
             "' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n"
         )
         footer = "|}\n</div>\n"
@@ -281,78 +305,6 @@ def get_results_divided_by_timespan(buffer, area=None, with_goal=False, timefram
     buffer.write(poa_wikitext)
     buffer.write(main_wikitext)
     buffer.write(footer)
-#
-#
-# @login_required
-# @permission_required("metrics.view_metric")
-# def export_trimester_report(request):
-#     buffer = StringIO()
-#
-#     get_results_divided_by_trimester(buffer, None, False)
-#
-#     response = HttpResponse(buffer.getvalue())
-#     response['Content-Type'] = 'text/plain; charset=UTF-8'
-#     response['Content-Disposition'] = 'attachment; filename="trimester_report.txt"'
-#
-#     return response
-#
-# @login_required
-# @permission_required("metrics.view_metric")
-# def export_trimester_report_by_by_area_responsible(request):
-#     buffer = StringIO()
-#
-#     for area in TeamArea.objects.all():
-#         get_results_divided_by_trimester(buffer, area, False)
-#
-#     response = HttpResponse(buffer.getvalue())
-#     response['Content-Type'] = 'text/plain; charset=UTF-8'
-#     response['Content-Disposition'] = 'attachment; filename="trimester_report.txt"'
-#
-#     return response
-#
-#
-# def get_results_divided_by_trimester(buffer, area=None, with_goal=False):
-#     timespan_array = [
-#         (datetime.date(datetime.datetime.today().year, 1, 1), datetime.date(datetime.datetime.today().year, 3, 31)),
-#         (datetime.date(datetime.datetime.today().year, 4, 1), datetime.date(datetime.datetime.today().year, 6, 18)),
-#         (datetime.date(datetime.datetime.today().year, 6, 19), datetime.date(datetime.datetime.today().year, 9, 20)),
-#         (datetime.date(datetime.datetime.today().year, 9, 21), datetime.date(datetime.datetime.today().year, 12, 31)),
-#         (datetime.date(datetime.datetime.today().year, 1, 1), datetime.date(datetime.datetime.today().year, 12, 31))
-#     ]
-#     if area:
-#         report_query = Q(area_responsible=area)
-#         header = ("==" + area.text + "==\n<div class='wmb_report_table_container bd-" + area.color_code +
-#                   "'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-" + area.color_code +
-#                   " co-" + area.color_code + "' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n")
-#         footer = "|}\n</div>\n"
-#     else:
-#         report_query = Q()
-#         header = "{| class='wikitable wmb_report_table'\n"
-#         footer = "|}\n"
-#
-#     poa_results = get_results_for_timespan(timespan_array,
-#                                            Q(project=Project.objects.get(current_poa=True), is_operation=True),
-#                                            report_query,
-#                                            with_goal,
-#                                            "en",
-#                                            False)
-#     main_results = get_results_for_timespan(timespan_array,
-#                                             Q(project=Project.objects.get(main_funding=True)),
-#                                             report_query,
-#                                             with_goal,
-#                                             "en",
-#                                             True)
-#
-#     poa_wikitext = construct_wikitext(poa_results, header +
-#                                       "!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n")
-#     main_wikitext = construct_wikitext(main_results, "")
-#
-#     poa_wikitext = shorten_duplicate_refs(poa_wikitext)
-#     main_wikitext = shorten_duplicate_refs(main_wikitext)
-#
-#     buffer.write(poa_wikitext)
-#     buffer.write(main_wikitext)
-#     buffer.write(footer)
 
 
 def get_results_for_timespan(timespan_array, metric_query=Q(), report_query=Q(), with_goal=False, lang="pt", is_main_funding=False):
@@ -388,42 +340,7 @@ def get_results_for_timespan(timespan_array, metric_query=Q(), report_query=Q(),
     return results
 
 
-def shorten_duplicate_refs(wikitext):
-    ref_counts = {}
-
-    def replace_ref(match):
-        ref_name = match.group(1)
-        if ref_name in ref_counts:
-            ref_counts[ref_name] += 1
-            return f'<ref name="{ref_name}"/>'
-        else:
-            ref_counts[ref_name] = 1
-            return match.group(0)
-
-    pattern = r'<ref name="([^\"]+)">[^<]+</ref>'
-    return re.sub(pattern, replace_ref, wikitext)
-
-
-def construct_wikitext(results, wikitext):
-    activities = list(dict.fromkeys(row['activity'] for row in results))
-    other_activity = Activity.objects.get(pk=1).text in activities
-    for activity in activities:
-        metrics = [row for row in results if row['activity'] == activity]
-        rowspan = len(metrics)
-        if not other_activity:
-            header = "| rowspan='{}' | {} |".format(rowspan, activity) if len(metrics) > 1 else "| {} |".format(
-                activity)
-        else:
-            header = "| rowspan='{}' | - |".format(rowspan) if len(metrics) > 1 else "| - |"
-
-        for metric in metrics:
-            wikitext += header + "| {} || {}\n|-\n".format(metric["metric"], " || ".join(map(str, metric["done"])))
-            header = ""
-
-    return wikitext
-
-
-def get_metrics_and_aggregate_per_project(project_query=Q(active=True), metric_query=Q(), supplementary_query=Q(), field=None, lang=""):
+def get_metrics_and_aggregate_per_project(project_query=Q(active_status=True), metric_query=Q(), supplementary_query=Q(), field=None, lang=""):
     aggregated_metrics_and_results = {}
 
     for project in Project.objects.filter(project_query).order_by("-current_poa", "-main_funding"):
@@ -517,29 +434,6 @@ def get_goal_for_metric(metric):
     }
 
 
-def build_wiki_ref_for_reports(metric, supplementary_query=Q()):
-    query = Q(metrics_related__in=[metric]) & supplementary_query
-    reports = Report.objects.filter(query)
-    refs_set = []
-    for report in reports:
-        if not report.reference_text:
-            links = report.links.replace("\\r\\n", "\r\n").splitlines()
-            formatted_links = []
-            for link in links:
-                formatted_links.append(wikify_link(link))
-
-            ref_content = ", ".join(formatted_links)
-            if ref_content:
-                refs_set.append(f"<ref name=\"sara-{report.id}\">{ref_content}</ref>")
-        else:
-            refs_set.append(report.reference_text)
-    return "".join(refs_set)
-
-
-def is_there_a_final_report(reports):
-    return reports.filter(metrics_related__boolean_type=True, partial_report=False).exists() or False
-
-
 def get_done_for_report(reports, metric):
     operation_reports = OperationReport.objects.filter(report__in=reports, metric=metric)
     alt_operation_reports = OperationReport.objects.filter(report__in=reports)
@@ -579,13 +473,59 @@ def get_done_for_report(reports, metric):
     }
 
 
-def update_metrics_relations(request):
-    main_funding = Project.objects.get(main_funding=True)
-    editors_filter = Q(number_of_editors__gt=0) | Q(number_of_editors_retained__gt=0) | Q(number_of_new_editors__gt=0)
-    editors_metrics = Metric.objects.filter(project=main_funding).filter(editors_filter)
-    reports = Report.objects.filter(Q(metrics_related__number_of_editors__gt=0))
-    for report in reports:
-        report.metrics_related.add(*editors_metrics)
-        report.save()
+def shorten_duplicate_refs(wikitext):
+    ref_counts = {}
 
-    return redirect(reverse("metrics:per_project"))
+    def replace_ref(match):
+        ref_name = match.group(1)
+        if ref_name in ref_counts:
+            ref_counts[ref_name] += 1
+            return f'<ref name="{ref_name}"/>'
+        else:
+            ref_counts[ref_name] = 1
+            return match.group(0)
+
+    pattern = r'<ref name="([^\"]+)">[^<]+</ref>'
+    return re.sub(pattern, replace_ref, wikitext)
+
+
+def construct_wikitext(results, wikitext):
+    activities = list(dict.fromkeys(row['activity'] for row in results))
+    other_activity = Activity.objects.get(pk=1).text in activities
+    for activity in activities:
+        metrics = [row for row in results if row['activity'] == activity]
+        rowspan = len(metrics)
+        if not other_activity:
+            header = "| rowspan='{}' | {} |".format(rowspan, activity) if len(metrics) > 1 else "| {} |".format(
+                activity)
+        else:
+            header = "| rowspan='{}' | - |".format(rowspan) if len(metrics) > 1 else "| - |"
+
+        for metric in metrics:
+            wikitext += header + "| {} || {}\n|-\n".format(metric["metric"], " || ".join(map(str, metric["done"])))
+            header = ""
+
+    return wikitext
+
+
+def build_wiki_ref_for_reports(metric, supplementary_query=Q()):
+    query = Q(metrics_related__in=[metric]) & supplementary_query
+    reports = Report.objects.filter(query)
+    refs_set = []
+    for report in reports:
+        if not report.reference_text:
+            links = report.links.replace("\\r\\n", "\r\n").splitlines()
+            formatted_links = []
+            for link in links:
+                formatted_links.append(wikify_link(link))
+
+            ref_content = ", ".join(formatted_links)
+            if ref_content:
+                refs_set.append(f"<ref name=\"sara-{report.id}\">{ref_content}</ref>")
+        else:
+            refs_set.append(report.reference_text)
+    return "".join(refs_set)
+
+
+def is_there_a_final_report(reports):
+    return reports.filter(metrics_related__boolean_type=True, partial_report=False).exists() or False

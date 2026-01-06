@@ -4,10 +4,10 @@ from django.utils.translation import gettext as _
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 
-from metrics.link_utils import build_wikiref
+from metrics.link_utils import build_wiki_ref
 from metrics.models import Activity, Project, Metric
 from users.models import TeamArea, UserProfile
-from strategy.models import StrategicAxis, Direction
+from strategy.models import StrategicAxis, Direction, StrategicLearningQuestion
 
 
 class Funding(models.Model):
@@ -94,54 +94,6 @@ def save_team_area_as_area_activated(sender, instance, created, **kwargs):
     if created:
         contact = ""
         AreaActivated.objects.create(text=instance.text, contact=contact)
-
-
-class LearningArea(models.Model):
-    text = models.CharField(max_length=420)
-
-    class Meta:
-        verbose_name = _("Learning area")
-        verbose_name_plural = _("Learning areas")
-
-    def __str__(self):
-        return self.text
-
-    def clean(self):
-        if not self.text:
-            raise ValidationError(_("You need to fill the text field"))
-
-
-class StrategicLearningQuestion(models.Model):
-    text = models.CharField(max_length=420)
-    learning_area = models.ForeignKey(LearningArea, on_delete=models.CASCADE, related_name='strategic_question')
-
-    class Meta:
-        verbose_name = _("Strategic learning question")
-        verbose_name_plural = _("Strategic learning questions")
-
-    def __str__(self):
-        return self.text
-
-    def clean(self):
-        if not self.text:
-            raise ValidationError(_("You need to fill the text field"))
-
-
-class EvaluationObjective(models.Model):
-    text = models.CharField(max_length=420)
-    learning_area_of_objective = models.ForeignKey(LearningArea, on_delete=models.CASCADE, null=True,
-                                                   related_name='evaluation_objective')
-
-    class Meta:
-        verbose_name = _("Evaluation objective")
-        verbose_name_plural = _("Evaluation objectives")
-
-    def __str__(self):
-        return self.text
-
-    def clean(self):
-        if not self.text:
-            raise ValidationError(_("You need to fill the text field"))
 
 
 class Report(models.Model):
@@ -232,7 +184,7 @@ class Report(models.Model):
         if not self.end_date:
             self.end_date = self.initial_date
         if not self.reference_text:
-            self.reference_text = build_wikiref(self.links, self.pk)
+            self.reference_text = build_wiki_ref(self.links, self.pk)
 
     def __str__(self):
         return self.description

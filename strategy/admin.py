@@ -1,7 +1,8 @@
-from django.conf import settings
+from django.contrib import admin
+from .models import StrategicAxis, Direction, LearningArea, StrategicLearningQuestion, EvaluationObjective
 
-if settings.ENABLE_STRATEGY_APP:
-    from django.contrib import admin
-    from .models import StrategicAxis, Direction
-    admin.site.register(StrategicAxis)
-    admin.site.register(Direction)
+admin.site.register(StrategicAxis)
+admin.site.register(Direction)
+admin.site.register(LearningArea)
+admin.site.register(StrategicLearningQuestion)
+admin.site.register(EvaluationObjective)

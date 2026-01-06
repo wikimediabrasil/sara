@@ -47,7 +47,7 @@
                 </div>
                 <div class="nav_separator"></div>
             {% endif %}
-            {% if settings.ENABLE_CALENDAR_APP %}
+            {% if ENABLE_AGENDA_APP %}
                 <div class="nav_block">
                     <a href="{% url 'agenda:show_calendar' %}" aria-label="{% translate 'Calendar of activities' %}">
                         <i class="nav_icon fa-solid fa-calendar-check"></i>
@@ -56,7 +56,7 @@
                 </div>
                 <div class="nav_separator"></div>
             {% endif %}
-            {% if settings.ENABLE_BUG_APP and perms.report.add_report %}
+            {% if ENABLE_BUG_APP and perms.report.add_report %}
                 <div class="nav_block">
                     <a href="{% url 'agenda:area_activities' %}" aria-label="{% translate 'Area activities' %}">
                         <i class="nav_icon fa-solid fa-calendar-check"></i>

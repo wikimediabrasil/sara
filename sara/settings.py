@@ -27,8 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
-    'metrics.apps.MetricsConfig',
     'users.apps.UsersConfig',
+    'strategy.apps.StrategyConfig',
+    'metrics.apps.MetricsConfig',
     'report.apps.ReportConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -46,10 +47,7 @@ if ENABLE_BUG_APP:
     INSTALLED_APPS.append('bug.apps.BugConfig')
 
 if ENABLE_AGENDA_APP:
-    INSTALLED_APPS.append('agenda.apps.BugConfig')
-
-if ENABLE_STRATEGY_APP:
-    INSTALLED_APPS.append('strategy.apps.StrategyConfig')
+    INSTALLED_APPS.append('agenda.apps.AgendaConfig')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -80,7 +78,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
-                'utils.context_processors.global_flags'
+                'utils.context_processors.global_flags',
+                'utils.context_processors.global_settings',
             ],
         },
     },

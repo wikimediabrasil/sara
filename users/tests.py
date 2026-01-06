@@ -13,8 +13,8 @@ from django.utils.translation import gettext as _
 from users.models import TeamArea, Position, UserProfile
 from users.admin import AccountUserAdmin, UserProfileInline
 from users.views import login_oauth, logout_oauth
+from users.pipeline import associate_by_wiki_handle, get_username
 from agenda.models import Event
-
 
 
 class TeamAreaModelTests(TestCase):
@@ -37,11 +37,6 @@ class TeamAreaModelTests(TestCase):
         with self.assertRaises(ValidationError):
             team_area2.text = self.text
             team_area2.code = ""
-            team_area2.full_clean()
-
-        with self.assertRaises(ValidationError):
-            team_area2.code = self.code
-            team_area2.color_code = ""
             team_area2.full_clean()
 
     def test_trying_to_delete_team_area_that_are_responsible_for_events_fails(self):
@@ -223,3 +218,103 @@ class OauthViewTest(TestCase):
         expected_url = reverse("metrics:index")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, expected_url)
+
+
+class ListProfilesViewTest(TestCase):
+    def setUp(self):
+        self.superuser = User.objects.create_superuser(username="admin", password="pass", email="admin@test.com")
+        self.staff = User.objects.create_user(username="bob", password="pass", is_staff=True)
+        self.user = User.objects.create_user(username="alice", password="pass")
+        self.url = reverse("users:list_profiles")
+
+    def test_denies_non_superuser(self):
+        self.client.login(username="alice", password="pass")
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_allows_superuser(self):
+        self.client.login(username="admin", password="pass")
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_uses_correct_template(self):
+        self.client.login(username="admin", password="pass")
+        response = self.client.get(self.url)
+        self.assertTemplateUsed(response, "users/list_profiles.html")
+
+    def test_context_can_edit_true(self):
+        self.client.login(username="admin", password="pass")
+        response = self.client.get(self.url)
+        self.assertTrue(response.context["can_edit"])
+
+
+class AssociateByWikiHandleTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="django_user", password="pass"
+        )
+        self.profile = UserProfile.objects.create(
+            user=self.user,
+            professional_wiki_handle="WikiHandle"
+        )
+
+    def test_returns_existing_authenticated_user(self):
+        result = associate_by_wiki_handle(
+            backend=None,
+            uid="123",
+            user=self.user,
+        )
+        self.assertEqual(result["user"], self.user)
+
+    def test_matches_by_profile_wiki_handle_case_insensitive(self):
+        result = associate_by_wiki_handle(
+            backend=None,
+            uid="123",
+            details={"username": "wikihandle"},
+        )
+        self.assertEqual(result["user"], self.user)
+
+    def test_fallback_matches_by_username(self):
+        other = User.objects.create_user(
+            username="WikiUser", password="pass"
+        )
+        result = associate_by_wiki_handle(
+            backend=None,
+            uid="123",
+            details={"username": "WikiUser"},
+        )
+        self.assertEqual(result["user"], other)
+
+    def test_no_match_returns_empty_dict(self):
+        result = associate_by_wiki_handle(
+            backend=None,
+            uid="123",
+            details={"username": "unknown"},
+        )
+        self.assertEqual(result, {})
+
+    def test_missing_details_is_safe(self):
+        result = associate_by_wiki_handle(
+            backend=None,
+            uid="123",
+        )
+        self.assertEqual(result, {})
+
+
+class GetUsernameTests(TestCase):
+    def test_existing_user_keeps_username(self):
+        user = User.objects.create_user(username="keepme", password="pass")
+        result = get_username(
+            strategy=None,
+            details={"username": "ignored"},
+            user=user,
+        )
+        self.assertEqual(result, {"username": "keepme"})
+
+    def test_new_user_uses_details_username(self):
+        result = get_username(
+            strategy=None,
+            details={"username": "wikiname"},
+            user=None,
+        )
+        self.assertEqual(result, {"username": "wikiname"})

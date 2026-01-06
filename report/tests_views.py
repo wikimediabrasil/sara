@@ -8,11 +8,11 @@ from django.urls import reverse
 from django.contrib.auth.models import Permission
 from django.utils.translation import gettext as _
 
-from metrics.models import Metric, StrategicAxis
+from metrics.models import Metric
 from users.models import TeamArea, UserProfile, User
 from metrics.models import Activity, Area
-from strategy.models import Direction
-from report.models import Funding, Partner, Technology, AreaActivated, StrategicLearningQuestion, Report, Editor, LearningArea, Organizer, Project, OperationReport
+from strategy.models import Direction, StrategicAxis, LearningArea
+from report.models import Funding, Partner, Technology, AreaActivated, StrategicLearningQuestion, Report, Editor, Organizer, Project, OperationReport
 from report.forms import NewReportForm, activities_associated_as_choices, learning_areas_as_choices
 from report.views import export_report_instance, export_metrics, export_user_profile, export_area_activated, export_directions_related, export_editors, export_learning_questions_related, export_organizers, export_partners_activated, export_technologies_used, get_or_create_editors, get_or_create_organizers, export_operation_report, export_funding
 
@@ -57,7 +57,7 @@ class ReportAddViewTest(TestCase):
         learning_area = LearningArea.objects.create(text="Learning area")
         slq = StrategicLearningQuestion.objects.create(text="SLQ", learning_area=learning_area)
         activity_associated = Activity.objects.create(text="Activity")
-        area_reponsible = TeamArea.objects.create(text="Area")
+        area_responsible = TeamArea.objects.create(text="Area")
         metric = Metric.objects.create(text="Metric", activity=activity_associated, number_of_editors=10)
         metric_2 = Metric.objects.create(text="Metric 2", activity=activity_associated, wikipedia_edited=2)
         metric_2.project.add(project)
@@ -90,7 +90,7 @@ class ReportAddViewTest(TestCase):
             "learning": "Learnings!"*51,
             "learning_questions_related": [slq.id],
             "activity_associated": activity_associated.id,
-            "area_responsible": area_reponsible.id,
+            "area_responsible": area_responsible.id,
             "links": "Links",
             "donors": 0,
             "submissions": 0,
@@ -127,7 +127,7 @@ class ReportAddViewTest(TestCase):
         learning_area = LearningArea.objects.create(text="Learning area")
         slq = StrategicLearningQuestion.objects.create(text="SLQ", learning_area=learning_area)
         activity_associated = Activity.objects.create(text="Activity")
-        area_reponsible = TeamArea.objects.create(text="Area")
+        area_responsible = TeamArea.objects.create(text="Area")
         metric = Metric.objects.create(text="Metric", activity=activity_associated, number_of_editors=10, is_operation=True)
 
         data = {
@@ -152,7 +152,7 @@ class ReportAddViewTest(TestCase):
             "learning": "Learnings!"*51,
             "learning_questions_related": [slq.id],
             "activity_associated": activity_associated.id,
-            "area_responsible": area_reponsible.id,
+            "area_responsible": area_responsible.id,
             "links": "Links",
             "metrics_related": [metric.id],
             "organizers_string": "Organizer 1;Institution 1;Institution 2",
@@ -195,7 +195,7 @@ class ReportAddViewTest(TestCase):
         learning_area = LearningArea.objects.create(text="Learning area")
         slq = StrategicLearningQuestion.objects.create(text="SLQ", learning_area=learning_area)
         activity_associated = Activity.objects.create(text="Activity")
-        area_reponsible = TeamArea.objects.create(text="Area")
+        area_responsible = TeamArea.objects.create(text="Area")
 
         data = {
             "description": "Report",
@@ -204,7 +204,7 @@ class ReportAddViewTest(TestCase):
             "learning": "Learnings!" * 49,
             "learning_questions_related": [slq.id],
             "activity_associated": activity_associated.id,
-            "area_responsible": area_reponsible.id,
+            "area_responsible": area_responsible.id,
             "links": "Links"
         }
         form = NewReportForm(data, user=self.user)
@@ -222,7 +222,7 @@ class ReportAddViewTest(TestCase):
         learning_area = LearningArea.objects.create(text="Learning area")
         slq = StrategicLearningQuestion.objects.create(text="SLQ", learning_area=learning_area)
         activity_associated = Activity.objects.create(text="Activity")
-        area_reponsible = TeamArea.objects.create(text="Area")
+        area_responsible = TeamArea.objects.create(text="Area")
         metric = Metric.objects.create(text="Metric", activity=activity_associated, number_of_editors=10, is_operation=True)
 
         data = {
@@ -247,7 +247,7 @@ class ReportAddViewTest(TestCase):
             "learning": "Learnings!" * 51,
             "learning_questions_related": [slq.id],
             "activity_associated": activity_associated.id,
-            "area_responsible": area_reponsible.id,
+            "area_responsible": area_responsible.id,
             "links": "Links",
             "metrics_related": [metric.id],
             "organizers_string": "Organizer 1;Institution 1;Institution 2",
@@ -280,10 +280,9 @@ class ReportAddViewTest(TestCase):
         self.assertEqual(Report.objects.count(), 1)
         self.assertIn(_("It seems that you already submitted this report!"), response_2.content.decode('utf-8'))
 
-
     def test_delete_report_fails_if_user_doesnt_have_permission(self):
         activity_associated = Activity.objects.create(text="Activity")
-        area_reponsible = TeamArea.objects.create(text="Area")
+        area_responsible = TeamArea.objects.create(text="Area")
 
         report_1 = Report.objects.create(description="Report 1",
                                          created_by=self.user_profile,
@@ -291,7 +290,7 @@ class ReportAddViewTest(TestCase):
                                          initial_date=datetime.now().date(),
                                          learning="Learnings!" * 51,
                                          activity_associated=activity_associated,
-                                         area_responsible=area_reponsible,
+                                         area_responsible=area_responsible,
                                          links="Links")
 
         self.user.user_permissions.remove(self.delete_permission)
@@ -304,7 +303,7 @@ class ReportAddViewTest(TestCase):
 
     def test_delete_report_view_get(self):
         activity_associated = Activity.objects.create(text="Activity")
-        area_reponsible = TeamArea.objects.create(text="Area")
+        area_responsible = TeamArea.objects.create(text="Area")
 
         report_1 = Report.objects.create(description="Report 1",
                                          created_by=self.user_profile,
@@ -312,7 +311,7 @@ class ReportAddViewTest(TestCase):
                                          initial_date=datetime.now().date(),
                                          learning="Learnings!" * 51,
                                          activity_associated=activity_associated,
-                                         area_responsible=area_reponsible,
+                                         area_responsible=area_responsible,
                                          links="Links")
         self.client.login(username=self.username, password=self.password)
         url = reverse("report:delete_report", kwargs={"report_id": report_1.id})
@@ -323,7 +322,7 @@ class ReportAddViewTest(TestCase):
 
     def test_delete_report_view_post(self):
         activity_associated = Activity.objects.create(text="Activity")
-        area_reponsible = TeamArea.objects.create(text="Area")
+        area_responsible = TeamArea.objects.create(text="Area")
 
         report_1 = Report.objects.create(description="Report 1",
                                          created_by=self.user_profile,
@@ -331,7 +330,7 @@ class ReportAddViewTest(TestCase):
                                          initial_date=datetime.now().date(),
                                          learning="Learnings!" * 51,
                                          activity_associated=activity_associated,
-                                         area_responsible=area_reponsible,
+                                         area_responsible=area_responsible,
                                          links="Links")
         self.assertEqual(Report.objects.count(), 1)
         self.client.login(username=self.username, password=self.password)
@@ -495,7 +494,7 @@ class ReportAddViewTest(TestCase):
         Activity.objects.create(text="Other Activity")
         activity = Activity.objects.create(text="Activity")
 
-        area_reponsible = TeamArea.objects.create(text="Area")
+        area_responsible = TeamArea.objects.create(text="Area")
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
         Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
         learning_area = LearningArea.objects.create(text="Learning area")
@@ -509,7 +508,7 @@ class ReportAddViewTest(TestCase):
                                          initial_date=datetime.now().date().strftime("%Y-%m-%d"),
                                          learning="Learnings!" * 51,
                                          activity_associated=activity,
-                                         area_responsible=area_reponsible,
+                                         area_responsible=area_responsible,
                                          links="Links")
 
         report_1.metrics_related.add(metric_1)
@@ -532,7 +531,7 @@ class ReportAddViewTest(TestCase):
         area.save()
         activity = Activity.objects.create(text="Activity", area=area)
 
-        area_reponsible = TeamArea.objects.create(text="Area")
+        area_responsible = TeamArea.objects.create(text="Area")
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
         Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
         learning_area = LearningArea.objects.create(text="Learning area")
@@ -546,7 +545,7 @@ class ReportAddViewTest(TestCase):
                                          initial_date=datetime.now().date().strftime("%Y-%m-%d"),
                                          learning="Learnings!" * 51,
                                          activity_associated=activity,
-                                         area_responsible=area_reponsible,
+                                         area_responsible=area_responsible,
                                          links="Links")
 
         report_1.metrics_related.add(metric_1)
@@ -602,7 +601,7 @@ class ReportViewViewTest(TestCase):
         self.user.user_permissions.add(self.change_permission)
 
         self.activity_associated = Activity.objects.create(text="Activity")
-        self.area_reponsible = TeamArea.objects.create(text="Area")
+        self.area_responsible = TeamArea.objects.create(text="Area")
         self.strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
         self.directions_related = Direction.objects.create(text="Direction", strategic_axis=self.strategic_axis)
         self.learning_area = LearningArea.objects.create(text="Learning area")
@@ -615,7 +614,7 @@ class ReportViewViewTest(TestCase):
                                               initial_date=datetime.now().date().strftime("%Y-%m-%d"),
                                               learning="Learnings!" * 51,
                                               activity_associated=self.activity_associated,
-                                              area_responsible=self.area_reponsible,
+                                              area_responsible=self.area_responsible,
                                               links="Links")
         self.report_2 = Report.objects.create(description="Report 2",
                                               created_by=self.user_profile,
@@ -623,7 +622,7 @@ class ReportViewViewTest(TestCase):
                                               initial_date=datetime.now().date().strftime("%Y-%m-%d"),
                                               learning="Learnings!" * 51,
                                               activity_associated=self.activity_associated,
-                                              area_responsible=self.area_reponsible,
+                                              area_responsible=self.area_responsible,
                                               links="Links")
 
     def test_list_reports_is_only_possible_for_users_with_permissions(self):
@@ -752,7 +751,7 @@ class ReportExportViewTest(TestCase):
         self.user.user_permissions.add(self.view_permission)
 
         self.activity_associated = Activity.objects.create(text="Activity")
-        self.area_reponsible = TeamArea.objects.create(text="Area")
+        self.area_responsible = TeamArea.objects.create(text="Area")
 
         self.report_1 = Report.objects.create(description="Report 1",
                                               created_by=self.user_profile,
@@ -760,7 +759,7 @@ class ReportExportViewTest(TestCase):
                                               initial_date=datetime.now().date(),
                                               learning="Learnings!" * 51,
                                               activity_associated=self.activity_associated,
-                                              area_responsible=self.area_reponsible,
+                                              area_responsible=self.area_responsible,
                                               links="Links")
         self.report_2 = Report.objects.create(description="Report 2",
                                               created_by=self.user_profile,
@@ -768,7 +767,7 @@ class ReportExportViewTest(TestCase):
                                               initial_date=datetime.now().date(),
                                               learning="Learnings!" * 51,
                                               activity_associated=self.activity_associated,
-                                              area_responsible=self.area_reponsible,
+                                              area_responsible=self.area_responsible,
                                               links="Links")
         self.report_1.save()
         self.report_2.save()
@@ -1405,7 +1404,7 @@ class ReportExportViewTest(TestCase):
 
         area_activated = AreaActivated.objects.create(text="Area activated")
         self.report_1.area_activated.add(area_activated)
-        expected_row_1 = [self.area_reponsible.id, self.area_reponsible.text, AreaActivated.objects.get(text=self.area_reponsible.text).contact]
+        expected_row_1 = [self.area_responsible.id, self.area_responsible.text, AreaActivated.objects.get(text=self.area_responsible.text).contact]
         expected_row_2 = [area_activated.id, area_activated.text, area_activated.contact]
 
         expected_rows = [expected_row_1, expected_row_2]
@@ -1423,7 +1422,7 @@ class ReportExportViewTest(TestCase):
         area_activated_2 = AreaActivated.objects.create(text="Area activated")
         self.report_2.area_activated.add(area_activated_2)
 
-        expected_row_0 = [self.area_reponsible.id, self.area_reponsible.text, AreaActivated.objects.get(text=self.area_reponsible.text).contact]
+        expected_row_0 = [self.area_responsible.id, self.area_responsible.text, AreaActivated.objects.get(text=self.area_responsible.text).contact]
         expected_row_1 = [area_activated_1.id, area_activated_1.text, area_activated_1.contact]
         expected_row_2 = [area_activated_2.id, area_activated_2.text, area_activated_2.contact]
 
@@ -1714,7 +1713,7 @@ class ReportExportViewTest(TestCase):
                         float(self.funding_associated.value),
                         self.funding_associated.project.id,
                         self.funding_associated.project.text,
-                        self.funding_associated.project.active,
+                        self.funding_associated.project.active_status,
                         _("Ordinary")]
 
         result = export_funding(report_id=self.report_1.id)
@@ -1733,7 +1732,7 @@ class ReportExportViewTest(TestCase):
                         float(funding.value),
                         funding.project.id,
                         funding.project.text,
-                        funding.project.active,
+                        funding.project.active_status,
                         _("Current Plan of Activities")]
 
         result = export_funding(report_id=self.report_1.id)
@@ -1752,7 +1751,7 @@ class ReportExportViewTest(TestCase):
                         float(funding.value),
                         funding.project.id,
                         funding.project.text,
-                        funding.project.active,
+                        funding.project.active_status,
                         _("Main funding")]
 
         result = export_funding(report_id=self.report_1.id)
@@ -1772,14 +1771,14 @@ class ReportExportViewTest(TestCase):
                           float(self.funding_associated.value),
                           self.funding_associated.project.id,
                           self.funding_associated.project.text,
-                          self.funding_associated.project.active,
+                          self.funding_associated.project.active_status,
                           _("Ordinary")]
         expected_row_2 = [funding_2.id,
                           funding_2.name,
                           float(funding_2.value),
                           funding_2.project.id,
                           funding_2.project.text,
-                          funding_2.project.active,
+                          funding_2.project.active_status,
                           _("Main funding")]
 
         expected_rows = [expected_row_1, expected_row_2]
@@ -1914,11 +1913,9 @@ class ReportFormTest(TestCase):
         strategic_axis = StrategicAxis.objects.create(text="Strategic axis")
         project_1 = Project.objects.create(text="Project")
         area_1 = Area.objects.create(text="Area 1")
-        area_1.related_axis.add(strategic_axis)
         area_1.project.add(project_1)
         area_1.save()
         area_2 = Area.objects.create(text="Area 2")
-        area_2.related_axis.add(strategic_axis)
         area_2.project.add(project_1)
         area_2.save()
 
