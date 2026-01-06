@@ -222,7 +222,7 @@ def activities_associated_as_choices():
 
 def directions_associated_as_choices():
     axes = []
-    for axis in StrategicAxis.objects.all():
+    for axis in StrategicAxis.objects.filter(active=True).distinct():
         directions = []
         for direction in axis.directions.all():
             directions.append((direction.id, direction.text))
@@ -233,7 +233,7 @@ def directions_associated_as_choices():
 
 def learning_questions_as_choices():
     learning_areas = []
-    for learning_area in LearningArea.objects.all():
+    for learning_area in LearningArea.objects.filter(active=True).distinct():
         learning_questions = []
         for learning_question in learning_area.strategic_question.all():
             learning_questions.append((learning_question.id, learning_question.text))

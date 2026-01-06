@@ -24,6 +24,7 @@ class StrategicAxis(models.Model):
     """
     text = models.CharField(_("Text"), max_length=420, help_text=_("Human-readable name of the Strategic axis."))
     intentionality = models.CharField(_("Intentionality"), max_length=420, null=True, blank=True, help_text=_("Explanation of the intentionality behind this axis."))
+    active = models.BooleanField(_("Active"), default=True, help_text=_("Whether this axis is from the active Strategy."))
 
     class Meta:
         verbose_name = _("Strategic axis")
@@ -85,6 +86,7 @@ class LearningArea(models.Model):
         - clean: Validates that the 'text' field is not empty.
     """
     text = models.CharField(_("Text"), max_length=420, help_text=_("Human-readable name of the learning area."))
+    active = models.BooleanField(_("Active"), default=True, help_text=_("Whether this learning area is from the active Strategy."))
 
     class Meta:
         verbose_name = _("Learning area")
