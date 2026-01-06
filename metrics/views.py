@@ -105,7 +105,7 @@ def prepare_pdf(request, *args, **kwargs):
 @permission_required("metrics.view_metric")
 def show_metrics_per_project(request):
     current_language = get_language()
-    poa_project = Project.objects.get(current_poa=True)
+    poa_project = Project.objects.filter(current_poa=True).first()
     operational_dataset = get_metrics_and_aggregate_per_project(project_query=Q(current_poa=True), metric_query=Q(is_operation=True), lang=current_language)
 
     poa_dataset = get_metrics_and_aggregate_per_project(project_query=Q(current_poa=True), metric_query=Q(boolean_type=True), field="Occurrence", lang=current_language)

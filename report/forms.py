@@ -203,7 +203,7 @@ def remove_domain(users_string):
 
 def area_responsible_of_user(user):
     try:
-        team_area = TeamArea.objects.get(project__team_areas__positions=user.profile.position)
+        team_area = user.profile.position.area_associated
         return team_area.id
     except TeamArea.DoesNotExist:
         return ""
