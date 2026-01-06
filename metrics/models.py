@@ -227,8 +227,6 @@ class Metric(models.Model):
     number_of_resources = models.IntegerField(_("Number of resources"), null=True, default=0, help_text=_("Number of resources produced"))
     number_of_events = models.IntegerField(_("Number of events"), null=True, default=0, help_text=_("Number of activities"))
     boolean_type = models.BooleanField(_("Boolean type?"), default=False, help_text=_("Boolean type metric"))
-    other_type = models.CharField(_("Other type?"), null=True, blank=True, max_length=420, help_text=_("Other type of metric"))
-    observation = models.CharField(_("Observation"), null=True, blank=True, max_length=420, help_text=_("Observation for this metric"))
     is_operation = models.BooleanField(_("Operation?"), default=False, help_text=_("Is the metric an operation metric?"))
 
     class Meta:
