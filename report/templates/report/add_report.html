@@ -18,6 +18,7 @@
         let nextStrategic = "{% translate 'Fill strategic report' %}";
         let metrics_set = {{ metrics_set }};
         let get_metrics_url = "{% url 'report:get_metrics' %}";
+        let report_id = {{ report_id|default:'' }};
     </script>
     <script src="{% static 'js/report.js' %}" defer></script>
 {% endblock %}
