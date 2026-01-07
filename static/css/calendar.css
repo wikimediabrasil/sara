@@ -24,37 +24,39 @@
 
 /* ACTIVITIES */
 .activity { width: 100%; padding: 0.5em; }
-.activity-community { background-color: var(--rainbow-color-1); }
-.activity-education { background-color: var(--rainbow-color-3); }
-.activity-technology { background-color: var(--rainbow-color-5); }
-.activity-fundraising { background-color: var(--rainbow-color-17); }
+.activity-comunidade { background-color: var(--rainbow-color-1); }
+.activity-educacao { background-color: var(--rainbow-color-3); }
+.activity-tecnologia { background-color: var(--rainbow-color-5); }
+.activity-captacao { background-color: var(--rainbow-color-17); }
 .activity-calibra { background-color: var(--rainbow-color-7); }
-.activity-administration { background-color: var(--rainbow-color-9); }
-.activity-glam { background-color: var(--rainbow-color-11); }
-.activity-coordination { background-color: var(--rainbow-color-13); }
-.activity-communication { background-color: var(--rainbow-color-15); }
+.activity-administracao { background-color: var(--rainbow-color-9); }
+.activity-cultura { background-color: var(--rainbow-color-11); }
+.activity-coordenacao { background-color: var(--rainbow-color-13); }
+.activity-comunicacao { background-color: var(--rainbow-color-15); }
+.activity-campanha { background-color: var(--rainbow-color-17)}
 
 /* ACTIVITIES HOVER */
-.activity-community:hover { background-color: var(--rainbow-color-2); transition: all 300ms ease-in-out; }
-.activity-education:hover { background-color: var(--rainbow-color-4); transition: all 300ms ease-in-out; }
-.activity-technology:hover { background-color: var(--rainbow-color-6); transition: all 300ms ease-in-out; }
-.activity-fundraising:hover { background-color: var(--rainbow-color-18); transition: all 300ms ease-in-out; }
+.activity-comunidade:hover { background-color: var(--rainbow-color-2); transition: all 300ms ease-in-out; }
+.activity-educacao:hover { background-color: var(--rainbow-color-4); transition: all 300ms ease-in-out; }
+.activity-tecnologia:hover { background-color: var(--rainbow-color-6); transition: all 300ms ease-in-out; }
+.activity-captacao:hover { background-color: var(--rainbow-color-18); transition: all 300ms ease-in-out; }
 .activity-calibra:hover { background-color: var(--rainbow-color-8); transition: all 300ms ease-in-out; }
-.activity-administration:hover { background-color: var(--rainbow-color-10); transition: all 300ms ease-in-out; }
-.activity-glam:hover { background-color: var(--rainbow-color-12); transition: all 300ms ease-in-out; }
-.activity-coordination:hover { background-color: var(--rainbow-color-14); transition: all 300ms ease-in-out; }
-.activity-communication:hover { background-color: var(--rainbow-color-16); transition: all 300ms ease-in-out; }
+.activity-administracao:hover { background-color: var(--rainbow-color-10); transition: all 300ms ease-in-out; }
+.activity-cultura:hover { background-color: var(--rainbow-color-12); transition: all 300ms ease-in-out; }
+.activity-coordenacao:hover { background-color: var(--rainbow-color-14); transition: all 300ms ease-in-out; }
+.activity-comunicacao:hover { background-color: var(--rainbow-color-16); transition: all 300ms ease-in-out; }
+.activity-campanha:hover { background-color: var(--rainbow-color-18); transition: all 300ms ease-in-out; }
 
-
-.activity-community:hover a { color: var(--light-color) !important; }
-.activity-education:hover a { color: var(--light-color) !important; }
-.activity-technology:hover a { color: var(--light-color) !important; }
-.activity-calibra:hover a { color: var(--dark-color) !important; }
+.activity-comunidade:hover a { color: var(--light-color) !important; }
+.activity-educacao:hover a { color: var(--light-color) !important; }
+.activity-tecnologia:hover a { color: var(--light-color) !important; }
+.activity-captacao:hover a { color: var(--dark-color) !important; }
 .activity-administration:hover a { color: var(--dark-color) !important; }
-.activity-glam:hover a { color: var(--dark-color) !important; }
-.activity-coordination:hover a { color: var(--light-color) !important; }
-.activity-communication:hover a { color: var(--light-color) !important; }
-.activity-fundraising:hover a { color: var(--light-color) !important; }
+.activity-administracao:hover a { color: var(--dark-color) !important; }
+.activity-cultura:hover a { color: var(--light-color) !important; }
+.activity-coordenacao:hover a { color: var(--light-color) !important; }
+.activity-comunicacao:hover a { color: var(--light-color) !important; }
+.activity-campanha:hover a { color: var(--light-color) !important; }
 
 @media screen and (max-width: 600px) {
     .activity { width: 0.5em; height: 0.5em; border-radius: 100%; }
