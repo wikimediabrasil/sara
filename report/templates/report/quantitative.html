@@ -174,6 +174,18 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
                 <span class="toggle__fill"></span>
                 <span>{% translate "MediaWiki" %}</span>
             </label>
+            <label class="w3-third formfield toggle" for="wikifunctions">
+                <input class="toggle__input wiki" type="checkbox" id="wikifunctions" onclick="toggle_field(this.id)"
+                       {% if report_form.instance.wikifunctions_created or report_form.instance.wikifunctions_edited %}checked{% endif %}/>
+                <span class="toggle__fill"></span>
+                <span>{% translate "WikiFunctions" %}</span>
+            </label>
+            <label class="w3-third formfield toggle" for="incubator">
+                <input class="toggle__input wiki" type="checkbox" id="incubator" onclick="toggle_field(this.id)"
+                       {% if report_form.instance.incubator_created or report_form.instance.incubator_edited %}checked{% endif %}/>
+                <span class="toggle__fill"></span>
+                <span>{% translate "Incubator" %}</span>
+            </label>
         </div>
         <div class="w3-row invisible_field wikipedia">
             <div class="w3-third field_title">{% translate "Wikipedia" %}</div>
@@ -316,6 +328,28 @@ Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in r
             <div class="w3-third formfield form-right">
                 <input id="mediawiki_edited" name="mediawiki_edited" type="number" min="0" value="{{ report_form.instance.mediawiki_edited }}"/>
                 <small><label for="mediawiki_edited">{% translate "Edited" %}</label></small>
+            </div>
+        </div>
+        <div class="w3-row invisible_field wikifunctions">
+            <div class="w3-third field_title">{% translate "wikifunctions" %}</div>
+            <div class="w3-third formfield form-left">
+                <input id="wikifunctions_created" name="wikifunctions_created" type="number" min="0" value="{{ report_form.instance.wikifunctions_created }}"/>
+                <small><label for="wikifunctions_created">{% translate "Created" %}</label></small>
+            </div>
+            <div class="w3-third formfield form-right">
+                <input id="wikifunctions_edited" name="wikifunctions_edited" type="number" min="0" value="{{ report_form.instance.wikifunctions_edited }}"/>
+                <small><label for="wikifunctions_edited">{% translate "Edited" %}</label></small>
+            </div>
+        </div>
+        <div class="w3-row invisible_field incubator">
+            <div class="w3-third field_title">{% translate "incubator" %}</div>
+            <div class="w3-third formfield form-left">
+                <input id="incubator_created" name="incubator_created" type="number" min="0" value="{{ report_form.instance.incubator_created }}"/>
+                <small><label for="incubator_created">{% translate "Created" %}</label></small>
+            </div>
+            <div class="w3-third formfield form-right">
+                <input id="incubator_edited" name="incubator_edited" type="number" min="0" value="{{ report_form.instance.incubator_edited }}"/>
+                <small><label for="incubator_edited">{% translate "Edited" %}</label></small>
             </div>
         </div>
     </div>
