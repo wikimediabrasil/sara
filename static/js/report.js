@@ -137,7 +137,6 @@ function validateForm() {
 function show_metrics_options() {
   let activity_associated = $("#activity_associated").val();
   let funding_associated = $("#funding_associated").val();
-  let report_id = report_id;
   let metrics_related = metrics_set;
 
   if (activity_associated || funding_associated) {
