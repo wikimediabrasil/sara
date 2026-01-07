@@ -1590,7 +1590,7 @@ class ReportExportViewTest(TestCase):
 
         technology_used = Technology.objects.create(name="Technology")
         self.report_1.technologies_used.add(technology_used)
-        expected_row = [technology_used.id, technology_used.name, technology_used.tecnologies.count()]
+        expected_row = [technology_used.id, technology_used.name, technology_used.technologies.count()]
 
         result = export_technologies_used(report_id=self.report_1.id)
 
@@ -1603,8 +1603,8 @@ class ReportExportViewTest(TestCase):
         technology_used_2 = Technology.objects.create(name="Technology 2")
         self.report_1.technologies_used.add(technology_used_1)
         self.report_2.technologies_used.add(technology_used_2)
-        expected_row_1 = [technology_used_1.id, technology_used_1.name, technology_used_1.tecnologies.count()]
-        expected_row_2 = [technology_used_2.id, technology_used_2.name, technology_used_2.tecnologies.count()]
+        expected_row_1 = [technology_used_1.id, technology_used_1.name, technology_used_1.technologies.count()]
+        expected_row_2 = [technology_used_2.id, technology_used_2.name, technology_used_2.technologies.count()]
         expected_rows = [expected_row_1, expected_row_2]
 
         expected_df = pd.DataFrame(expected_rows, columns=expected_header)

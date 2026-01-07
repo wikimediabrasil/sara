@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from django.db.models import fields, Q, Case, When, Value, IntegerField
 from django.db.models.functions import Lower
-from report.models import Report, AreaActivated, Funding, Partner, Technology, Editor, Organizer, OperationReport
+from report.models import Report, Funding, Partner, Technology, Editor, Organizer, OperationReport
 from metrics.models import Area, Metric, Project
 from strategy.models import StrategicAxis, LearningArea
 from users.models import TeamArea, UserProfile
@@ -32,7 +32,7 @@ class NewReportForm(forms.ModelForm):
         self.fields["learning_questions_related"].choices = learning_questions_as_choices()
         self.fields["area_responsible"].queryset = TeamArea.objects.order_by(Lower("text"))
         self.fields["funding_associated"].queryset = Funding.objects.filter(project__active_status=True).order_by(Lower("name"))
-        self.fields["area_activated"].queryset = AreaActivated.objects.order_by(Lower("text"))
+        self.fields["area_activated"].queryset = TeamArea.objects.order_by(Lower("text"))
         self.fields["partners_activated"].queryset = Partner.objects.order_by(Lower("name"))
         if self.instance.id:
             self.fields["area_responsible"].initial = self.instance.area_responsible_id
@@ -45,7 +45,7 @@ class NewReportForm(forms.ModelForm):
         editors_list = remove_domain(editors_string).split("\r\n") if editors_string else []
         editors = []
         for editor in editors_list:
-            editor_object, created = Editor.objects.get_or_create(username=editor)
+            editor_object, created = Editor.objects.get_or_create(username=editor.strip())
 
             # Store the editor account date of registration
             if created:

@@ -13,9 +13,8 @@ from django.db.models import Q
 from django.utils.timezone import now
 
 from metrics.models import Metric, Project
-from report.models import Editor, Organizer, Partner, \
-    Funding, Technology, Report, AreaActivated, Activity, OperationReport
-from users.models import UserProfile
+from report.models import Editor, Organizer, Partner, Funding, Report, Activity, OperationReport
+from users.models import UserProfile, TeamArea
 from report.forms import NewReportForm, OperationForm, OperationUpdateFormSet
 from django.utils import translation
 
@@ -498,7 +497,7 @@ def export_area_activated(report_id=None, custom_query=Q()):
 
     rows = []
     for report in reports:
-        rows.append([report.area_responsible.id, report.area_responsible.text, AreaActivated.objects.get(text=report.area_responsible.text).contact])
+        rows.append([report.area_responsible.id, report.area_responsible.text, TeamArea.objects.get(text=report.area_responsible.text).contact])
         for instance in report.area_activated.all():
             rows.append([instance.id, instance.text, instance.contact])
 
@@ -602,7 +601,7 @@ def export_technologies_used(report_id=None, custom_query=Q()):
     rows = []
     for report in reports:
         for instance in report.technologies_used.all():
-            rows.append([instance.id, instance.name, instance.tecnologies.count()])
+            rows.append([instance.id, instance.name, instance.technologies.count()])
 
     df = pd.DataFrame(rows, columns=header).drop_duplicates().reset_index(drop=True)
     return df

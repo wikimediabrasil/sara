@@ -145,7 +145,7 @@ canvas {
 .wrapper-main { width: 100%; height: 100vh; overflow-y: auto; }
 .w3-container { padding: 0; }
 .w3-threequarter { padding: 1em 2em; }
-.subcontainer { padding: 1em !important; background-color: var(--light-grey-color); }
+.sub_container { padding: 1em !important; background-color: var(--light-grey-color); }
 .text-center { text-align: center; }
 .index {
     background-color: var(--light-color);
@@ -243,9 +243,9 @@ canvas {
     background-color: var(--light-color);
     color: var(--main-color);
 }
-.tabcontent { display: none; }
-.tabcontent.active { display: block; }
-.tablinks { color: var(--light-color); }
+.tab_content { display: none; }
+.tab_content.active { display: block; }
+.tab_links { color: var(--light-color); }
 
 /* TABLE */
 .custom-table-header-el {

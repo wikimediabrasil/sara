@@ -7,7 +7,7 @@
             <h4 class="field_title">{% translate "Strategic learning questions related to the activity being reported" %}*</h4>
             <p class="form-legend">{% translate "Which are the strategic learning questions this activity tries to answer?" %} <b>{% translate "Select a maximum of 3" %}</b></p>
         </div>
-        <fieldset id="strategic_questions_fieldset" class="subcontainer">
+        <fieldset id="strategic_questions_fieldset" class="sub_container">
             <legend>{% translate "Strategic learning questions related to the activity being reported" %}</legend>
             {% for learning_area in report_form.fields.learning_questions_related.choices %}
                 <div class="w3-container field_title" style="color:var(--main-color);">{{ learning_area.0 }}</div>
@@ -38,7 +38,7 @@
     </div>
     <div class="w3-row">
         <div id="back_strategy" class="w3-half formfield form-left">
-            <button type="button" class="tablinks custom_button"
+            <button type="button" class="tab_links custom_button"
                     onclick="openTab(this, 'Strategy')">{% translate "Go back to strategy report" %}</button>
         </div>
         <div class="w3-half formfield form-right">
