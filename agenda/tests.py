@@ -14,7 +14,7 @@ from agenda.services import send_event_reports
 from users.models import User, UserProfile, TeamArea, Position
 from agenda.views import get_activities_soon_to_be_finished, get_activities_already_finished,\
     get_activities_about_to_kickoff, show_list_of_reports_of_specific_area, show_list_of_reports_of_area
-from agenda.templatetags.calendartags import date_tag, next_month_tag, previous_month_tag, next_year_tag, \
+from agenda.templatetags.calendar_tags import date_tag, next_month_tag, previous_month_tag, next_year_tag, \
     previous_year_tag, next_day_tag, previous_day_tag
 
 

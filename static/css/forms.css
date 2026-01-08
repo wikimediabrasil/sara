@@ -13,7 +13,7 @@
     overflow-y: auto;
     overflow-x: auto;
 }
-.field_title { font-family: var(--main-font); font-weight: bold; }
+.field_title { font-family: var(--main-font), sans-serif; font-weight: bold; }
 .form-legend { font-size: small; color: var(--grey-color); }
 #homepage_buttons div:nth-child(odd) { padding-right: 1em; }
 #homepage_buttons div:nth-child(even) { padding-left: 1em; }
@@ -77,36 +77,21 @@ fieldset input { background-color: var(--main-lighter-color) !important }
     color: var(--main-color);
     cursor: pointer;
 }
-.add_button, .refresh_button {
-    color: var(--light-color);
-    font-size: 0.75em;
-    font-weight: bold;
-    background: var(--main-color);
-    border-radius: 0.5em;
-    border: none;
-    transition: all 300ms ease-in-out;
-}
-.add_button:hover, .refresh_button:hover {
-    scale: 97%;
-    background-color: var(--light-color);
-    color: var(--main-color);
-    cursor: pointer;
-}
 
 /* ALERT MESSAGES */
-.alertmessage-success {
+.alert_message_success {
     padding: 1em 2em;
     background-color: var(--success-color);
     color: var(--dark-color);
     text-align: center;
 }
-.alertmessage-warning {
+.alert_message_warning {
     padding: 1em 2em;
     background-color: var(--attention-color) !important;
     color: var(--dark-color);
     text-align: center;
 }
-.alertmessage-error {
+.alert_message_error {
     padding: 1em 2em;
     background-color: var(--error-color) !important;
     color: var(--dark-color);

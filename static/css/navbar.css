@@ -37,7 +37,7 @@
     font-weight: 700;
     font-size: 0.75em;
     text-transform: uppercase;
-    font-family: var(--main-font);
+    font-family: var(--main-font), sans-serif;
 }
 .nav_block i, .nav_block span { transition: all 300ms ease-in-out; }
 .nav_block:hover i, .nav_block:hover span { color: var(--light-color); }

@@ -14,7 +14,6 @@
   border-radius: 50%;
   text-decoration: none;
 }
-.day-0 { display: none; }
 .align-middle { vertical-align: middle; }
 .slim { padding: 0 !important; color:var(--main-color); transition: all 300ms ease-in-out; }
 .slim:hover { background-color: var(--dark-color);}

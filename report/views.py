@@ -16,12 +16,14 @@ from django.db.models import Q
 from django.utils.timezone import now
 
 from metrics.models import Metric, Project
-from report.models import Editor, Organizer, Partner, Funding, Report, Activity, OperationReport
-from users.models import UserProfile, TeamArea
+from report.models import Funding, Report, Activity, OperationReport
+from users.models import TeamArea
 from report.forms import NewReportForm, OperationForm, OperationUpdateFormSet
 
 
+# ======================================================================================================================
 # CREATE
+# ======================================================================================================================
 @login_required
 @permission_required("report.add_report")
 def add_report(request):
@@ -109,13 +111,16 @@ def get_operation_formset():
                 'number_of_new_partnerships'), extra=Metric.objects.filter(is_operation=True).count(),
         can_delete=False)
 
+# ======================================================================================================================
 # REVIEW
+# ======================================================================================================================
 @login_required
 @permission_required("report.view_report")
 def list_reports(request):
     current_year = now().year
 
     return list_reports_of_year(request, current_year)
+
 
 @login_required
 @permission_required("report.view_report")
@@ -140,34 +145,9 @@ def detail_report(request, report_id):
     return render(request, "report/detail_report.html", context)
 
 
-def add_csv_file(function_name, report_id=None, custom_query=None):
-    csv_file = BytesIO()
-    function_name(report_id, custom_query).to_csv(path_or_buf=csv_file, index=False)
-
-    return csv_file
-
-
-def add_excel_file(report_id=None, custom_query=None, lang=""):
-    excel_file = BytesIO()
-    writer = pd.ExcelWriter(excel_file, engine='xlsxwriter')
-
-    export_report_instance(report_id, custom_query).to_excel(writer, sheet_name='Report', index=False)
-    export_operation_report(report_id, custom_query, lang).to_excel(writer, sheet_name='Operation report', index=False)
-    export_metrics(report_id, custom_query).to_excel(writer, sheet_name='Metrics', index=False)
-    export_user_profile(report_id, custom_query).to_excel(writer, sheet_name='Users', index=False)
-    export_area_activated(report_id, custom_query).to_excel(writer, sheet_name='Areas', index=False)
-    export_directions_related(report_id, custom_query).to_excel(writer, sheet_name='Directions', index=False)
-    export_editors(report_id, custom_query).to_excel(writer, sheet_name='Editors', index=False)
-    export_funding(report_id, custom_query).to_excel(writer, sheet_name='Fundings', index=False)
-    export_learning_questions_related(report_id, custom_query).to_excel(writer, sheet_name='Learning questions', index=False)
-    export_organizers(report_id, custom_query).to_excel(writer, sheet_name='Organizers', index=False)
-    export_partners_activated(report_id, custom_query).to_excel(writer, sheet_name='Partners', index=False)
-    export_technologies_used(report_id, custom_query).to_excel(writer, sheet_name='Technologies', index=False)
-
-    writer.close()
-    return excel_file
-
-
+# ======================================================================================================================
+# EXPORT
+# ======================================================================================================================
 @login_required
 @permission_required("report.view_report")
 def export_report(request, report_id=None, year=None):
@@ -216,6 +196,34 @@ def export_report(request, report_id=None, year=None):
         return response
     else:
         return redirect(reverse("report:list_reports"))
+
+
+def add_csv_file(function_name, report_id=None, custom_query=None):
+    csv_file = BytesIO()
+    function_name(report_id, custom_query).to_csv(path_or_buf=csv_file, index=False)
+
+    return csv_file
+
+
+def add_excel_file(report_id=None, custom_query=None, lang=""):
+    excel_file = BytesIO()
+    writer = pd.ExcelWriter(excel_file, engine='xlsxwriter')
+
+    export_report_instance(report_id, custom_query).to_excel(writer, sheet_name='Report', index=False)
+    export_operation_report(report_id, custom_query, lang).to_excel(writer, sheet_name='Operation report', index=False)
+    export_metrics(report_id, custom_query).to_excel(writer, sheet_name='Metrics', index=False)
+    export_user_profile(report_id, custom_query).to_excel(writer, sheet_name='Users', index=False)
+    export_area_activated(report_id, custom_query).to_excel(writer, sheet_name='Areas', index=False)
+    export_directions_related(report_id, custom_query).to_excel(writer, sheet_name='Directions', index=False)
+    export_editors(report_id, custom_query).to_excel(writer, sheet_name='Editors', index=False)
+    export_funding(report_id, custom_query).to_excel(writer, sheet_name='Fundings', index=False)
+    export_learning_questions_related(report_id, custom_query).to_excel(writer, sheet_name='Learning questions', index=False)
+    export_organizers(report_id, custom_query).to_excel(writer, sheet_name='Organizers', index=False)
+    export_partners_activated(report_id, custom_query).to_excel(writer, sheet_name='Partners', index=False)
+    export_technologies_used(report_id, custom_query).to_excel(writer, sheet_name='Technologies', index=False)
+
+    writer.close()
+    return excel_file
 
 
 def export_report_instance(report_id=None, custom_query=Q()):
@@ -621,92 +629,48 @@ def export_technologies_used(report_id=None, custom_query=Q()):
     return df
 
 
-
+# ======================================================================================================================
 # UPDATE
+# ======================================================================================================================
 @login_required
 @permission_required("report.change_report")
 def update_report(request, report_id):
-    obj = get_object_or_404(Report, id=report_id)
+    report = get_object_or_404(Report, id=report_id)
 
-    if obj.locked:
-        if not request.user.has_perm("report.can_edit_locked_report"):
-            messages.error(request, _("You do not have permission to edit this report. Please, share the link with the Products and Technology team for any questions."))
-            return redirect(reverse("report:detail_report", kwargs={"report_id": report_id}))
-        else:
-            pass
+    if report.locked and not request.user.has_perm("report.can_edit_locked_report"):
+        messages.error(request, _("You do not have permission to edit this report. Please, share the link with the Products and Technology team for any questions."))
+        return redirect(reverse("report:detail_report", kwargs={"report_id": report_id}))
 
     if request.method == "POST":
-        report_form = NewReportForm(request.POST or None, instance=obj, user=request.user, is_update=True)
-        operation_metrics = OperationUpdateFormSet(request.POST, instance=obj, prefix='Operation')
+        report_form = NewReportForm(request.POST, instance=report, user=request.user, is_update=True)
+        operation_metrics = OperationUpdateFormSet(request.POST, instance=report, prefix='Operation')
         if report_form.is_valid() and operation_metrics.is_valid():
-            report_instance = report_form.save(commit=False, is_update=True)
+            with transaction.atomic():
+                report = report_form.save(user=request.user)
 
-            # Metrics
-            instances = operation_metrics.save()
+                operation_metrics.save()
 
-            metrics_related = list(map(int, report_form.data.getlist('metrics_related', [])))
-            for instance in instances:
-                instance.report = report_instance
-                instance.save()
-                numbers = instance.number_of_people_reached_through_social_media + instance.number_of_new_followers + instance.number_of_mentions + instance.number_of_community_communications + instance.number_of_events + instance.number_of_resources + instance.number_of_partnerships_activated + instance.number_of_new_partnerships
-                if numbers > 0:
-                    metrics_related.append(instance.metric)
-
-            report_instance.metrics_related.set(metrics_related)
-
-            # Editors
-            editors = get_or_create_editors(request.POST["editors_string"])
-            report_instance.editors.set(editors)
-
-            # Organizers
-            organizers = get_or_create_organizers(request.POST["organizers_string"])
-            report_instance.organizers.set(organizers)
-
-            # Modified by and Modified at
-            user_profile = UserProfile.objects.get(user=request.user)
-            report_instance.modified_by = user_profile
-            report_instance.modified_at = datetime.datetime.now()
-
-            # Fundings
-            fundings_associated = report_form.cleaned_data["funding_associated"]
-            report_instance.funding_associated.set(fundings_associated)
-
-            # Areas activated
-            areas_activated = report_form.cleaned_data["area_activated"]
-            report_instance.area_activated.set(areas_activated)
-
-            # Partners
-            partners_activated = report_form.cleaned_data["partners_activated"]
-            report_instance.partners_activated.set(partners_activated)
-
-            # Technologies
-            technologies_used = report_form.cleaned_data["technologies_used"]
-            report_instance.technologies_used.set(technologies_used)
-
-            # Directions
-            directions_related = list(map(int, report_form.data.getlist('directions_related', [])))
-            report_instance.directions_related.set(directions_related)
-
-            # Learning Questions
-            learning_questions_related = list(map(int, report_form.data.getlist('learning_questions_related', [])))
-            report_instance.learning_questions_related.set(learning_questions_related)
-
-            report_instance.save()
-            return redirect(reverse("report:detail_report", kwargs={"report_id": report_id}))
+            messages.success(request, _("Report updated successfully!"))
+            return redirect(reverse("report:detail_report", kwargs={"report_id": report.id}))
     else:
-        report_form = NewReportForm(instance=obj, user=request.user)
-        operation_metrics = OperationUpdateFormSet(prefix="Operation", instance=obj)
-        context = {"report_form": report_form,
-                   "report_id": report_id,
-                   "operation_metrics": operation_metrics,
-                   "directions_related_set": list(obj.directions_related.values_list("id", flat=True)),
-                   "learning_questions_related_set": list(obj.learning_questions_related.values_list("id", flat=True)),
-                   "metrics_set": list(obj.metrics_related.values_list("id", flat=True)),
-                   "title": _("Edit report %(report_id)s") % {"report_id": report_id}}
-        return render(request, "report/update_report.html", context)
+        report_form = NewReportForm(instance=report, user=request.user, is_update=True)
+        operation_metrics = OperationUpdateFormSet(prefix="Operation", instance=report)
+
+    context = {"report_form": report_form,
+               "report_id": report.id,
+               "operation_metrics": operation_metrics,
+               "directions_related_set": list(report.directions_related.values_list("id", flat=True)),
+               "learning_questions_related_set": list(report.learning_questions_related.values_list("id", flat=True)),
+               "metrics_set": list(report.metrics_related.values_list("id", flat=True)),
+               "title": _("Edit report %(report_id)s") % {"report_id": report.id},
+               }
+
+    return render(request, "report/update_report.html", context)
 
 
+# ======================================================================================================================
 # DELETE
+# ======================================================================================================================
 @login_required
 @permission_required("report.delete_report")
 def delete_report(request, report_id):
@@ -721,36 +685,9 @@ def delete_report(request, report_id):
     return render(request, 'report/delete_report.html', context)
 
 
+# ======================================================================================================================
 # FUNCTIONS
-def get_or_create_editors(editors_string):
-    editors_list = editors_string.split("\r\n")
-    editors = []
-    if editors_string:
-        for editor in editors_list:
-            new_editor, created = Editor.objects.get_or_create(username=editor)
-            if new_editor not in editors:
-                editors.append(new_editor)
-
-    return editors
-
-
-def get_or_create_organizers(organizers_string):
-    organizers_list = organizers_string.split("\r\n")
-    organizers = []
-    if organizers_string:
-        for organizer in organizers_list:
-            organizer_name, institution_name = (organizer + ";").split(";", maxsplit=1)
-            new_organizer, new_organizer_created = Organizer.objects.get_or_create(name=organizer_name)
-            if institution_name:
-                for partner_name in institution_name.split(";"):
-                    if partner_name:
-                        partner, partner_created = Partner.objects.get_or_create(name=partner_name)
-                        new_organizer.institution.add(partner)
-                new_organizer.save()
-            organizers.append(new_organizer)
-    return organizers
-
-
+# ======================================================================================================================
 def get_metrics(request):
     projects = []
     main_ = False

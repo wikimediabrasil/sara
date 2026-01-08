@@ -38,7 +38,7 @@
     --bs-body-color: var(--dark-grey-color);
 
     /* TYPOGRAPHY */
-    --main-font: Poppins, sans-serif;
+    --main-font: Poppins;
 }
 html {
     font-size: 100%;
@@ -65,7 +65,7 @@ main { flex: 1; }
 a { text-decoration: none; color:inherit; }
 p, footer, .block-section { margin:1em 0; }
 svg { vertical-align:unset !important; }
-button { font-family: var(--main-font) !important; font-weight: bold; }
+button { font-family: var(--main-font), sans-serif !important; font-weight: bold; }
 .banner-message {
     display: flex;
     flex-direction: column;
@@ -84,7 +84,7 @@ button { font-family: var(--main-font) !important; font-weight: bold; }
 
 /* HEADER ELEMENTS */
 h1, h2, h3, h4, h5 {
-    font-family: var(--main-font) !important;
+    font-family: var(--main-font), sans-serif !important;
     font-size: 1.25em;
     font-weight: bold;
     width: fit-content;
