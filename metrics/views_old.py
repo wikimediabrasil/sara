@@ -341,72 +341,30 @@ def get_results_for_timespan(timespan_array, metric_query=Q(), report_query=Q(),
 
 
 def get_metrics_and_aggregate_per_project(project_query=Q(active_status=True), metric_query=Q(), supplementary_query=Q(), field=None, lang=""):
-    projects = Project.objects.filter(project_query).order_by("-current_poa", "-main_funding")
+    aggregated_metrics_and_results = {}
 
-    activities = (
-            Activity.objects
-            .filter(area__project__in=projects)
-            .select_related("area")
-            .prefetch_related("area__project")
-        )
-
-    metrics = Metric.objects.filter(metric_query)
-
-    reports = (
-        Report.objects
-        .filter(activity_associated__metrics__project__in=projects)
-        .prefetch_related(
-            "metrics_related",
-            "editors",
-            "partners",
-            "organizers",
-            "operation_report_set"
-        )
-    )
-
-    result_cache = {}
-
-    output = {}
-
-    for project in projects:
+    for project in Project.objects.filter(project_query).order_by("-current_poa", "-main_funding"):
         project_metrics = []
-
-        project_activities = activities.filter(area__project=project)
-
-        for activity in project_activities:
+        for activity in Activity.objects.filter(area__project=project):
             activity_metrics = {}
+            if activity.id != 1:
+                q_filter = Q(project=project, activity=activity) & metric_query
+            else:
+                q_filter = Q(project=project) & metric_query
+            for metric in Metric.objects.filter(q_filter):
+                goal, done, final = get_goal_and_done_for_metric(metric, supplementary_query, project.main_funding)
 
-            for metric in metrics:
-                key = (project.id, activity.id, metric.id)
-
-                if key not in result_cache:
-                    result_cache[key] = get_goal_and_done_for_metric(metric=metric, reports=reports, project=project, activity=activity)
-
-                goal, done, final = result_cache[key]
-
-                if field and goal.get(field):
-                    result_metrics = {
-                        field: {
-                            "goal": goal[field],
-                            "done": done[field],
-                            "final": final,
-                        }
-                    }
+                if field and goal[field] != 0:
+                    result_metrics = {field: {"goal": goal[field], "done": done[field], "final": final}}
                 else:
-                    result_metrics = {
-                        k: {"goal": v, "done": done[k], "final": final}
-                        for k, v in goal.items() if v
-                    }
+                    result_metrics = {key: {"goal": value, "done": done[key], "final": final} for key, value in goal.items() if
+                                      value != 0}
 
                 if not result_metrics:
-                    continue
+                    result_metrics = {"Other metric": {"goal": "-", "done": "-", "final": final}}
 
-                title = metric.text_en if lang == "en" else metric.text
-
-                activity_metrics[metric.id] = {
-                    "title": title,
-                    "metrics": result_metrics,
-                }
+                localized_title = metric.text_en if lang=="en" else metric.text
+                activity_metrics[metric.id] = {"title": localized_title, "metrics": result_metrics}
 
             if activity_metrics:
                 project_metrics.append({
@@ -416,29 +374,25 @@ def get_metrics_and_aggregate_per_project(project_query=Q(active_status=True), m
                 })
 
         if project_metrics:
-            output[project.id] = {
+            aggregated_metrics_and_results[project.id] = {
                 "project": project.text,
                 "project_metrics": project_metrics
             }
-    return output
+    return aggregated_metrics_and_results
 
 
-def get_goal_and_done_for_metric(metric, reports, project, activity):
-    qs = reports.filter(metrics_related=metric, activity_associated__area__project=project)
-
-    if activity.id != 1:
-        qs = qs.filter(activity_associated=activity)
-
-    if project.main_funding:
-        qs = qs.exclude(
+def get_goal_and_done_for_metric(metric, supplementary_query=Q(), is_main_funding=False):
+    query = Q(metrics_related__in=[metric]) & supplementary_query
+    reports = Report.objects.filter(query)
+    if is_main_funding:
+        reports = reports.exclude(
             (Q(activity_associated__area__project__counts_for_main_funding=False) | Q(funding_associated__project__counts_for_main_funding=False)) &
             ~(Q(activity_associated__id=1) & Q(funding_associated__project__counts_for_main_funding=True)) &
             ~(Q(activity_associated__id=1) & Q(funding_associated__isnull=True))
         )
-
     goal = get_goal_for_metric(metric)
-    done = get_done_for_report(qs, metric)
-    final = is_there_a_final_report(qs)
+    done = get_done_for_report(reports, metric)
+    final = is_there_a_final_report(reports)
 
     return goal, done, final
 
@@ -446,19 +400,19 @@ def get_goal_and_done_for_metric(metric, reports, project, activity):
 def get_goal_for_metric(metric):
     return {
         # Content metrics
-        "Wikipedia (created)": metric.wikipedia_created, "Wikipedia (edited)": metric.wikipedia_edited,
-        "Wikimedia Commons (created)": metric.commons_created, "Wikimedia Commons (edited)": metric.commons_edited,
-        "Wikidata (created)": metric.wikidata_created, "Wikidata (edited)": metric.wikidata_edited,
-        "Wikiversity (created)": metric.wikiversity_created, "Wikiversity (edited)": metric.wikiversity_edited,
-        "Wikibooks (created)": metric.wikibooks_created, "Wikibooks (edited)": metric.wikibooks_edited,
-        "Wikisource (created)": metric.wikisource_created, "Wikisource (edited)": metric.wikisource_edited,
-        "Wikinews (created)": metric.wikinews_created, "Wikinews (edited)": metric.wikinews_edited,
-        "Wikiquote (created)": metric.wikiquote_created, "Wikiquote (edited)": metric.wikiquote_edited,
-        "Wiktionary (created)": metric.wiktionary_created, "Wiktionary (edited)": metric.wiktionary_edited,
-        "Wikivoyage (created)": metric.wikivoyage_created, "Wikivoyage (edited)": metric.wikivoyage_edited,
-        "Wikispecies (created)": metric.wikispecies_created, "Wikispecies (edited)": metric.wikispecies_edited,
-        "MetaWiki (created)": metric.metawiki_created, "MetaWiki (edited)": metric.metawiki_edited,
-        "MediaWiki (created)": metric.mediawiki_created, "MediaWiki (edited)": metric.mediawiki_edited,
+        "Wikipedia": metric.wikipedia_created + metric.wikipedia_edited,
+        "Wikimedia Commons": metric.commons_created + metric.commons_edited,
+        "Wikidata": metric.wikidata_created + metric.wikidata_edited,
+        "Wikiversity": metric.wikiversity_created + metric.wikiversity_edited,
+        "Wikibooks": metric.wikibooks_created + metric.wikibooks_edited,
+        "Wikisource": metric.wikisource_created + metric.wikisource_edited,
+        "Wikinews": metric.wikinews_created + metric.wikinews_edited,
+        "Wikiquote": metric.wikiquote_created + metric.wikiquote_edited,
+        "Wiktionary": metric.wiktionary_created + metric.wiktionary_edited,
+        "Wikivoyage": metric.wikivoyage_created + metric.wikivoyage_edited,
+        "Wikispecies": metric.wikispecies_created + metric.wikispecies_edited,
+        "MetaWiki": metric.metawiki_created + metric.metawiki_edited,
+        "MediaWiki": metric.mediawiki_created + metric.mediawiki_edited,
         # Community metrics
         "Number of editors": metric.number_of_editors,
         "Number of editors retained": metric.number_of_editors_retained,
@@ -481,71 +435,41 @@ def get_goal_for_metric(metric):
 
 
 def get_done_for_report(reports, metric):
-    sums = reports.aggregate(
-        # Content metrics
-        wikipedia_created=Sum("wikipedia_created"), wikipedia_edited=Sum("wikipedia_edited"),
-        commons_created=Sum("commons_created"), commons_edited=Sum("commons_edited"),
-        wikidata_created=Sum("wikidata_created"), wikidata_edited=Sum("wikidata_edited"),
-        wikiversity_created=Sum("wikiversity_created"), wikiversity_edited=Sum("wikiversity_edited"),
-        wikibooks_created=Sum("wikibooks_created"), wikibooks_edited=Sum("wikibooks_edited"),
-        wikisource_created=Sum("wikisource_created"), wikisource_edited=Sum("wikisource_edited"),
-        wikinews_created=Sum("wikinews_created"), wikinews_edited=Sum("wikinews_edited"),
-        wikiquote_created=Sum("wikiquote_created"), wikiquote_edited=Sum("wikiquote_edited"),
-        wiktionary_created=Sum("wiktionary_created"), wiktionary_edited=Sum("wiktionary_edited"),
-        wikivoyage_created=Sum("wikivoyage_created"), wikivoyage_edited=Sum("wikivoyage_edited"),
-        wikispecies_created=Sum("wikispecies_created"), wikispecies_edited=Sum("wikispecies_edited"),
-        metawiki_created=Sum("metawiki_created"), metawiki_edited=Sum("metawiki_edited"),
-        mediawiki_created=Sum("mediawiki_created"), mediawiki_edited=Sum("mediawiki_edited"),
-        wikifunctions_created=Sum("wikifunctions_created"), wikifunctions_edited=Sum("wikifunctions_edited"),
-        incubator_created=Sum("incubator_created"), incubator_edited=Sum("incubator_edited"),
-
-        # Community metrics
-        participants=Sum("participants"),
-        feedbacks=Sum("feedbacks"),
-    )
-
     operation_reports = OperationReport.objects.filter(report__in=reports, metric=metric)
     alt_operation_reports = OperationReport.objects.filter(report__in=reports)
-
     return {
         # Content metrics
-        "Wikipedia (created)": sums["wikipedia_created"] or 0, "Wikipedia (edited)": sums["wikipedia_edited"] or 0,
-        "Wikimedia Commons (created)": sums["commons_created"] or 0, "Wikimedia Commons (edited)": sums["commons_edited"] or 0,
-        "Wikidata (created)": sums["wikidata_created"] or 0, "Wikidata (edited)": sums["wikidata_edited"] or 0,
-        "Wikiversity (created)": sums["wikiversity_created"] or 0, "Wikiversity (edited)": sums["wikiversity_edited"] or 0,
-        "Wikibooks (created)": sums["wikibooks_created"] or 0, "Wikibooks (edited)": sums["wikibooks_edited"] or 0,
-        "Wikisource (created)": sums["wikisource_created"] or 0, "Wikisource (edited)": sums["wikisource_edited"] or 0,
-        "Wikinews (created)": sums["wikinews_created"] or 0, "Wikinews (edited)": sums["wikinews_edited"] or 0,
-        "Wikiquote (created)": sums["wikiquote_created"] or 0, "Wikiquote (edited)": sums["wikiquote_edited"] or 0,
-        "Wiktionary (created)": sums["wiktionary_created"] or 0, "Wiktionary (edited)": sums["wiktionary_edited"] or 0,
-        "Wikivoyage (created)": sums["wikivoyage_created"] or 0, "Wikivoyage (edited)": sums["wikivoyage_edited"] or 0,
-        "Wikispecies (created)": sums["wikispecies_created"] or 0, "Wikispecies (edited)": sums["wikispecies_edited"] or 0,
-        "MetaWiki (created)": sums["metawiki_created"] or 0, "MetaWiki (edited)": sums["metawiki_edited"] or 0,
-        "MediaWiki (created)": sums["mediawiki_created"] or 0, "MediaWiki (edited)": sums["mediawiki_edited"] or 0,
-        "Wikifunctions (created)": sums["wikifunctions_created"] or 0, "Wikifunctions (edited)": sums["wikifunctions_edited"] or 0,
-        "Incubator (created)": sums["incubator_created"] or 0, "Incubator (edited)": sums["incubator_edited"] or 0,
-
+        "Wikipedia": reports.aggregate(total=Sum(F("wikipedia_created") + F("wikipedia_edited")))["total"] or 0,
+        "Wikimedia Commons": reports.aggregate(total=Sum(F("commons_created") + F("commons_edited")))["total"] or 0,
+        "Wikidata": reports.aggregate(total=Sum(F("wikidata_created") + F("wikidata_edited")))["total"] or 0,
+        "Wikiversity": reports.aggregate(total=Sum(F("wikiversity_created") + F("wikiversity_edited")))["total"] or 0,
+        "Wikibooks": reports.aggregate(total=Sum(F("wikibooks_created") + F("wikibooks_edited")))["total"] or 0,
+        "Wikisource": reports.aggregate(total=Sum(F("wikisource_created") + F("wikisource_edited")))["total"] or 0,
+        "Wikinews": reports.aggregate(total=Sum(F("wikinews_created") + F("wikinews_edited")))["total"] or 0,
+        "Wikiquote": reports.aggregate(total=Sum(F("wikiquote_created") + F("wikiquote_edited")))["total"] or 0,
+        "Wiktionary": reports.aggregate(total=Sum(F("wiktionary_created") + F("wiktionary_edited")))["total"] or 0,
+        "Wikivoyage": reports.aggregate(total=Sum(F("wikivoyage_created") + F("wikivoyage_edited")))["total"] or 0,
+        "Wikispecies": reports.aggregate(total=Sum(F("wikispecies_created") + F("wikispecies_edited")))["total"] or 0,
+        "MetaWiki": reports.aggregate(total=Sum(F("metawiki_created") + F("metawiki_edited")))["total"] or 0,
+        "MediaWiki": reports.aggregate(total=Sum(F("mediawiki_created") + F("mediawiki_edited")))["total"] or 0,
         # Community metrics
-        "Number of participants": sums["participants"] or 0,
-        "Number of feedbacks": sums["feedbacks"] or 0,
-
         "Number of editors": Editor.objects.filter(editors__in=reports).distinct().count() or 0,
         "Number of editors retained": Editor.objects.filter(retained=True, editors__in=reports).distinct().count() or 0,
         "Number of new editors": Editor.objects.filter(editors__in=reports, account_creation_date__gte=F('editors__initial_date')).count() or 0,
+        "Number of participants": reports.aggregate(total=Sum("participants"))["total"] or 0,
         "Number of partnerships activated": Partner.objects.filter(partners__in=reports).distinct().count() or 0,
         "Number of new partnerships": operation_reports.aggregate(total=Sum("number_of_new_partnerships"))["total"] or 0,
         "Number of organizers": Organizer.objects.filter(organizers__in=reports).distinct().count() or 0,
         "Number of organizers retained": Organizer.objects.filter(retained=True,organizers__in=reports).distinct().count() or 0,
         "Number of resources": operation_reports.aggregate(total=Sum("number_of_resources"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_resources"))["total"] or 0,
-        "Number of events": operation_reports.aggregate(total=Sum("number_of_events"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_events"))["total"] or 0,
-
+        "Number of feedbacks": reports.aggregate(total=Sum("feedbacks"))["total"] or 0,"Number of events": operation_reports.aggregate(total=Sum("number_of_events"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_events"))["total"] or 0,
         # Communication metrics
         "Number of new followers": operation_reports.aggregate(total=Sum("number_of_new_followers"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_new_followers"))["total"] or 0,
         "Number of mentions": operation_reports.aggregate(total=Sum("number_of_mentions"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_mentions"))["total"] or 0,
         "Number of community communications": operation_reports.aggregate(total=Sum("number_of_community_communications"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_community_communications"))["total"] or 0,
         "Number of people reached through social media": operation_reports.aggregate(total=Sum("number_of_people_reached_through_social_media"))["total"] or alt_operation_reports.aggregate(total=Sum("number_of_people_reached_through_social_media"))["total"] or 0,
         # Other metrics
-        "Occurrence": reports.filter(metrics_related__boolean_type=True).exists(),
+        "Occurrence": reports.filter(metrics_related__boolean_type=True).exists() or False,
     }
 
 
@@ -604,4 +528,4 @@ def build_wiki_ref_for_reports(metric, supplementary_query=Q()):
 
 
 def is_there_a_final_report(reports):
-    return reports.filter(metrics_related__boolean_type=True, partial_report=False).exists()
+    return reports.filter(metrics_related__boolean_type=True, partial_report=False).exists() or False
