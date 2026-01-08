@@ -14,43 +14,43 @@
                 {% if data.title %}
                     <div class="w3-row">
                         <div class="w3-third field_title">{% trans "Title" %}</div>
-                        <div class="w3-twothird formfield view-field">{{ data.title }}</div>
+                        <div class="w3-twothird formfield view_field">{{ data.title }}</div>
                     </div>
                 {% endif %}
                 {% if data.description %}
                     <div class="w3-row">
                         <div class="w3-third field_title">{% trans "Description" %}</div>
-                        <div class="w3-twothird formfield view-field">{{ data.description|linebreaksbr }}</div>
+                        <div class="w3-twothird formfield view_field">{{ data.description|linebreaksbr }}</div>
                     </div>
                 {% endif %}
                 {% if data.report_date %}
                     <div class="w3-row">
                         <div class="w3-third field_title">{% trans "Date of report" %}</div>
-                        <div class="w3-twothird formfield view-field">{{ data.report_date }}</div>
+                        <div class="w3-twothird formfield view_field">{{ data.report_date }}</div>
                     </div>
                 {% endif %}
                 {% if data.update_date %}
                     <div class="w3-row">
                         <div class="w3-third field_title">{% trans "Update date" %}</div>
-                        <div class="w3-twothird formfield view-field">{{ data.update_date }}</div>
+                        <div class="w3-twothird formfield view_field">{{ data.update_date }}</div>
                     </div>
                 {% endif %}
                 {% if data.reporter %}
                     <div class="w3-row">
                         <div class="w3-third field_title">{% trans "Reporter" %}</div>
-                        <div class="w3-twothird formfield view-field">{{ data.reporter }}</div>
+                        <div class="w3-twothird formfield view_field">{{ data.reporter }}</div>
                     </div>
                 {% endif %}
                 {% if data.status %}
                     <div class="w3-row">
                         <div class="w3-third field_title">{% trans "Status" %}</div>
-                        <div class="w3-twothird formfield view-field">{{ data.get_status_display }}</div>
+                        <div class="w3-twothird formfield view_field">{{ data.get_status_display }}</div>
                     </div>
                 {% endif %}
                 {% if data.bug_type %}
                     <div class="w3-row">
                         <div class="w3-third field_title">{% trans "Type" %}</div>
-                        <div class="w3-twothird formfield view-field">{{ data.get_bug_type_display }}</div>
+                        <div class="w3-twothird formfield view_field">{{ data.get_bug_type_display }}</div>
                     </div>
                 {% endif %}
                 {% if perms.bug.change_bug %}
@@ -67,11 +67,11 @@
                 {% if data.observation %}
                     <div class="w3-row">
                         <div class="w3-third field_title">{% trans "Observation" %}</div>
-                        <div class="w3-twothird formfield view-field">{{ data.observation.observation|linebreaksbr }}</div>
+                        <div class="w3-twothird formfield view_field">{{ data.observation.observation|linebreaksbr }}</div>
                     </div>
                     <div class="w3-row">
                         <div class="w3-third field_title">{% trans "Answer date" %}</div>
-                        <div class="w3-twothird formfield view-field">{{ data.observation.answer_date }}</div>
+                        <div class="w3-twothird formfield view_field">{{ data.observation.answer_date }}</div>
                     </div>
                 {% endif %}
                 {% if perms.bug.add_obs %}

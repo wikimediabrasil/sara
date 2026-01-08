@@ -16,7 +16,7 @@
     <script>
         let submitText = "{% translate 'Submit' %}";
         let nextStrategic = "{% translate 'Fill strategic report' %}";
-        let metrics_set = {{ metrics_set }};
+        let metrics_set = {{ metrics_set|default:"[]"|safe }};
         let get_metrics_url = "{% url 'report:get_metrics' %}";
         let report_id = "{{ report_id|default:'' }}";
     </script>

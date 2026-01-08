@@ -17,7 +17,7 @@
 .form-legend { font-size: small; color: var(--grey-color); }
 #homepage_buttons div:nth-child(odd) { padding-right: 1em; }
 #homepage_buttons div:nth-child(even) { padding-left: 1em; }
-.view-field {
+.view_field {
     color: var(--dark-color);
     border: none;
     background-color: var(--light-color);
@@ -26,6 +26,10 @@
     border-radius: 0.5em;
     overflow-y: auto;
     overflow-x: auto;
+}
+.scroll_field {
+    max-height: 9em;
+    overflow-y: auto;
 }
 .invisible_field { display: none !important; }
 fieldset { border: none; padding: 0; margin: 0; }

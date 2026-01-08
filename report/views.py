@@ -1,13 +1,16 @@
 import datetime
 import pandas as pd
 import zipfile
+from io import BytesIO
+
 from django.utils import timezone
 from django.forms import inlineformset_factory
-from io import BytesIO
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect, reverse, HttpResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.utils.translation import gettext as _
+from django.utils import translation
 from django.contrib import messages
 from django.db.models import Q
 from django.utils.timezone import now
@@ -16,67 +19,78 @@ from metrics.models import Metric, Project
 from report.models import Editor, Organizer, Partner, Funding, Report, Activity, OperationReport
 from users.models import UserProfile, TeamArea
 from report.forms import NewReportForm, OperationForm, OperationUpdateFormSet
-from django.utils import translation
 
 
 # CREATE
 @login_required
 @permission_required("report.add_report")
 def add_report(request):
-    report_form = NewReportForm(request.POST or None, user=request.user)
-    directions_related_set = list(map(int, report_form.data.getlist('directions_related', [])))
-    learning_questions_related_set = list(map(int, report_form.data.getlist('learning_questions_related', [])))
-    metrics_set = list(map(int, report_form.data.getlist('metrics_related', [])))
-    operation_formset = get_operation_formset()
-    if request.method == "POST":
-        timediff = timezone.now() - datetime.timedelta(hours=24)
-        report_exists = Report.objects.filter(created_by__user=request.user, description=report_form.data.get("description"), created_at__gte=timediff).exists()
-        operation_metrics = operation_formset(request.POST, prefix='Operation')
-        if not report_exists:
-            if report_form.is_valid() and operation_metrics.is_valid():
-                report = report_form.save(user=request.user, is_update=False)
-                instances = operation_metrics.save(commit=False)
+    operation_form_set = get_operation_formset()
 
+    if request.method == "POST":
+        report_form = NewReportForm(request.POST, user=request.user)
+        operation_metrics = operation_form_set(request.POST, prefix='Operation')
+
+        if report_form.is_valid() and operation_metrics.is_valid():
+            timediff = timezone.now() - datetime.timedelta(hours=24)
+            description = report_form.cleaned_data.get("description")
+
+            with transaction.atomic():
+                report_exists = Report.objects.filter(
+                    created_by__user=request.user,
+                    description=description,
+                    created_at__gte=timediff,
+                ).exists()
+
+                if report_exists:
+                    raise ValueError(_("Report already exists!"))
+
+                report = report_form.save(user=request.user)
+
+                instances = operation_metrics.save(commit=False)
                 operation_metrics_related = []
+
                 for instance in instances:
                     instance.report = report
                     instance.save()
-                    numbers = instance.number_of_people_reached_through_social_media + instance.number_of_new_followers + instance.number_of_mentions + instance.number_of_community_communications + instance.number_of_events + instance.number_of_resources + instance.number_of_partnerships_activated + instance.number_of_new_partnerships
-                    if numbers > 0:
+
+                    numeric_fields = [
+                        "number_of_people_reached_through_social_media",
+                        "number_of_new_followers",
+                        "number_of_mentions",
+                        "number_of_community_communications",
+                        "number_of_events",
+                        "number_of_resources",
+                        "number_of_partnerships_activated",
+                        "number_of_new_partnerships",
+                    ]
+
+                    if any(getattr(instance, f, 0) > 0 for f in numeric_fields):
                         operation_metrics_related.append(instance.metric)
 
-                report.metrics_related.add(*operation_metrics_related)
-                report.save()
+                if operation_metrics_related:
+                    report.metrics_related.add(*operation_metrics_related)
 
-                messages.success(request, _("Report registered successfully!"))
-                return redirect(reverse("report:detail_report", kwargs={"report_id": report.id}))
-            else:
-                messages.error(request, _("Something went wrong!"))
-                for field, error in report_form.errors.items():
-                    messages.error(request, field + ": " + error[0])
+            messages.success(request, _("Report registered successfully!"))
+            return redirect(reverse("report:detail_report", kwargs={"report_id": report.id}))
         else:
-            messages.error(request, _("It seems that you already submitted this report!"))
-            messages.error(request, str(request.user) + ":" + report_form.data.get("description") + ":" + str(timediff))
-
-        context = {
-            "directions_related_set": directions_related_set,
-            "learning_questions_related_set": learning_questions_related_set,
-            "metrics_set": metrics_set,
-            "operation_metrics": operation_metrics,
-            "report_form": report_form,
-            "title": _("Add report")
-        }
-        return render(request, "report/add_report.html", context)
+            messages.error(request, _("Something went wrong!"))
+            for field, error in report_form.errors.items():
+                messages.error(request, f"{field}: {error[0]}")
     else:
-        operation_metrics = operation_formset(prefix="Operation", initial=[{"metric": metric_object} for metric_object in Metric.objects.filter(is_operation=True)])
-        context = {"directions_related_set": directions_related_set,
-                   "learning_questions_related_set": learning_questions_related_set,
-                   "metrics_set": metrics_set,
-                   "operation_metrics": operation_metrics,
-                   "report_form": report_form,
-                   "title": _("Add report")}
+        report_form = NewReportForm(user=request.user)
+        operation_metrics = operation_form_set(
+            prefix='Operation',
+            initial=[{"metric": metric} for metric in Metric.objects.filter(is_operation=True)],
+        )
 
-        return render(request, "report/add_report.html", context)
+    context = {
+        "report_form": report_form,
+        "operation_metrics": operation_metrics,
+        "title": _("Add report")
+    }
+
+    return render(request, "report/add_report.html", context)
 
 
 def get_operation_formset():

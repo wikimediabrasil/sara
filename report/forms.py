@@ -1,7 +1,10 @@
+from venv import create
+
 from django.utils import timezone
 from django import forms
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
+from django.core.exceptions import FieldDoesNotExist
 from django.db.models import fields, Q, Case, When, Value, IntegerField
 from django.db.models.functions import Lower
 from report.models import Report, Funding, Partner, Technology, Editor, Organizer, OperationReport
@@ -16,7 +19,8 @@ from django.forms import inlineformset_factory
 
 
 class NewReportForm(forms.ModelForm):
-    is_update = False
+    editors_string = forms.CharField(required=False, widget=forms.Textarea,)
+    organizers_string = forms.CharField(required=False, widget=forms.Textarea,)
 
     class Meta:
         model = Report
@@ -24,96 +28,56 @@ class NewReportForm(forms.ModelForm):
         exclude = ["created_by", "created_at", "modified_by", "modified_at"]
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop("user", None)
+        self.user = kwargs.pop("user", None)
         self.is_update = kwargs.pop("is_update", False)
-        super(NewReportForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
         self.fields["activity_associated"].choices = activities_associated_as_choices()
         self.fields["directions_related"].choices = directions_associated_as_choices()
         self.fields["learning_questions_related"].choices = learning_questions_as_choices()
+
         self.fields["area_responsible"].queryset = TeamArea.objects.order_by(Lower("text"))
-        self.fields["funding_associated"].queryset = Funding.objects.filter(project__active_status=True).order_by(Lower("name"))
         self.fields["area_activated"].queryset = TeamArea.objects.order_by(Lower("text"))
         self.fields["partners_activated"].queryset = Partner.objects.order_by(Lower("name"))
-        if self.instance.id:
-            self.fields["area_responsible"].initial = self.instance.area_responsible_id
-        else:
-            self.fields["area_responsible"].initial = area_responsible_of_user(user)
         self.fields["technologies_used"].queryset = Technology.objects.order_by(Lower("name"))
 
-    def clean_editors(self):
-        editors_string = self.data.get("editors_string", "")
-        editors_list = remove_domain(editors_string).split("\r\n") if editors_string else []
-        editors = []
-        for editor in editors_list:
-            editor_object, created = Editor.objects.get_or_create(username=editor.strip())
+        self.fields["funding_associated"].queryset = Funding.objects.filter(project__active_status=True).order_by(Lower("name"))
 
-            # Store the editor account date of registration
-            if created:
-                user_creation_date = get_user_date_of_registration(editor)
-                if user_creation_date:
-                    editor_object.account_creation_date = user_creation_date
-            # Which means that the user is already on the database and is returning = retained
-            else:
-                if not self.is_update:
-                    editor_object.retained = 1
-                    editor_object.retained_at = datetime.today().date()
+        if self.instance.pk:
+            self.fields["area_responsible"].initial = self.instance.area_responsible_id
+        else:
+            self.fields["area_responsible"].initial = area_responsible_of_user(self.user)
 
-            editor_object.save()
-            editors.append(editor_object)
-        return editors
+    def clean(self):
+        cleaned = super().clean()
 
-    def clean_organizers(self):
-        organizers_string = self.data.get("organizers_string", "")
-        organizers_list = remove_domain(organizers_string).split("\r\n") if organizers_string else []
+        raw_editors = cleaned.get("editors_string", "")
+        editors = [
+            u.strip()
+            for u in remove_domain(raw_editors).splitlines()
+            if u.strip()
+        ]
+        cleaned["_parsed_editors"] = list(set(editors))
+
+        raw_organizers = cleaned.get("organizers_string", "")
         organizers = []
-        for organizer in organizers_list:
-            organizer_name, institution_name = (organizer + ";").split(";", maxsplit=1)
-            organizer_object, created = Organizer.objects.get_or_create(name=organizer_name.strip())
-            if not created and not self.is_update:
-                organizer_object.retained = True
-                organizer_object.save()
-            if institution_name:
-                for partner_name in institution_name.split(";"):
-                    if partner_name:
-                        partner, partner_created = Partner.objects.get_or_create(name=partner_name.strip())
-                        organizer_object.institution.add(partner)
-                organizer_object.save()
-            organizers.append(organizer_object)
-        return organizers
+        inferred_partners = set()
 
-    def clean_partners_activated(self):
-        organizers_string = self.data.get("organizers_string", "")
-        organizers_list = organizers_string.split("\r\n") if organizers_string else []
+        for line in raw_organizers.splitlines():
+            if not line.strip():
+                continue
 
-        partners = self.data.getlist("partners_activated", []) if "partners_activated" in self.data else []
-        for organizer in organizers_list:
-            organizer_name, institution_name = (organizer + ";").split(";", maxsplit=1)
-            if institution_name:
-                for partner_name in institution_name.split(";"):
-                    if partner_name:
-                        partner, partner_created = Partner.objects.get_or_create(name=partner_name.strip())
-                        partners.append(partner.id)
-        return partners
+            name, institutions = (line + "|").split("|", 1)
+            organizers.append(line.strip())
 
-    def clean_initial_date(self):
-        initial_date = self.cleaned_data.get('initial_date')
-        return initial_date
+            for institution in institutions.split("|"):
+                if institution.strip():
+                    inferred_partners.add(institution.strip())
 
-    def clean_metrics_related(self):
-        metrics_related = self.cleaned_data.get('metrics_related')
-        main_funding = Project.objects.get(main_funding=True)
-        metrics_main_funding = Metric.objects.filter(project=main_funding)
-        for metric in metrics_related:
-            field_names = [metric_field.name for metric_field in metric._meta.fields if isinstance(metric_field, fields.IntegerField) and metric_field.name != "id" and getattr(metric, metric_field.name) > 0]
+        cleaned["_parsed_organizers"] = list(set(organizers))
+        cleaned["_inferred_partner_names"] = list(inferred_partners)
 
-            # Check if the metrics of the main funding have values
-            query = Q()
-            for field_name in field_names:
-                query |= Q(**{f"{field_name}__gt": 0})
-
-            if len(query):
-                metrics_related = metrics_related.union(metrics_main_funding.filter(query))
-        return metrics_related
+        return cleaned
 
     def clean_end_date(self):
         initial_date = self.cleaned_data.get('initial_date')
@@ -176,22 +140,132 @@ class NewReportForm(forms.ModelForm):
 
     def save(self, commit=True, user=None, *args, **kwargs):
         report = super(NewReportForm, self).save(commit=False)
+
         if commit:
             user_profile = get_object_or_404(UserProfile, user=user)
             report.created_by = user_profile
             report.modified_by = user_profile
             report.save()
-            report.editors.clear()
-            report.organizers.clear()
-            report.editors.set(self.cleaned_data['editors'])
-            report.organizers.set(self.cleaned_data['organizers'])
-            report.partners_activated.set(self.cleaned_data['partners_activated'])
+
+            self._save_editors(report)
+            self._save_organizers(report)
+            self._save_partners(report)
+
             report.technologies_used.set(self.cleaned_data['technologies_used'])
             report.area_activated.set(self.cleaned_data['area_activated'])
             report.directions_related.set(self.cleaned_data['directions_related'])
             report.learning_questions_related.set(self.cleaned_data['learning_questions_related'])
-            report.metrics_related.set(self.add_metrics_related_depending_on_values())
+
+            metrics = self._metrics_related() or []
+            report.metrics_related.set(metrics)
+
         return report
+
+    def _save_editors(self, report):
+        editors = []
+        for username in self.cleaned_data["_parsed_editors"]:
+            editor, created = Editor.objects.get_or_create(username=username)
+
+            if created:
+                editor.account_creation_date = get_user_date_of_registration(username)
+            elif not self.is_update:
+                editor.retained = True
+                editor.retained_at = self.cleaned_data["initial_date"]
+
+            editor.save()
+            editors.append(editor)
+
+        report.editors.set(editors)
+
+    def _save_organizers(self, report):
+        organizers = {}
+        created_in_this_save = set()
+
+        for line in self.cleaned_data["_parsed_organizers"]:
+            name, institutions = (line + "|").split("|", 1)
+            key = name.strip().lower()
+
+            organizer, created = Organizer.objects.get_or_create(name=name.strip())
+
+            if created:
+                organizer.first_seen_at = timezone.now().date()
+                organizer.save()
+                created_in_this_save.add(organizer.id)
+            elif not self.is_update and organizer.id not in created_in_this_save:
+                organizer.retained = True
+                organizer.retained_at = self.cleaned_data["initial_date"]
+                organizer.save()
+
+            for inst_name in institutions.split("|"):
+                if inst_name.strip():
+                    partner, _ = Partner.objects.get_or_create(name=inst_name.strip())
+                    organizer.institution.add(partner)
+
+            organizers[key] = organizer
+
+        report.organizers.set(organizers.values())
+
+    def _save_partners(self, report):
+        partners = {p.id: p for p in list(Partner.objects.filter(id__in=self.cleaned_data["partners_activated"]))}
+
+        for name in self.cleaned_data["_inferred_partner_names"]:
+            partner, _ = Partner.objects.get_or_create(name=name)
+            partners[partner.id] = partner
+
+        report.partners_activated.set(partners.values())
+
+    def _metrics_related(self):
+        metrics_related = self.cleaned_data.get("metrics_related")
+        main_funding = Project.objects.get(main_funding=True)
+        metrics_main_funding = Metric.objects.filter(project=main_funding)
+
+        int_fields_names = [
+            ["wikipedia_created", "wikipedia_edited"],
+            ["commons_created", "commons_edited"],
+            ["wikidata_created", "wikidata_edited"],
+            ["wikiversity_created", "wikiversity_edited"],
+            ["wikibooks_created", "wikibooks_edited"],
+            ["wikisource_created", "wikisource_edited"],
+            ["wikinews_created", "wikinews_edited"],
+            ["wikiquote_created", "wikiquote_edited"],
+            ["wiktionary_created", "wiktionary_edited"],
+            ["wikivoyage_created", "wikivoyage_edited"],
+            ["wikispecies_created", "wikispecies_edited"],
+            ["metawiki_created", "metawiki_edited"],
+            ["mediawiki_created", "mediawiki_edited"],
+            ["participants"],
+            ["feedbacks"],
+        ]
+
+        for field_set in int_fields_names:
+            if any(self.cleaned_data.get(field_name, 0) > 0 for field_name in field_set):
+                query = Q()
+                for field in field_set:
+                    try:
+                        Metric._meta.get_field(field)
+                        metric_field= field
+                    except FieldDoesNotExist:
+                        metric_field = f"number_of_{field}"
+
+                    query |= Q(**{f"{metric_field}__gt": 0})
+
+                metrics_related = metrics_related.union(metrics_main_funding.filter(query))
+
+        obj_fields_names = {
+            "editors": ["number_of_editors", "number_of_editors_retained", "number_of_new_editors"],
+            "organizers": ["number_of_organizers", "number_of_organizers_retained"],
+            "partners_activated": ["number_of_partnerships_activated"],
+        }
+
+        for field_set, field_names in obj_fields_names.items():
+            if self.cleaned_data.get(field_set):
+                query = Q()
+                for field_name in field_names:
+                    query |= Q(**{f"{field_name}__gt": 0})
+
+                metrics_related = metrics_related.union(metrics_main_funding.filter(query))
+
+        return metrics_related
 
 
 def remove_domain(users_string):

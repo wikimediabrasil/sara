@@ -26,6 +26,7 @@ class Funding(models.Model):
 class Editor(models.Model):
     username = models.CharField(max_length=420, unique=True)
     account_creation_date = models.DateTimeField(null=True, blank=True)
+    first_seen_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     retained_at = models.DateField(null=True, blank=True)
     retained = models.BooleanField(default=False)
 
@@ -40,6 +41,7 @@ class Editor(models.Model):
 class Partner(models.Model):
     name = models.CharField(max_length=420)
     website = models.URLField(null=True, blank=True)
+    partnership_term = models.URLField(null=True, blank=True)
 
     class Meta:
         verbose_name = _("Partner")
@@ -52,6 +54,8 @@ class Partner(models.Model):
 class Organizer(models.Model):
     name = models.CharField(max_length=420)
     retained = models.BooleanField(default=False)
+    retained_at = models.DateField(null=True, blank=True)
+    first_seen_at = models.DateField(auto_now=True, null=True, blank=True)
     institution = models.ManyToManyField(Partner, related_name="organizer_institution")
 
     class Meta:
