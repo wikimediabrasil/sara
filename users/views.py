@@ -50,7 +50,7 @@ def update_profile(request, username):
     Returns:
         HttpResponse: Rendered response for ``users/update_profile.html``.
     """
-    user = get_object_or_404(User, username=username)
+    user = get_object_or_404(User, username=username.replace("_", " "))
     request_user = request.user
     user_form = UserForm(request.POST or None, instance=user)
     user_profile_form = UserProfileForm(request.POST or None, instance=user.profile, request_user=request_user)
@@ -101,7 +101,7 @@ def detail_profile(request, username):
     Returns:
         HttpResponse: Rendered response for ``users/detail_profile.html``.
     """
-    user = get_object_or_404(User, username=username)
+    user = get_object_or_404(User, username=username.replace("_", " "))
     request_user = request.user
     can_delete = request_user.has_perm("users.delete_user")
     can_edit = can_delete or request_user == user

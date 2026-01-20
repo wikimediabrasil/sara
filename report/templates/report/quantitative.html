@@ -31,8 +31,8 @@
             <p class="form-legend">{% translate "List of usernames of people registered for an activity" %} <b>{% translate "One per line" %}</b></p>
         </div>
         <div class="w3-twothird formfield">
-            <textarea id="editors" name="editors_string" rows="4" placeholder="Username 1
-Username 2">{% if report_form.instance.id %}{% for editor in report_form.instance.editors.all %}{{ editor.username }}{% if not forloop.last %}&#13;&#10;{% endif %}{% endfor %}{% endif %}</textarea>
+            <textarea id="editors" name="editors_string" rows="4" placeholder="{% blocktrans %}Username 1
+Username 2{% endblocktrans %}">{% if report_form.instance.id %}{% for editor in report_form.instance.editors.all %}{{ editor.username }}{% if not forloop.last %}&#13;&#10;{% endif %}{% endfor %}{% endif %}</textarea>
         </div>
     </div>
     <div class="w3-row">
@@ -41,8 +41,8 @@ Username 2">{% if report_form.instance.id %}{% for editor in report_form.instanc
             <p class="form-legend">{% translate "List of usernames (or full names if they don't have usernames) of people who organized the activity" %} <b>{% translate "One per line" %}</b></p>
         </div>
         <div class="w3-twothird formfield">
-            <textarea id="organizers" name="organizers_string" rows="4" placeholder="Username 1; Institution 1
-Username 2; Institution 2">{% if report_form.instance.id %}{% for organizer in report_form.instance.organizers.all %}{{ organizer.name }}{% if not forloop.last %}&#13;&#10;{% endif %}{% endfor %}{% endif %}</textarea>
+            <textarea id="organizers" name="organizers_string" rows="4" placeholder="{% blocktrans %}Username 1|Institution 1
+Username 2|Institution 2{% endblocktrans %}">{% if report_form.instance.id %}{% for organizer in report_form.instance.organizers.all %}{{ organizer.name }}{% if not forloop.last %}&#13;&#10;{% endif %}{% endfor %}{% endif %}</textarea>
         </div>
     </div>
     <div class="w3-row">

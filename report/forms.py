@@ -156,21 +156,30 @@ class NewReportForm(forms.ModelForm):
             report.directions_related.set(self.cleaned_data['directions_related'])
             report.learning_questions_related.set(self.cleaned_data['learning_questions_related'])
 
-            metrics = self._metrics_related() or []
+            metrics = self._metrics_related()
+            metrics = self._apply_implicit_metrics(report, metrics)
             report.metrics_related.set(metrics)
 
         return report
 
     def _save_editors(self, report):
         editors = []
+        self._has_editors = False
+        self._has_new_editors = False
+        self._has_retained_editors = False
+
         for username in self.cleaned_data["_parsed_editors"]:
             editor, created = Editor.objects.get_or_create(username=username)
 
             if created:
                 editor.account_creation_date = get_user_date_of_registration(username)
+                self._has_editors = True
+                if editor.first_seen_at.date() >= report.initial_date:
+                    self._has_new_editors = True
             elif not self.is_update:
                 editor.retained = True
                 editor.retained_at = self.cleaned_data["initial_date"]
+                self._has_retained_editors = True
 
             editor.save()
             editors.append(editor)
@@ -180,6 +189,9 @@ class NewReportForm(forms.ModelForm):
     def _save_organizers(self, report):
         organizers = {}
         created_in_this_save = set()
+        self._has_organizers = False
+        self._has_retained_organizers = False
+        self._has_new_organizers = False
 
         for line in self.cleaned_data["_parsed_organizers"]:
             name, institutions = (line + "|").split("|", 1)
@@ -191,10 +203,15 @@ class NewReportForm(forms.ModelForm):
                 organizer.first_seen_at = timezone.now().date()
                 organizer.save()
                 created_in_this_save.add(organizer.id)
+                self._has_organizers = True
+
+                if organizer.first_seen_at.date() >= report.initial_date:
+                    self._has_new_organizers = True
             elif not self.is_update and organizer.id not in created_in_this_save:
                 organizer.retained = True
                 organizer.retained_at = self.cleaned_data["initial_date"]
                 organizer.save()
+                self._has_retained_organizers = True
 
             for inst_name in institutions.split("|"):
                 if inst_name.strip():
@@ -266,6 +283,33 @@ class NewReportForm(forms.ModelForm):
                 metrics_related = metrics_related.union(metrics_main_funding.filter(query))
 
         return metrics_related
+
+    @staticmethod
+    def _contributes_to_main_funding(report):
+        if not report.activity_associated or not report.activity_associated.area:
+            return False
+        return report.activity_associated.area.project.filter(counts_for_main_funding=True).exists()
+
+    def _apply_implicit_metrics(self, report, metrics):
+        if not self._contributes_to_main_funding(report):
+            return metrics
+
+        main_funding = Project.objects.get(main_funding=True)
+
+        if getattr(self, "_has_editors", False):
+            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_editors__gt=0))
+        if getattr(self, "_has_new_editors", False):
+            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_new_editors__gt=0))
+        if getattr(self, "_has_retained_editors", False):
+            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_retained_editors__gt=0))
+        if getattr(self, "_has_organizers", False):
+            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_organizers__gt=0))
+        if getattr(self, "_has_new_organizers", False):
+            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_new_organizers__gt=0))
+        if getattr(self, "_has_retained_organizers", False):
+            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_retained_organizers__gt=0))
+
+        return metrics
 
 
 def remove_domain(users_string):

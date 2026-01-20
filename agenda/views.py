@@ -4,9 +4,10 @@ from datetime import date, timedelta
 from django.db import transaction
 from django.contrib import messages
 from django.shortcuts import render, redirect, reverse, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.utils.translation import gettext as _
 from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist
 
 from users.models import TeamArea, UserProfile
 from agenda.models import Event
@@ -285,32 +286,57 @@ def send_email(request):
     return redirect(reverse("metrics:index"))
 
 
-def show_list_of_reports_of_specific_area(request, area_id=None):
-    if not area_id:
-        user = request.user
-        area = TeamArea.objects.get(team_area_of_position__user_position__user=user)
-        manager = user.first_name
+def list_of_reports_of_area(code="", user=None):
+    if code:
+        try:
+            area = TeamArea.objects.get(code=code)
+            manager = UserProfile.objects.filter(
+                user__is_active=True,
+                position__area_associated=area,
+                position__type__name="Manager").first()
+        except ObjectDoesNotExist:
+            return False
     else:
-        area = TeamArea.objects.get(pk=area_id)
-        manager = UserProfile.objects.filter(user__is_active=True, position__area_associated=area, position__type__name="Manager").first()
+        try:
+            area = user.profile.position.area_associated
+            manager = user.first_name
+        except AttributeError:
+            return False
 
-    today_boy = (datetime.date.today() - datetime.date(datetime.date.today().year, 1, 1)).days
-    today_eoy = (datetime.date(datetime.date.today().year, 12, 31) - datetime.date.today()).days
-    past_activities = get_activities_already_finished(area, delta=today_boy)
-    future_activities = get_activities_soon_to_be_finished(area, delta=today_eoy)
+    today = datetime.date.today()
+    days_since_jan_01 = (today - datetime.date(today.year, 1, 1)).days
+    days_until_dec_31 = (datetime.date(today.year, 12, 31) - today).days
 
     context = {
-        "past_activities": build_message_about_reports(past_activities),
-        "future_activities": build_message_about_reports(future_activities),
+        "past_activities": build_message_about_reports(
+            get_activities_already_finished(area, delta=days_since_jan_01)
+        ),
+        "future_activities": build_message_about_reports(
+            get_activities_soon_to_be_finished(area, delta=days_until_dec_31)
+        ),
         "manager": manager,
         "area": area
     }
 
-    return render(request, "agenda/area_activities.html", context)
+    return context
 
 
+@permission_required("report.add_report")
 def show_list_of_reports_of_area(request):
-    return redirect(reverse("agenda:specific_area_activities"))
+    context = list_of_reports_of_area("", request.user)
+    if context:
+        return render(request, "agenda/area_activities.html", context)
+    else:
+        return redirect(reverse("metrics:index"))
+
+
+@permission_required("report.add_report")
+def show_list_of_reports_of_specific_area(request, code=""):
+    context = list_of_reports_of_area(code)
+    if context:
+        return render(request, "agenda/area_activities.html", context)
+    else:
+        return redirect(reverse("metrics:index"))
 
 
 def get_activities_soon_to_be_finished(area, delta=14):
