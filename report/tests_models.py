@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from report.models import Funding, Editor, Organizer, Partner, Technology, AreaActivated, Report, StrategicAxis, Project, OperationReport
+from report.models import Funding, Editor, Organizer, Partner, Technology, Report, StrategicAxis, Project, OperationReport
 from users.models import TeamArea, UserProfile, User
 from metrics.models import Activity, Metric
 from strategy.models import Direction, LearningArea, StrategicLearningQuestion
@@ -66,31 +66,31 @@ class TechnologyModelTest(TestCase):
         self.assertEqual(str(self.technology), self.name)
 
 
-class AreaActivatedModelTest(TestCase):
-    def setUp(self):
-        self.text = "Area Activated"
-        self.area_activated = AreaActivated.objects.create(text=self.text)
-
-    def test_area_activated_str_method_returns_the_text(self):
-        self.assertEqual(str(self.area_activated), self.text)
-
-    def test_area_activated_contact(self):
-        self.area_activated.contact = "Contact"
-        self.area_activated.save()
-        area_activated_contact = self.area_activated.contact
-        self.assertEqual(area_activated_contact, "Contact")
-
-    def test_area_activated_clean_method(self):
-        area_activated = AreaActivated()
-        with self.assertRaises(ValidationError):
-            area_activated.clean()
-
-    def test_creating_team_area_creates_an_area_activated_instance(self):
-        self.assertEqual(AreaActivated.objects.count(), 1)
-        self.assertFalse(AreaActivated.objects.filter(text="Team Area").exists())
-        TeamArea.objects.create(text="Team Area", code="Code")
-        self.assertEqual(AreaActivated.objects.count(), 2)
-        self.assertTrue(AreaActivated.objects.filter(text="Team Area").exists())
+# class AreaActivatedModelTest(TestCase):
+#     def setUp(self):
+#         self.text = "Area Activated"
+#         self.area_activated = AreaActivated.objects.create(text=self.text)
+#
+#     def test_area_activated_str_method_returns_the_text(self):
+#         self.assertEqual(str(self.area_activated), self.text)
+#
+#     def test_area_activated_contact(self):
+#         self.area_activated.contact = "Contact"
+#         self.area_activated.save()
+#         area_activated_contact = self.area_activated.contact
+#         self.assertEqual(area_activated_contact, "Contact")
+#
+#     def test_area_activated_clean_method(self):
+#         area_activated = AreaActivated()
+#         with self.assertRaises(ValidationError):
+#             area_activated.clean()
+#
+#     def test_creating_team_area_creates_an_area_activated_instance(self):
+#         self.assertEqual(AreaActivated.objects.count(), 1)
+#         self.assertFalse(AreaActivated.objects.filter(text="Team Area").exists())
+#         TeamArea.objects.create(text="Team Area", code="Code")
+#         self.assertEqual(AreaActivated.objects.count(), 2)
+#         self.assertTrue(AreaActivated.objects.filter(text="Team Area").exists())
 
 
 class ReportModelTest(TestCase):

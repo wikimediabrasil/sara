@@ -31,21 +31,17 @@ def associate_by_wiki_handle(backend, uid, user=None, *args, **kwargs):
     if user:
         return {'user': user}
 
-    try:
-        details = kwargs.get('details', {})
-        wiki_username = details.get('username')
+    details = kwargs.get('details', {})
+    wiki_username = details.get('username')
 
-        if wiki_username:
-            profile = UserProfile.objects.filter(professional_wiki_handle__iexact=wiki_username).select_related('user').first()
-            if profile:
-                return {'user': profile.user}
+    if wiki_username:
+        profile = UserProfile.objects.filter(professional_wiki_handle__iexact=wiki_username).select_related('user').first()
+        if profile:
+            return {'user': profile.user}
 
-            user_ = User.objects.filter(username=wiki_username).first()
-            if user_:
-                return {'user': user_}
-
-    except UserProfile.DoesNotExist:
-        pass
+        user_ = User.objects.filter(username=wiki_username).first()
+        if user_:
+            return {'user': user_}
 
     return {}
 

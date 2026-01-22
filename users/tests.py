@@ -250,13 +250,9 @@ class ListProfilesViewTest(TestCase):
 
 class AssociateByWikiHandleTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="django_user", password="pass"
-        )
-        self.profile = UserProfile.objects.create(
-            user=self.user,
-            professional_wiki_handle="WikiHandle"
-        )
+        self.user = User.objects.create_user(username="django_user", password="pass")
+        self.user.profile.professional_wiki_handle = "WikiHandle"
+        self.user.profile.save()
 
     def test_returns_existing_authenticated_user(self):
         result = associate_by_wiki_handle(
@@ -264,7 +260,8 @@ class AssociateByWikiHandleTests(TestCase):
             uid="123",
             user=self.user,
         )
-        self.assertEqual(result["user"], self.user)
+
+        self.assertEqual(result, {"user": self.user})
 
     def test_matches_by_profile_wiki_handle_case_insensitive(self):
         result = associate_by_wiki_handle(
@@ -272,18 +269,21 @@ class AssociateByWikiHandleTests(TestCase):
             uid="123",
             details={"username": "wikihandle"},
         )
-        self.assertEqual(result["user"], self.user)
+
+        self.assertEqual(result, {"user": self.user})
 
     def test_fallback_matches_by_username(self):
         other = User.objects.create_user(
             username="WikiUser", password="pass"
         )
+
         result = associate_by_wiki_handle(
             backend=None,
             uid="123",
             details={"username": "WikiUser"},
         )
-        self.assertEqual(result["user"], other)
+
+        self.assertEqual(result, {"user": other})
 
     def test_no_match_returns_empty_dict(self):
         result = associate_by_wiki_handle(
@@ -291,6 +291,7 @@ class AssociateByWikiHandleTests(TestCase):
             uid="123",
             details={"username": "unknown"},
         )
+
         self.assertEqual(result, {})
 
     def test_missing_details_is_safe(self):
@@ -298,6 +299,7 @@ class AssociateByWikiHandleTests(TestCase):
             backend=None,
             uid="123",
         )
+
         self.assertEqual(result, {})
 
 

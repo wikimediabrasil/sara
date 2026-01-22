@@ -504,6 +504,8 @@ def get_done_for_report(reports, metric):
         "Wikispecies (created)": reports_aggregations["wikispecies_created"] or 0, "Wikispecies (edited)": reports_aggregations["wikispecies_edited"] or 0,
         "MetaWiki (created)": reports_aggregations["metawiki_created"] or 0, "MetaWiki (edited)": reports_aggregations["metawiki_edited"] or 0,
         "MediaWiki (created)": reports_aggregations["mediawiki_created"] or 0, "MediaWiki (edited)": reports_aggregations["mediawiki_edited"] or 0,
+        "Wikifunctions (created)": reports_aggregations["wikifunctions_created"] or 0, "Wikifunctions (edited)": reports_aggregations["wikifunctions_edited"] or 0,
+        "Incubator (created)": reports_aggregations["incubator_created"] or 0, "Incubator (edited)": reports_aggregations["incubator_edited"] or 0,
         # Financial metrics
         "Number of donors": reports_aggregations["donors"] or 0,
         "Number of submissions": reports_aggregations["submissions"] or 0,

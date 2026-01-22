@@ -1,7 +1,8 @@
 import re
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta, date
-from django.test import TestCase, RequestFactory
+from django.test import TestCase, RequestFactory, override_settings
+from django.conf import settings
 from django.db.utils import IntegrityError
 from django.core.exceptions import ValidationError
 from django.urls import reverse
@@ -15,7 +16,7 @@ from strategy.models import StrategicAxis, LearningArea
 from metrics.models import Area, Metric, Activity, Project
 
 from metrics.views import get_metrics_and_aggregate_per_project, build_wiki_ref_for_reports, \
-    show_metrics_for_specific_project, get_results_for_timespan
+    show_metrics_for_specific_project, get_results_for_timespan, get_timespan_array
 from metrics.templatetags.metricstags import categorize, perc, bool_yesno, is_yesno, bool_yesnopartial
 from metrics.utils import render_to_pdf
 from metrics.link_utils import process_all_references, unwikify_link, replace_with_links, dewikify_url, build_wiki_ref
@@ -296,13 +297,10 @@ class ShowMetricsForProjectTests(TestCase):
         operational_data = { self.project.id: {"project_metrics": [1, 2]} }
         bool_data = { self.project.id: {"project_metrics": [3]} }
 
-        def side_effect(*args, **kwargs):
-            if "Occurrence" in args:
-                return bool_data
-            else:
-                return operational_data
-
-        mock_get_metrics.side_effect = side_effect
+        mock_get_metrics.side_effect = [
+            operational_data,
+            bool_data,
+        ]
 
         request = self.factory.get("/fake-url/")
         request.user = self.user
@@ -312,7 +310,6 @@ class ShowMetricsForProjectTests(TestCase):
         response = show_metrics_for_specific_project(request, self.project.id)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Test Project", response.content)
-        # Ensure metrics are combined
         self.assertIn(b"1", response.content)
         self.assertIn(b"3", response.content)
 
@@ -527,9 +524,9 @@ class MetricFunctionsTests(TestCase):
         self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity"], self.activity_1.text)
         self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"].keys())[0], self.metric_2.id)
         self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["title"], self.metric_2.text)
-        self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"].keys())[0], "Wikipedia")
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Wikipedia"]["goal"], 500)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Wikipedia"]["done"], 0)
+        self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"].keys())[0], "Wikipedia (created)")
+        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Wikipedia (created)"]["goal"], 500)
+        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Wikipedia (created)"]["done"], 0)
 
     def test_get_metrics_and_aggregate_per_project_with_goal_and_some_done(self):
         project = Project.objects.create(text="Project")
@@ -543,7 +540,7 @@ class MetricFunctionsTests(TestCase):
         self.activity_1.save()
 
         self.report_3.metrics_related.add(self.metric_2.id)
-        self.report_3.wikipedia_edited = 200
+        self.report_3.wikipedia_created = 200
         self.report_3.save()
         aggregated_metrics = get_metrics_and_aggregate_per_project()
         self.assertEqual(list(aggregated_metrics.keys())[0], project.id)
@@ -552,9 +549,9 @@ class MetricFunctionsTests(TestCase):
         self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity"], self.activity_1.text)
         self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"].keys())[0], self.metric_2.id)
         self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["title"], self.metric_2.text)
-        self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"].keys())[0], "Wikipedia")
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Wikipedia"]["goal"], 500)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Wikipedia"]["done"], 200)
+        self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"].keys())[0], "Wikipedia (created)")
+        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Wikipedia (created)"]["goal"], 500)
+        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Wikipedia (created)"]["done"], 200)
 
     def test_get_metrics_and_aggregate_per_project_without_data(self):
         aggregated_metrics = get_metrics_and_aggregate_per_project()
@@ -632,6 +629,12 @@ class MetricFunctionsTests(TestCase):
 
         response = get_results_for_timespan(timespan_array, metric_query=Q(project=main_project), with_goal=True, lang="en")
         self.assertEqual([{"activity": self.metric_1.activity.text, "metric": self.metric_1.text_en, "done": ["-", "-", "", 10]}], response)
+
+    def test_invalid_timeframe_raises_value_error(self):
+        settings.REPORT_TIMESPANS = {}
+
+        with self.assertRaisesMessage(ValueError, "Invalid timeframe"):
+            get_timespan_array("does-not-exist")
 
 
 class ReferencesFunctionsTests(TestCase):
@@ -936,18 +939,47 @@ class MetricsExportTests(TestCase):
         self.other_activity = Activity.objects.create(text="Other activity")
         self.activity = Activity.objects.create(text="Activity")
 
+        self.report_timespans = {
+            "trimester": {
+                "periods": [
+                    ((1, 1), (3, 31)),
+                    ((4, 1), (6, 30)),
+                    ((7, 1), (9, 30)),
+                    ((10, 1), (12, 31)),
+                ],
+                "total": ((1, 1), (12, 31)),
+                "labels": ["Q1", "Q2", "Q3", "Q4"]
+            },
+            "semester": {
+                "periods": [
+                    ((1, 1), (6, 30)),
+                    ((7, 1), (12, 31)),
+                ],
+                "total": ((1, 1), (12, 31)),
+                "labels": ["S1", "S2"]
+            },
+            "year": {
+                "periods": [
+                    ((1, 1), (12, 31))
+                ],
+                "total": ((1, 1), (12, 31)),
+                "labels": ["Year"]
+            }
+        }
+
     def test_export_trimester_report_succeeds_if_user_has_permission(self):
         self.client.login(username=self.username, password=self.password)
         url = reverse("metrics:export_reports_per_trimester")
 
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertIn('Content-Disposition', response)
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-        self.assertNotEqual(response.content, b'')
-        expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n|}\n"
-        self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+        with override_settings(REPORT_TIMESPANS=self.report_timespans):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
+            self.assertIn('Content-Disposition', response)
+            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
+            self.assertNotEqual(response.content, b'')
+            expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n|}\n"
+            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
 
     def test_export_trimester_report_fails_if_user_is_not_authorized(self):
         self.user.user_permissions.remove(self.view_metrics_permission)
@@ -963,14 +995,15 @@ class MetricsExportTests(TestCase):
         self.client.login(username=self.username, password=self.password)
         url = reverse("metrics:export_reports_per_semester")
 
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertIn('Content-Disposition', response)
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename="semester_report.txt"')
-        self.assertNotEqual(response.content, b'')
-        expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! S1 !! S2 !! Total !! References\n|-\n|}\n"
-        self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+        with override_settings(REPORT_TIMESPANS=self.report_timespans):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
+            self.assertIn('Content-Disposition', response)
+            self.assertEqual(response['Content-Disposition'], 'attachment; filename="semester_report.txt"')
+            self.assertNotEqual(response.content, b'')
+            expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! S1 !! S2 !! Total !! References\n|-\n|}\n"
+            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
 
     def test_export_semester_report_fails_if_user_is_not_authorized(self):
         self.user.user_permissions.remove(self.view_metrics_permission)
@@ -986,14 +1019,15 @@ class MetricsExportTests(TestCase):
         self.client.login(username=self.username, password=self.password)
         url = reverse("metrics:export_reports_per_year")
 
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertIn('Content-Disposition', response)
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename="year_report.txt"')
-        self.assertNotEqual(response.content, b'')
-        expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Year !! Total !! References\n|-\n|}\n"
-        self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+        with override_settings(REPORT_TIMESPANS=self.report_timespans):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
+            self.assertIn('Content-Disposition', response)
+            self.assertEqual(response['Content-Disposition'], 'attachment; filename="year_report.txt"')
+            self.assertNotEqual(response.content, b'')
+            expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Year !! Total !! References\n|-\n|}\n"
+            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
 
     def test_export_yearly_report_fails_if_user_is_not_authorized(self):
         self.user.user_permissions.remove(self.view_metrics_permission)
@@ -1013,14 +1047,16 @@ class MetricsExportTests(TestCase):
         metric.save()
 
         url = reverse("metrics:export_reports_per_trimester")
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertIn('Content-Disposition', response)
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-        self.assertNotEqual(response.content, b'')
-        expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| Activity || Metric || - || - || - || - || - || \n|-\n|}\n"
-        self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+
+        with override_settings(REPORT_TIMESPANS=self.report_timespans):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
+            self.assertIn('Content-Disposition', response)
+            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
+            self.assertNotEqual(response.content, b'')
+            expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| Activity || Metric || - || - || - || - || - || \n|-\n|}\n"
+            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
 
     def test_export_trimester_report_exports_activities_results_with_number_when_something_was_done(self):
         self.client.login(username=self.username, password=self.password)
@@ -1051,14 +1087,15 @@ class MetricsExportTests(TestCase):
 
         operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=3, number_of_resources=2)
 
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertIn('Content-Disposition', response)
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-        self.assertNotEqual(response.content, b'')
-        expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| " + bytes(self.activity.text, 'utf-8') + b" || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n"
-        self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+        with override_settings(REPORT_TIMESPANS=self.report_timespans):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
+            self.assertIn('Content-Disposition', response)
+            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
+            self.assertNotEqual(response.content, b'')
+            expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| " + bytes(self.activity.text, 'utf-8') + b" || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n"
+            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
 
     def test_export_trimester_report_exports_activities_results_of_main_funding_project(self):
         self.client.login(username=self.username, password=self.password)
@@ -1089,14 +1126,15 @@ class MetricsExportTests(TestCase):
 
         operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=6, number_of_resources=2)
 
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertIn('Content-Disposition', response)
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-        self.assertNotEqual(response.content, b'')
-        expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| - || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n"
-        self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+        with override_settings(REPORT_TIMESPANS=self.report_timespans):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
+            self.assertIn('Content-Disposition', response)
+            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
+            self.assertNotEqual(response.content, b'')
+            expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| - || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n"
+            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
 
     def test_export_trimester_report_by_area_succeeds_if_user_is_authenticated(self):
         self.client.login(username=self.username, password=self.password)
@@ -1129,14 +1167,15 @@ class MetricsExportTests(TestCase):
 
         operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=6, number_of_resources=2)
 
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertIn('Content-Disposition', response)
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-        self.assertNotEqual(response.content, b'')
-        expected_content = b"==" + bytes(area_responsible.text, 'utf-8') + b"==\n<div class='wmb_report_table_container bd-" + bytes(area_responsible.code, 'utf-8') + b"'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-" + bytes(area_responsible.code, 'utf-8') + b" co-" + bytes(area_responsible.code, 'utf-8') + b"' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| " + bytes(self.activity.text, 'utf-8') + b" || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n</div>\n"
-        self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+        with override_settings(REPORT_TIMESPANS=self.report_timespans):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
+            self.assertIn('Content-Disposition', response)
+            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
+            self.assertNotEqual(response.content, b'')
+            expected_content = b"==" + bytes(area_responsible.text, 'utf-8') + b"==\n<div class='wmb_report_table_container bd-" + bytes(area_responsible.code, 'utf-8') + b"'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-" + bytes(area_responsible.code, 'utf-8') + b" co-" + bytes(area_responsible.code, 'utf-8') + b"' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| " + bytes(self.activity.text, 'utf-8') + b" || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n</div>\n"
+            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
 
     def test_export_trimester_report_by_area_fails_if_user_is_unauthenticated(self):
         self.user.user_permissions.remove(self.view_metrics_permission)
@@ -1179,14 +1218,15 @@ class MetricsExportTests(TestCase):
 
         operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=6, number_of_resources=2)
 
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertIn('Content-Disposition', response)
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename="semester_report.txt"')
-        self.assertNotEqual(response.content, b'')
-        expected_content = b"==" + bytes(area_responsible.text, 'utf-8') + b"==\n<div class='wmb_report_table_container bd-" + bytes(area_responsible.code, 'utf-8') + b"'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-" + bytes(area_responsible.code, 'utf-8') + b" co-" + bytes(area_responsible.code, 'utf-8') + b"' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n!Activity !! Metrics !! S1 !! S2 !! Total !! References\n|-\n| " + bytes(self.activity.text, 'utf-8') + b" || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n</div>\n"
-        self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+        with override_settings(REPORT_TIMESPANS=self.report_timespans):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
+            self.assertIn('Content-Disposition', response)
+            self.assertEqual(response['Content-Disposition'], 'attachment; filename="semester_report.txt"')
+            self.assertNotEqual(response.content, b'')
+            expected_content = b"==" + bytes(area_responsible.text, 'utf-8') + b"==\n<div class='wmb_report_table_container bd-" + bytes(area_responsible.code, 'utf-8') + b"'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-" + bytes(area_responsible.code, 'utf-8') + b" co-" + bytes(area_responsible.code, 'utf-8') + b"' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n!Activity !! Metrics !! S1 !! S2 !! Total !! References\n|-\n| " + bytes(self.activity.text, 'utf-8') + b" || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n</div>\n"
+            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
 
     def test_export_semester_report_by_area_fails_if_user_is_unauthenticated(self):
         self.user.user_permissions.remove(self.view_metrics_permission)
@@ -1229,14 +1269,15 @@ class MetricsExportTests(TestCase):
 
         operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=6, number_of_resources=2)
 
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertIn('Content-Disposition', response)
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename="year_report.txt"')
-        self.assertNotEqual(response.content, b'')
-        expected_content = b"==" + bytes(area_responsible.text, 'utf-8') + b"==\n<div class='wmb_report_table_container bd-" + bytes(area_responsible.code, 'utf-8') + b"'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-" + bytes(area_responsible.code, 'utf-8') + b" co-" + bytes(area_responsible.code, 'utf-8') + b"' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n!Activity !! Metrics !! Year !! Total !! References\n|-\n| " + bytes(self.activity.text, 'utf-8') + b" || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n</div>\n"
-        self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+        with override_settings(REPORT_TIMESPANS=self.report_timespans):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
+            self.assertIn('Content-Disposition', response)
+            self.assertEqual(response['Content-Disposition'], 'attachment; filename="year_report.txt"')
+            self.assertNotEqual(response.content, b'')
+            expected_content = b"==" + bytes(area_responsible.text, 'utf-8') + b"==\n<div class='wmb_report_table_container bd-" + bytes(area_responsible.code, 'utf-8') + b"'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-" + bytes(area_responsible.code, 'utf-8') + b" co-" + bytes(area_responsible.code, 'utf-8') + b"' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n!Activity !! Metrics !! Year !! Total !! References\n|-\n| " + bytes(self.activity.text, 'utf-8') + b" || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n</div>\n"
+            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
 
     def test_export_yearly_report_by_area_fails_if_user_is_unauthenticated(self):
         self.user.user_permissions.remove(self.view_metrics_permission)
@@ -1277,14 +1318,15 @@ class MetricsExportTests(TestCase):
 
         operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=6, number_of_resources=2)
 
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertIn('Content-Disposition', response)
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-        self.assertNotEqual(response.content, b'')
-        expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| - || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[[toolforge:sara-wmb/calendar|calendar]], [[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]], [[c:Main_Page|Main Page]], [https://example.com]</ref>\n|-\n|}\n"
-        self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+        with override_settings(REPORT_TIMESPANS=self.report_timespans):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
+            self.assertIn('Content-Disposition', response)
+            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
+            self.assertNotEqual(response.content, b'')
+            expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| - || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[[toolforge:sara-wmb/calendar|calendar]], [[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]], [[c:Main_Page|Main Page]], [https://example.com]</ref>\n|-\n|}\n"
+            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
 
     def test_export_trimester_report_exports_wiki_links_as_wikitext_and_deals_with_duplicates(self):
         self.client.login(username=self.username, password=self.password)
@@ -1332,11 +1374,12 @@ class MetricsExportTests(TestCase):
         operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=6, number_of_resources=2)
         operation_report_2 = OperationReport.objects.create(metric=metric_2, report=report_2, number_of_events=2, number_of_resources=6)
 
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-        self.assertIn('Content-Disposition', response)
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-        self.assertNotEqual(response.content, b'')
-        expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| rowspan='2' | - || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[[toolforge:sara-wmb/calendar|calendar]], [[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]], [[c:Main_Page|Main Page]], [https://example.com]</ref>\n|-\n| " + bytes(metric_2.text, 'utf-8') + b" || " + bytes(str(operation_report_2.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report_2.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\"/><ref name=\"sara-" + bytes(str(report_2.id), 'utf-8') + b"\">[[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]]</ref>\n|-\n|}\n"
-        self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+        with override_settings(REPORT_TIMESPANS=self.report_timespans):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
+            self.assertIn('Content-Disposition', response)
+            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
+            self.assertNotEqual(response.content, b'')
+            expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| rowspan='2' | - || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[[toolforge:sara-wmb/calendar|calendar]], [[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]], [[c:Main_Page|Main Page]], [https://example.com]</ref>\n|-\n| " + bytes(metric_2.text, 'utf-8') + b" || " + bytes(str(operation_report_2.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report_2.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\"/><ref name=\"sara-" + bytes(str(report_2.id), 'utf-8') + b"\">[[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]]</ref>\n|-\n|}\n"
+            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))

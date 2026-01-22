@@ -230,17 +230,25 @@ def export_report_instance(report_id=None, custom_query=Q()):
     header = [_('ID'), _('Created by'), _('Created at'), _('Modified by'), _('Modified at'), _('Activity associated'),
               _('Partial report?'), _('Name of the activity'), _('Reference Text'), _('Area responsible'),
               _('Area activated'), _('Initial date'), _('End date'), _('Description'), _('Funding associated'),
-              _('Links'), _('Are there private links?'), _('Public communication'), _('Number of participants'),
-              _('Number of feedbacks'), _('Editors'), _('# Editors'), _('Organizers'), _('# Organizers'),
-              _('Partnerships activated'), _('# Partnerships activated'), _('Technologies used'), _('# Donors'),
-              _('# Submissions'), _('# Wikipedia created'), _('# Wikipedia edited'), _('# Commons created'),
-              _('# Commons edited'), _('# Wikidata created'), _('# Wikidata edited'), _('# Wikiversity created'),
-              _('# Wikiversity edited'), _('# Wikibooks created'), _('# Wikibooks edited'), _('# Wikisource created'),
-              _('# Wikisource edited'), _('# Wikinews created'), _('# Wikinews edited'), _('# Wikiquote created'),
-              _('# Wikiquote edited'), _('# Wiktionary created'), _('# Wiktionary edited'), _('# Wikivoyage created'),
-              _('# Wikivoyage edited'), _('# Wikispecies created'), _('# Wikispecies edited'), _('# Metawiki created'),
-              _('# Metawiki edited'), _('# MediaWiki created'), _('# MediaWiki edited'), _('Directions related'),
-              _('Learning'), _('Learning questions related'), _('Metrics related')]
+              _('Links'), _('Are there private links?'), _('Number of participants'), _('Number of feedbacks'),
+              _('Editors'), _('# Editors'), _('Organizers'), _('# Organizers'), _('Partnerships activated'),
+              _('# Partnerships activated'), _('Technologies used'), _('# Donors'), _('# Submissions'),
+              _('# Wikipedia created'), _('# Wikipedia edited'),
+              _('# Commons created'), _('# Commons edited'),
+              _('# Wikidata created'), _('# Wikidata edited'),
+              _('# Wikiversity created'), _('# Wikiversity edited'),
+              _('# Wikibooks created'), _('# Wikibooks edited'),
+              _('# Wikisource created'), _('# Wikisource edited'),
+              _('# Wikinews created'), _('# Wikinews edited'),
+              _('# Wikiquote created'), _('# Wikiquote edited'),
+              _('# Wiktionary created'), _('# Wiktionary edited'),
+              _('# Wikivoyage created'), _('# Wikivoyage edited'),
+              _('# Wikispecies created'), _('# Wikispecies edited'),
+              _('# Metawiki created'), _('# Metawiki edited'),
+              _('# MediaWiki created'), _('# MediaWiki edited'),
+              _('# Wikifunctions created'), _('# Wikifunctions edited'),
+              _('# Incubator created'), _('# Incubator edited'),
+              _('Directions related'), _('Learning'), _('Learning questions related'), _('Metrics related')]
 
     if report_id:
         reports = Report.objects.filter(pk=report_id)
@@ -275,7 +283,6 @@ def export_report_instance(report_id=None, custom_query=Q()):
         else:
             funding_associated = ""
         links = report.links.replace("\r\n", "; ")
-        public_communication = report.public_communication
 
         # Quantitative
         participants = report.participants
@@ -336,6 +343,10 @@ def export_report_instance(report_id=None, custom_query=Q()):
         metawiki_edited = report.metawiki_edited
         mediawiki_created = report.mediawiki_created
         mediawiki_edited = report.mediawiki_edited
+        wikifunctions_created = report.wikifunctions_created
+        wikifunctions_edited = report.wikifunctions_edited
+        incubator_created = report.incubator_created
+        incubator_edited = report.incubator_edited
 
         # Strategy
         if report.directions_related.exists():
@@ -358,7 +369,7 @@ def export_report_instance(report_id=None, custom_query=Q()):
 
         rows.append([id_, created_by, created_at, modified_by, modified_at, activity_associated, partial_report,
                      activity_name, reference_text, area_responsible, area_activated, initial_date, end_date,
-                     description, funding_associated, links, private_links, public_communication, participants,
+                     description, funding_associated, links, private_links, participants,
                      feedbacks, editors, num_editors, organizers, num_organizers, partners_activated,
                      num_partners_activated, technologies_used, donors, submissions, wikipedia_created,
                      wikipedia_edited, commons_created, commons_edited, wikidata_created, wikidata_edited,
@@ -366,6 +377,7 @@ def export_report_instance(report_id=None, custom_query=Q()):
                      wikisource_edited, wikinews_created, wikinews_edited, wikiquote_created, wikiquote_edited,
                      wiktionary_created, wiktionary_edited, wikivoyage_created, wikivoyage_edited, wikispecies_created,
                      wikispecies_edited, metawiki_created, metawiki_edited, mediawiki_created, mediawiki_edited,
+                     wikifunctions_created, wikifunctions_edited, incubator_created, incubator_edited,
                      directions_related, learning, learning_questions_related, metrics_related])
 
     df = pd.DataFrame(rows, columns=header).drop_duplicates().reset_index(drop=True)
@@ -411,14 +423,22 @@ def export_operation_report(report_id=None, custom_query=Q(), lang=""):
 def export_metrics(report_id=None, custom_query=Q()):
     header = [_('ID'), _('Metric'), _('Activity ID'), _('Activity'), _('Activity code'), _('Number of editors'),
               _('Number of participants'), _('Number of partnerships activated'), _('Number of feedbacks'),
-              _('Number of events'), _('Other type? Which?'), _('Observation'), _('# Wikipedia created'),
-              _('# Wikipedia edited'), _('# Commons created'), _('# Commons edited'), _('# Wikidata created'),
-              _('# Wikidata edited'), _('# Wikiversity created'), _('# Wikiversity edited'), _('# Wikibooks created'),
-              _('# Wikibooks edited'), _('# Wikisource created'), _('# Wikisource edited'), _('# Wikinews created'),
-              _('# Wikinews edited'), _('# Wikiquote created'), _('# Wikiquote edited'), _('# Wiktionary created'),
-              _('# Wiktionary edited'), _('# Wikivoyage created'), _('# Wikivoyage edited'), _('# Wikispecies created'),
-              _('# Wikispecies edited'), _('# Metawiki created'), _('# Metawiki edited'), _('# MediaWiki created'),
-              _('# MediaWiki edited')]
+              _('Number of events'),
+              _('# Wikipedia created'), _('# Wikipedia edited'),
+              _('# Commons created'), _('# Commons edited'),
+              _('# Wikidata created'), _('# Wikidata edited'),
+              _('# Wikiversity created'), _('# Wikiversity edited'),
+              _('# Wikibooks created'), _('# Wikibooks edited'),
+              _('# Wikisource created'), _('# Wikisource edited'),
+              _('# Wikinews created'), _('# Wikinews edited'),
+              _('# Wikiquote created'), _('# Wikiquote edited'),
+              _('# Wiktionary created'), _('# Wiktionary edited'),
+              _('# Wikivoyage created'), _('# Wikivoyage edited'),
+              _('# Wikispecies created'), _('# Wikispecies edited'),
+              _('# Metawiki created'), _('# Metawiki edited'),
+              _('# MediaWiki created'), _('# MediaWiki edited'),
+              _('# Wikifunctions created'), _('# Wikifunctions edited'),
+              _('# Incubator created'), _('# Incubator edited')]
 
     if report_id:
         reports = Report.objects.filter(pk=report_id)
@@ -432,7 +452,7 @@ def export_metrics(report_id=None, custom_query=Q()):
                 rows.append([instance.id, instance.text, instance.activity_id, instance.activity.text,
                              instance.activity.code, instance.number_of_editors, instance.number_of_participants,
                              instance.number_of_partnerships_activated, instance.number_of_feedbacks,
-                             instance.number_of_events, instance.other_type, instance.observation,
+                             instance.number_of_events,
                              instance.wikipedia_created, instance.wikipedia_edited, instance.commons_created,
                              instance.commons_edited, instance.wikidata_created, instance.wikidata_edited,
                              instance.wikiversity_created, instance.wikiversity_edited, instance.wikibooks_created,
@@ -441,7 +461,8 @@ def export_metrics(report_id=None, custom_query=Q()):
                              instance.wikiquote_edited, instance.wiktionary_created, instance.wiktionary_edited,
                              instance.wikivoyage_created, instance.wikivoyage_edited, instance.wikispecies_created,
                              instance.wikispecies_edited, instance.metawiki_created, instance.metawiki_edited,
-                             instance.mediawiki_created, instance.mediawiki_edited])
+                             instance.mediawiki_created, instance.mediawiki_edited, instance.wikifunctions_created,
+                             instance.wikifunctions_edited, instance.incubator_created, instance.incubator_edited])
 
     df = pd.DataFrame(rows, columns=header).drop_duplicates().reset_index(drop=True)
     return df
@@ -510,7 +531,7 @@ def export_funding(report_id=None, custom_query=Q()):
 
 
 def export_area_activated(report_id=None, custom_query=Q()):
-    header = [_('ID'), _('Area activated'), _('Contact')]
+    header = [_('ID'), _('Area activated')]
 
     if report_id:
         reports = Report.objects.filter(pk=report_id)
@@ -519,9 +540,9 @@ def export_area_activated(report_id=None, custom_query=Q()):
 
     rows = []
     for report in reports:
-        rows.append([report.area_responsible.id, report.area_responsible.text, TeamArea.objects.get(text=report.area_responsible.text).contact])
+        rows.append([report.area_responsible.id, report.area_responsible.text])
         for instance in report.area_activated.all():
-            rows.append([instance.id, instance.text, instance.contact])
+            rows.append([instance.id, instance.text])
 
     df = pd.DataFrame(rows, columns=header).drop_duplicates().reset_index(drop=True)
     return df

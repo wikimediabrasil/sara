@@ -323,7 +323,8 @@ def list_of_reports_of_area(code="", user=None):
 
 @permission_required("report.add_report")
 def show_list_of_reports_of_area(request):
-    context = list_of_reports_of_area("", request.user)
+    user = request.user
+    context = list_of_reports_of_area("", user)
     if context:
         return render(request, "agenda/area_activities.html", context)
     else:

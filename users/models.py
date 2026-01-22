@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 User = get_user_model()
 
 
-class TeamArea(models.Model):
+class   TeamArea(models.Model):
     text = models.CharField(_("Name"), max_length=420, help_text=_("Human-readable name of the team area"))
     code = models.CharField(_("Code"),
                             max_length=50,

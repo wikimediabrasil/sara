@@ -2,7 +2,7 @@ from io import StringIO
 from datetime import datetime, date, timedelta
 from django.test import TestCase, RequestFactory
 from django.urls import reverse
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, AnonymousUser, Permission
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import IntegrityError, transaction
@@ -12,8 +12,8 @@ from unittest.mock import patch
 from agenda.models import Event
 from agenda.services import send_event_reports
 from users.models import User, UserProfile, TeamArea, Position
-from agenda.views import get_activities_soon_to_be_finished, get_activities_already_finished,\
-    get_activities_about_to_kickoff, show_list_of_reports_of_specific_area, show_list_of_reports_of_area
+from agenda.views import get_activities_soon_to_be_finished, get_activities_already_finished, \
+    get_activities_about_to_kickoff, list_of_reports_of_area
 from agenda.templatetags.calendar_tags import date_tag, next_month_tag, previous_month_tag, next_year_tag, \
     previous_year_tag, next_day_tag, previous_day_tag
 
@@ -444,13 +444,40 @@ class ListReportsTests(TestCase):
 
         self.profile = UserProfile.objects.get(user=self.user)
         self.group = Group.objects.create(name="Group")
-        self.area = TeamArea.objects.create(text="Test Area")
+        self.area = TeamArea.objects.create(text="Test Area", code="test_area")
         self.position = Position.objects.create(text="Position", type=self.group, area_associated=self.area)
+        self.permission = Permission.objects.get(codename='add_report')
+        self.user.user_permissions.add(self.permission)
+        self.client.force_login(self.user)
 
     @patch("agenda.views.get_activities_already_finished")
     @patch("agenda.views.get_activities_soon_to_be_finished")
     @patch("agenda.views.build_message_about_reports")
-    def test_view_with_area_id(self, mock_build_message, mock_future, mock_past):
+    @patch("agenda.views.TeamArea.objects.get")
+    @patch("agenda.views.UserProfile.objects.filter")
+    def test_view_with_area_code(self, mock_userprofile_filter, mock_area_get, mock_build_message, mock_future, mock_past):
+        mock_past.return_value = "past"
+        mock_future.return_value = "future"
+        mock_build_message.side_effect = lambda x: f"built-{x}"
+
+        mock_area_get.return_value = self.area
+        mock_userprofile_filter.return_value.first.return_value = self.profile
+
+        self.client.force_login(self.user)
+        self.user.user_permissions.add(self.permission)
+
+        response = self.client.get(
+            reverse("agenda:specific_area_activities", kwargs={"code":self.area.code})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"built-past", response.content)
+        self.assertIn(b"built-future", response.content)
+
+    @patch("agenda.views.get_activities_already_finished")
+    @patch("agenda.views.get_activities_soon_to_be_finished")
+    @patch("agenda.views.build_message_about_reports")
+    def test_view_without_area_code(self, mock_build_message, mock_future, mock_past):
         mock_past.return_value = "past"
         mock_future.return_value = "future"
         mock_build_message.side_effect = lambda x: f"built-{x}"
@@ -458,40 +485,77 @@ class ListReportsTests(TestCase):
         request = self.factory.get("/fake-url")
         request.user = self.user
 
-        with patch("agenda.views.TeamArea.objects.get") as mock_area_get, \
-                patch("agenda.views.UserProfile.objects.filter") as mock_userprofile_filter:
-            mock_area_get.return_value = self.area
-            mock_userprofile_filter.return_value.first.return_value = self.profile
+        self.client.force_login(self.user)
+        self.user.user_permissions.add(self.permission)
+        self.user.profile.position = self.position
+        self.user.profile.save()
 
-            response = show_list_of_reports_of_specific_area(request, area_id=self.area.pk)
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b"built-past", response.content)
-            self.assertIn(b"built-future", response.content)
+        response = self.client.get(
+            reverse("agenda:area_activities")
+        )
 
-    @patch("agenda.views.get_activities_already_finished")
-    @patch("agenda.views.get_activities_soon_to_be_finished")
-    @patch("agenda.views.build_message_about_reports")
-    def test_view_without_area_id(self, mock_build_message, mock_future, mock_past):
-        mock_past.return_value = "past"
-        mock_future.return_value = "future"
-        mock_build_message.side_effect = lambda x: f"built-{x}"
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"built-past", response.content)
+        self.assertIn(b"built-future", response.content)
 
-        request = self.factory.get("/fake-url")
-        request.user = self.user
+    def test_returns_false_when_code_does_not_exist(self):
+        result = list_of_reports_of_area(code="INVALID")
+        self.assertFalse(result)
 
-        with patch("agenda.views.TeamArea.objects.get") as mock_area_get:
-            mock_area_get.return_value = self.area
+    def test_returns_false_when_user_has_no_profile_or_position(self):
+        user = User.objects.create_user(username="u", password="x")
+        result = list_of_reports_of_area(user=user)
+        self.assertFalse(result)
 
-            response = show_list_of_reports_of_specific_area(request)
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b"built-past", response.content)
-            self.assertIn(b"built-future", response.content)
+    @patch("agenda.views.list_of_reports_of_area")
+    def test_show_list_of_reports_of_area_with_context(self, mock_list):
+        mock_list.return_value = {"foo": "bar"}
 
-    def test_redirect_from_area_view(self):
-        request = self.factory.get("/fake-url")
-        response = show_list_of_reports_of_area(request)
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse("agenda:specific_area_activities"))
+        response = self.client.get(
+            reverse("agenda:area_activities")
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "agenda/area_activities.html")
+        mock_list.assert_called_once_with("", self.user)
+
+    @patch("agenda.views.list_of_reports_of_area")
+    def test_show_list_of_reports_of_area_without_context(self, mock_list):
+        mock_list.return_value = None
+
+        response = self.client.get(
+            reverse("agenda:area_activities")
+        )
+
+        self.assertRedirects(response, reverse("metrics:index"))
+
+    @patch("agenda.views.list_of_reports_of_area")
+    def test_show_list_of_reports_of_specific_area_with_context(self, mock_list):
+        mock_list.return_value = {"foo": "bar"}
+
+        response = self.client.get(
+            reverse(
+                "agenda:specific_area_activities",
+                kwargs={"code": "ABC"},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "agenda/area_activities.html")
+        mock_list.assert_called_once_with("ABC")
+
+    @patch("agenda.views.list_of_reports_of_area")
+    def test_show_list_of_reports_of_specific_area_without_context(self, mock_list):
+        mock_list.return_value = None
+
+        response = self.client.get(
+            reverse(
+                "agenda:specific_area_activities",
+                kwargs={"code": "ABC"},
+            )
+        )
+
+        self.assertRedirects(response, reverse("metrics:index"))
 
 
 class CalendarTagTest(TestCase):

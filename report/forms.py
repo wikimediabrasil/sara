@@ -28,7 +28,7 @@ class NewReportForm(forms.ModelForm):
         exclude = ["created_by", "created_at", "modified_by", "modified_at"]
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop("user", None)
+        self.user = kwargs.pop("user")
         self.is_update = kwargs.pop("is_update", False)
         super().__init__(*args, **kwargs)
 
@@ -63,19 +63,23 @@ class NewReportForm(forms.ModelForm):
         organizers = []
         inferred_partners = set()
 
+        parsed_organizers =[]
         for line in raw_organizers.splitlines():
             if not line.strip():
                 continue
 
             name, institutions = (line + "|").split("|", 1)
-            organizers.append(line.strip())
+            parsed_organizers.append({
+                "name": name.strip(),
+                "institutions": [
+                    inst.strip()
+                    for inst in institutions.split("|")
+                    if inst.strip()
+                ],
+            })
 
-            for institution in institutions.split("|"):
-                if institution.strip():
-                    inferred_partners.add(institution.strip())
 
-        cleaned["_parsed_organizers"] = list(set(organizers))
-        cleaned["_inferred_partner_names"] = list(inferred_partners)
+        cleaned["_parsed_organizers"] = parsed_organizers
 
         return cleaned
 
@@ -88,56 +92,6 @@ class NewReportForm(forms.ModelForm):
         else:
             return initial_date
 
-    def add_metrics_related_depending_on_values(self):
-        metrics_related = self.cleaned_data.get("metrics_related")
-        main_funding = Project.objects.get(main_funding=True)
-        metrics_main_funding = Metric.objects.filter(project=main_funding)
-
-        int_fields_names = [
-            ["wikipedia_created", "wikipedia_edited"],
-            ["commons_created", "commons_edited"],
-            ["wikidata_created", "wikidata_edited"],
-            ["wikiversity_created", "wikiversity_edited"],
-            ["wikibooks_created", "wikibooks_edited"],
-            ["wikisource_created", "wikisource_edited"],
-            ["wikinews_created", "wikinews_edited"],
-            ["wikiquote_created", "wikiquote_edited"],
-            ["wiktionary_created", "wiktionary_edited"],
-            ["wikivoyage_created", "wikivoyage_edited"],
-            ["wikispecies_created", "wikispecies_edited"],
-            ["metawiki_created", "metawiki_edited"],
-            ["mediawiki_created", "mediawiki_edited"],
-            ["participants"],
-            ["feedbacks"],
-        ]
-
-        for field_set in int_fields_names:
-            if any(self.cleaned_data.get(field_name) > 0 for field_name in field_set):
-                query = Q()
-                for field_name in field_set:
-                    if hasattr(Metric, f"{field_name}"):
-                        query |= Q(**{f"{field_name}__gt": 0})
-                    else:
-                        query |= Q(**{f"number_of_{field_name}__gt": 0})
-                if len(query):
-                    metrics_related = metrics_related.union(metrics_main_funding.filter(query))
-
-        obj_fields_names = {
-            "editors": ["number_of_editors", "number_of_editors_retained", "number_of_new_editors"],
-            "organizers": ["number_of_organizers", "number_of_organizers_retained"],
-            "partners_activated": ["number_of_partnerships_activated"],
-        }
-
-        for field_set, field_names in obj_fields_names.items():
-            if self.cleaned_data.get(field_set):
-                query = Q()
-                for field_name in field_names:
-                    query |= Q(**{f"{field_name}__gt": 0})
-                if len(query):
-                    metrics_related = metrics_related.union(metrics_main_funding.filter(query))
-
-        return metrics_related
-
     def save(self, commit=True, user=None, *args, **kwargs):
         report = super(NewReportForm, self).save(commit=False)
 
@@ -149,7 +103,6 @@ class NewReportForm(forms.ModelForm):
 
             self._save_editors(report)
             self._save_organizers(report)
-            self._save_partners(report)
 
             report.technologies_used.set(self.cleaned_data['technologies_used'])
             report.area_activated.set(self.cleaned_data['area_activated'])
@@ -189,15 +142,18 @@ class NewReportForm(forms.ModelForm):
     def _save_organizers(self, report):
         organizers = {}
         created_in_this_save = set()
+
         self._has_organizers = False
         self._has_retained_organizers = False
         self._has_new_organizers = False
 
-        for line in self.cleaned_data["_parsed_organizers"]:
-            name, institutions = (line + "|").split("|", 1)
-            key = name.strip().lower()
+        for entry in self.cleaned_data["_parsed_organizers"]:
+            name = entry["name"]
+            institutions = entry["institutions"]
 
-            organizer, created = Organizer.objects.get_or_create(name=name.strip())
+            key = name.lower()
+
+            organizer, created = Organizer.objects.get_or_create(name=name)
 
             if created:
                 organizer.first_seen_at = timezone.now().date()
@@ -205,31 +161,23 @@ class NewReportForm(forms.ModelForm):
                 created_in_this_save.add(organizer.id)
                 self._has_organizers = True
 
-                if organizer.first_seen_at.date() >= report.initial_date:
+                if organizer.first_seen_at >= report.initial_date:
                     self._has_new_organizers = True
+
             elif not self.is_update and organizer.id not in created_in_this_save:
                 organizer.retained = True
                 organizer.retained_at = self.cleaned_data["initial_date"]
                 organizer.save()
                 self._has_retained_organizers = True
 
-            for inst_name in institutions.split("|"):
+            for inst_name in institutions:
                 if inst_name.strip():
-                    partner, _ = Partner.objects.get_or_create(name=inst_name.strip())
+                    partner, _ = Partner.objects.get_or_create(name=inst_name)
                     organizer.institution.add(partner)
 
             organizers[key] = organizer
 
         report.organizers.set(organizers.values())
-
-    def _save_partners(self, report):
-        partners = {p.id: p for p in list(Partner.objects.filter(id__in=self.cleaned_data["partners_activated"]))}
-
-        for name in self.cleaned_data["_inferred_partner_names"]:
-            partner, _ = Partner.objects.get_or_create(name=name)
-            partners[partner.id] = partner
-
-        report.partners_activated.set(partners.values())
 
     def _metrics_related(self):
         metrics_related = self.cleaned_data.get("metrics_related")
@@ -250,6 +198,8 @@ class NewReportForm(forms.ModelForm):
             ["wikispecies_created", "wikispecies_edited"],
             ["metawiki_created", "metawiki_edited"],
             ["mediawiki_created", "mediawiki_edited"],
+            ["wikifunctions_created", "wikifunctions_edited"],
+            ["incubator_created", "incubator_edited"],
             ["participants"],
             ["feedbacks"],
         ]
@@ -301,13 +251,13 @@ class NewReportForm(forms.ModelForm):
         if getattr(self, "_has_new_editors", False):
             metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_new_editors__gt=0))
         if getattr(self, "_has_retained_editors", False):
-            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_retained_editors__gt=0))
+            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_editors_retained__gt=0))
         if getattr(self, "_has_organizers", False):
             metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_organizers__gt=0))
         if getattr(self, "_has_new_organizers", False):
             metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_new_organizers__gt=0))
         if getattr(self, "_has_retained_organizers", False):
-            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_retained_organizers__gt=0))
+            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_organizers_retained__gt=0))
 
         return metrics
 
@@ -323,27 +273,26 @@ def area_responsible_of_user(user):
     try:
         team_area = user.profile.position.area_associated
         return team_area.id
-    except TeamArea.DoesNotExist:
+    except (TeamArea.DoesNotExist, AttributeError):
         return ""
 
 
 def activities_associated_as_choices():
     areas = []
-    area_list = Area.objects.filter(project__active_status=True).distinct().order_by("-poa_area", "text")
+    area_list = (Area.objects.filter(project__active_status=True).prefetch_related("activities").distinct().order_by("-poa_area", "text"))
+
     for area in area_list:
-        activities = []
-        for activity in area.activities.all():
-            activities.append((activity.id, activity.text + " (" + activity.code + ")"))
+        activities = [(a.id, f"{a.text} ({a.code})") for a in area.activities.all()]
         areas.append((area.text, int(area.poa_area), tuple(activities)))
+
     return tuple(areas)
 
 
 def directions_associated_as_choices():
     axes = []
-    for axis in StrategicAxis.objects.filter(active=True).distinct():
-        directions = []
-        for direction in axis.directions.all():
-            directions.append((direction.id, direction.text))
+    axes_qs = (StrategicAxis.objects.filter(active=True).prefetch_related("directions").distinct())
+    for axis in axes_qs:
+        directions = [(d.id, d.text) for d in axis.directions.all()]
         axes.append((axis.text, tuple(directions)))
 
     return tuple(axes)
@@ -351,26 +300,15 @@ def directions_associated_as_choices():
 
 def learning_questions_as_choices():
     learning_areas = []
-    for learning_area in LearningArea.objects.filter(active=True).distinct():
-        learning_questions = []
-        for learning_question in learning_area.strategic_question.all():
-            learning_questions.append((learning_question.id, learning_question.text))
+
+    learning_areas_qs = (LearningArea.objects.filter(active=True).prefetch_related("strategic_question").distinct())
+
+    for learning_area in learning_areas_qs:
+        learning_questions = [(l.id, l.text) for l in learning_area.strategic_question.all()]
         learning_areas.append((learning_area.text, tuple(learning_questions)))
 
     return tuple(learning_areas)
 
-
-def learning_areas_as_choices():
-    areas = []
-    for area in LearningArea.objects.all():
-        new_category = []
-        questions = []
-        for question in area.strategic_question.all():
-            questions.append([question.id, question.text])
-            new_category = [area.text, questions]
-        areas.append(new_category)
-
-    return areas
 
 
 def get_user_date_of_registration(user):
