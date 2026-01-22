@@ -85,7 +85,7 @@ class Activity(models.Model):
     text = models.CharField(_("Title"), max_length=420, help_text=_("Activity title"))
     code = models.CharField(_("Code"), max_length=20, null=True, blank=True, help_text=_("Activity code"))
     area = models.ForeignKey(Area, on_delete=models.RESTRICT, related_name='activities', null=True, verbose_name=_("Area"))
-    is_main_activity = models.BooleanField(_(""), default=False, help_text=_("Is this the main activity?"))
+    is_main_activity = models.BooleanField(_("Is main activity?"), default=False, help_text=_("Is this the main activity?"))
     area_responsible = models.ForeignKey(TeamArea, on_delete=models.RESTRICT, related_name='activity_manager', null=True, blank=True, verbose_name=_("Area responsible"))
 
     class Meta:
@@ -119,7 +119,7 @@ class Metric(models.Model):
         wikinews_created, wikinews_edited, wikiquote_created, wikiquote_edited,
         wiktionary_created, wiktionary_edited, wikivoyage_created, wikivoyage_edited,
         wikispecies_created, wikispecies_edited, metawiki_created, metawiki_edited,
-        mediawiki_created, mediawiki_edited (IntegerField): Number of items created/edited on each platform.
+        mediawiki_created, mediawiki_edited (IntegerField): Number of items edited on each platform.
 
     Community Metrics:
         number_of_editors, number_of_editors_retained, number_of_new_editors (IntegerField)
@@ -155,36 +155,36 @@ class Metric(models.Model):
     # ==================================================================================================================
     # CONTENT METRICS
     # ==================================================================================================================
-    wikipedia_created     = models.IntegerField(_("Created in Wikipedia"), null=True, default=0, help_text=_("Number of items created/edited on Wikipedia."))
-    wikipedia_edited      = models.IntegerField(_("Edited in Wikipedia"), null=True, default=0, help_text=_("Number of items edited on Wikipedia."))
-    commons_created       = models.IntegerField(_("Created in Wikimedia Commons"), null=True, default=0, help_text=_("Number of items created/edited on Wikimedia Commons."))
-    commons_edited        = models.IntegerField(_("Edited in Wikimedia Commons"), null=True, default=0, help_text=_("Number of items edited on Wikimedia Commons."))
-    wikidata_created      = models.IntegerField(_("Created in Wikidata"), null=True, default=0, help_text=_("Number of items created/edited on Wikidata."))
-    wikidata_edited       = models.IntegerField(_("Edited in Wikidata"), null=True, default=0, help_text=_("Number of items created/edited on Wikidata."))
-    wikiversity_created   = models.IntegerField(_("Created in Wikiversity"), null=True, default=0, help_text=_("Number of items created/edited on Wikiversity."))
-    wikiversity_edited    = models.IntegerField(_("Edited in Wikiversity"), null=True, default=0, help_text=_("Number of items created/edited on Wikiversity."))
-    wikibooks_created     = models.IntegerField(_("Created in Wikibooks"), null=True, default=0, help_text=_("Number of items created/edited on Wikibooks."))
-    wikibooks_edited      = models.IntegerField(_("Edited in Wikibooks"), null=True, default=0, help_text=_("Number of items created/edited on Wikibooks."))
-    wikisource_created    = models.IntegerField(_("Created in Wikisource"), null=True, default=0, help_text=_("Number of items created/edited on Wikisource."))
-    wikisource_edited     = models.IntegerField(_("Edited in Wikisource"), null=True, default=0, help_text=_("Number of items created/edited on Wikisource."))
-    wikinews_created      = models.IntegerField(_("Created in Wikinews"), null=True, default=0, help_text=_("Number of items created/edited on Wikinews."))
-    wikinews_edited       = models.IntegerField(_("Edited in Wikinews"), null=True, default=0, help_text=_("Number of items created/edited on Wikinews."))
-    wikiquote_created     = models.IntegerField(_("Created in Wikiquote"), null=True, default=0, help_text=_("Number of items created/edited on Wikiquote."))
-    wikiquote_edited      = models.IntegerField(_("Edited in Wikiquote"), null=True, default=0, help_text=_("Number of items created/edited on Wikiquote."))
-    wiktionary_created    = models.IntegerField(_("Created in Wiktionary"), null=True, default=0, help_text=_("Number of items created/edited on Wiktionary."))
-    wiktionary_edited     = models.IntegerField(_("Edited in Wiktionary"), null=True, default=0, help_text=_("Number of items created/edited on Wiktionary."))
-    wikivoyage_created    = models.IntegerField(_("Created in Wikivoyage"), null=True, default=0, help_text=_("Number of items created/edited on Wikivoyage."))
-    wikivoyage_edited     = models.IntegerField(_("Edited in Wikivoyage"), null=True, default=0, help_text=_("Number of items created/edited on Wikivoyage."))
-    wikispecies_created   = models.IntegerField(_("Created in Wikispecies"), null=True, default=0, help_text=_("Number of items created/edited on Wikispecies."))
-    wikispecies_edited    = models.IntegerField(_("Edited in Wikispecies"), null=True, default=0, help_text=_("Number of items created/edited on Wikispecies."))
-    metawiki_created      = models.IntegerField(_("Created in Meta-Wiki"), null=True, default=0, help_text=_("Number of items created/edited on Meta-Wiki."))
-    metawiki_edited       = models.IntegerField(_("Edited in Meta-Wiki"), null=True, default=0, help_text=_("Number of items created/edited on Meta-Wiki."))
-    mediawiki_created     = models.IntegerField(_("Created in Mediawiki"), null=True, default=0, help_text=_("Number of items created/edited on Mediawiki."))
-    mediawiki_edited      = models.IntegerField(_("Edited in Mediawiki"), null=True, default=0, help_text=_("Number of items created/edited on Mediawiki."))
-    incubator_created     = models.IntegerField(_("Created in Wikimedia Incubator"), null=True, default=0, help_text=_("Number of items created/edited on Wikimedia Incubator."))
-    incubator_edited      = models.IntegerField(_("Edited in Wikimedia Incubator"), null=True, default=0, help_text=_("Number of items created/edited on Wikimedia Incubator."))
-    wikifunctions_created = models.IntegerField(_("Created in WikiFunctions"), null=True, default=0, help_text=_("Number of items created/edited on WikiFunctions."))
-    wikifunctions_edited  = models.IntegerField(_("Edited in WikiFunctions"), null=True, default=0, help_text=_("Number of items created/edited on WikiFunctions."))
+    wikipedia_created     = models.IntegerField(_("Created in Wikipedia"), null=True, default=0, help_text=_("Number of articles created on Wikipedia."))
+    wikipedia_edited      = models.IntegerField(_("Edited in Wikipedia"), null=True, default=0, help_text=_("Number of articles edited on Wikipedia."))
+    commons_created       = models.IntegerField(_("Created in Wikimedia Commons"), null=True, default=0, help_text=_("Number of medias created on Wikimedia Commons."))
+    commons_edited        = models.IntegerField(_("Edited in Wikimedia Commons"), null=True, default=0, help_text=_("Number of medias edited on Wikimedia Commons."))
+    wikidata_created      = models.IntegerField(_("Created in Wikidata"), null=True, default=0, help_text=_("Number of items created on Wikidata."))
+    wikidata_edited       = models.IntegerField(_("Edited in Wikidata"), null=True, default=0, help_text=_("Number of items edited on Wikidata."))
+    wikiversity_created   = models.IntegerField(_("Created in Wikiversity"), null=True, default=0, help_text=_("Number of pages or materials created on Wikiversity."))
+    wikiversity_edited    = models.IntegerField(_("Edited in Wikiversity"), null=True, default=0, help_text=_("Number of pages or materials edited on Wikiversity."))
+    wikibooks_created     = models.IntegerField(_("Created in Wikibooks"), null=True, default=0, help_text=_("Number of pages or materials created on Wikibooks."))
+    wikibooks_edited      = models.IntegerField(_("Edited in Wikibooks"), null=True, default=0, help_text=_("Number of pages or materials edited on Wikibooks."))
+    wikisource_created    = models.IntegerField(_("Created in Wikisource"), null=True, default=0, help_text=_("Number of pages or materials created on Wikisource."))
+    wikisource_edited     = models.IntegerField(_("Edited in Wikisource"), null=True, default=0, help_text=_("Number of pages or materials edited on Wikisource."))
+    wikinews_created      = models.IntegerField(_("Created in Wikinews"), null=True, default=0, help_text=_("Number of pages or materials created on Wikinews."))
+    wikinews_edited       = models.IntegerField(_("Edited in Wikinews"), null=True, default=0, help_text=_("Number of pages or materials edited on Wikinews."))
+    wikiquote_created     = models.IntegerField(_("Created in Wikiquote"), null=True, default=0, help_text=_("Number of pages or materials created on Wikiquote."))
+    wikiquote_edited      = models.IntegerField(_("Edited in Wikiquote"), null=True, default=0, help_text=_("Number of pages or materials edited on Wikiquote."))
+    wiktionary_created    = models.IntegerField(_("Created in Wiktionary"), null=True, default=0, help_text=_("Number of pages or materials created on Wiktionary."))
+    wiktionary_edited     = models.IntegerField(_("Edited in Wiktionary"), null=True, default=0, help_text=_("Number of pages or materials edited on Wiktionary."))
+    wikivoyage_created    = models.IntegerField(_("Created in Wikivoyage"), null=True, default=0, help_text=_("Number of pages or materials created on Wikivoyage."))
+    wikivoyage_edited     = models.IntegerField(_("Edited in Wikivoyage"), null=True, default=0, help_text=_("Number of pages or materials edited on Wikivoyage."))
+    wikispecies_created   = models.IntegerField(_("Created in Wikispecies"), null=True, default=0, help_text=_("Number of pages or materials created on Wikispecies."))
+    wikispecies_edited    = models.IntegerField(_("Edited in Wikispecies"), null=True, default=0, help_text=_("Number of pages or materials edited on Wikispecies."))
+    metawiki_created      = models.IntegerField(_("Created in Meta-Wiki"), null=True, default=0, help_text=_("Number of pages or materials created on Meta-Wiki."))
+    metawiki_edited       = models.IntegerField(_("Edited in Meta-Wiki"), null=True, default=0, help_text=_("Number of pages or materials edited on Meta-Wiki."))
+    mediawiki_created     = models.IntegerField(_("Created in Mediawiki"), null=True, default=0, help_text=_("Number of pages or materials created on Mediawiki."))
+    mediawiki_edited      = models.IntegerField(_("Edited in Mediawiki"), null=True, default=0, help_text=_("Number of pages or materials edited on Mediawiki."))
+    incubator_created     = models.IntegerField(_("Created in Wikimedia Incubator"), null=True, default=0, help_text=_("Number of pages or materials created on Wikimedia Incubator."))
+    incubator_edited      = models.IntegerField(_("Edited in Wikimedia Incubator"), null=True, default=0, help_text=_("Number of pages or materials edited on Wikimedia Incubator."))
+    wikifunctions_created = models.IntegerField(_("Created in Wikifunctions"), null=True, default=0, help_text=_("Number of pages or materials created on Wikifunctions."))
+    wikifunctions_edited  = models.IntegerField(_("Edited in Wikifunctions"), null=True, default=0, help_text=_("Number of pages or materials edited on Wikifunctions."))
 
     # ==================================================================================================================
     # COMMUNITY METRICS
