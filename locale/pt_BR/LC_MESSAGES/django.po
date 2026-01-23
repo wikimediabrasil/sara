@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-22 14:28-0300\n"
+"POT-Creation-Date: 2026-01-23 16:14-0300\n"
 "PO-Revision-Date: 2024-02-09 16:44-0300\n"
 "Last-Translator: Éder Porto <eder.porto@wmnobrasil.org>\n"
 "Language-Team: PT_BR <LL@li.org>\n"
@@ -1012,13 +1012,13 @@ msgstr "Editados no Wikifunctions"
 msgid "Number of pages or materials edited on Wikifunctions."
 msgstr "Número de páginas ou materiais editados no Wikifunctions."
 
-#: .\metrics\models.py:193 .\metrics\templates\metrics\translations.html:19
+#: .\metrics\models.py:193 .\metrics\templates\metrics\translations.html:36
 #: .\report\tests_views.py:1322 .\report\tests_views.py:1389
 #: .\report\views.py:424
 msgid "Number of editors"
 msgstr "Número de editores"
 
-#: .\metrics\models.py:194 .\metrics\templates\metrics\translations.html:20
+#: .\metrics\models.py:194 .\metrics\templates\metrics\translations.html:37
 msgid "Number of editors retained"
 msgstr "Número de editores retidos"
 
@@ -1026,7 +1026,7 @@ msgstr "Número de editores retidos"
 msgid "Number of editors participating in more activities"
 msgstr "Número de editores participantdo em mais de uma atividade"
 
-#: .\metrics\models.py:195 .\metrics\templates\metrics\translations.html:21
+#: .\metrics\models.py:195 .\metrics\templates\metrics\translations.html:38
 msgid "Number of new editors"
 msgstr "Número de novos editores"
 
@@ -1034,11 +1034,11 @@ msgstr "Número de novos editores"
 msgid "Number of editors recently registered"
 msgstr "Número de editores recentemente registrados"
 
-#: .\metrics\models.py:198 .\metrics\templates\metrics\translations.html:23
+#: .\metrics\models.py:198 .\metrics\templates\metrics\translations.html:39
 msgid "Number of organizers"
 msgstr "Número de organizadores"
 
-#: .\metrics\models.py:199 .\metrics\templates\metrics\translations.html:24
+#: .\metrics\models.py:199 .\metrics\templates\metrics\translations.html:40
 msgid "Number of organizers retained"
 msgstr "Número de organizadores retidos"
 
@@ -1046,7 +1046,7 @@ msgstr "Número de organizadores retidos"
 msgid "Number of organizers participating in more activities"
 msgstr "Número de organizadores participando em mais de uma atividade"
 
-#: .\metrics\models.py:200
+#: .\metrics\models.py:200 .\metrics\templates\metrics\translations.html:41
 msgid "Number of new organizers"
 msgstr "Número de novos organizadores"
 
@@ -1054,7 +1054,8 @@ msgstr "Número de novos organizadores"
 msgid "Number of organizers recently registered"
 msgstr "Número de organizadores recentemente registrados"
 
-#: .\metrics\models.py:203 .\report\templates\report\detail_report.html:174
+#: .\metrics\models.py:203 .\metrics\templates\metrics\translations.html:34
+#: .\report\templates\report\detail_report.html:174
 #: .\report\templates\report\quantitative.html:12 .\report\tests_views.py:937
 #: .\report\tests_views.py:1038 .\report\tests_views.py:1236
 #: .\report\tests_views.py:1322 .\report\tests_views.py:1389
@@ -1062,7 +1063,7 @@ msgstr "Número de organizadores recentemente registrados"
 msgid "Number of participants"
 msgstr "Número de participantes"
 
-#: .\metrics\models.py:204 .\metrics\templates\metrics\translations.html:17
+#: .\metrics\models.py:204 .\metrics\templates\metrics\translations.html:35
 #: .\report\templates\report\detail_report.html:180
 #: .\report\templates\report\quantitative.html:21 .\report\tests_views.py:938
 #: .\report\tests_views.py:1039 .\report\tests_views.py:1237
@@ -1071,7 +1072,7 @@ msgstr "Número de participantes"
 msgid "Number of feedbacks"
 msgstr "Número de respostas"
 
-#: .\metrics\models.py:207 .\metrics\templates\metrics\translations.html:22
+#: .\metrics\models.py:207 .\metrics\templates\metrics\translations.html:42
 #: .\report\templates\report\detail_report.html:135
 #: .\report\templates\report\operations.html:72
 #: .\report\templates\report\operations.html:155 .\report\tests_views.py:1322
@@ -1080,14 +1081,16 @@ msgstr "Número de respostas"
 msgid "Number of partnerships activated"
 msgstr "Número de parcerias ativadas"
 
-#: .\metrics\models.py:208 .\report\templates\report\detail_report.html:139
+#: .\metrics\models.py:208 .\metrics\templates\metrics\translations.html:43
+#: .\report\templates\report\detail_report.html:139
 #: .\report\templates\report\operations.html:81
 #: .\report\templates\report\operations.html:164 .\report\tests_views.py:1680
 #: .\report\tests_views.py:1715 .\report\views.py:394
 msgid "Number of new partnerships"
 msgstr "Número de novas parcerias"
 
-#: .\metrics\models.py:213 .\report\templates\report\detail_report.html:143
+#: .\metrics\models.py:213 .\metrics\templates\metrics\translations.html:49
+#: .\report\templates\report\detail_report.html:143
 #: .\report\templates\report\operations.html:27
 #: .\report\templates\report\operations.html:110 .\report\tests_views.py:1678
 #: .\report\tests_views.py:1712 .\report\views.py:392
@@ -1098,7 +1101,8 @@ msgstr "Número de novos seguidores"
 msgid "Number of new followers in social media"
 msgstr "Número de novos seguidores nas redes sociais"
 
-#: .\metrics\models.py:214 .\report\templates\report\detail_report.html:147
+#: .\metrics\models.py:214 .\metrics\templates\metrics\translations.html:50
+#: .\report\templates\report\detail_report.html:147
 #: .\report\templates\report\operations.html:36
 #: .\report\templates\report\operations.html:119 .\report\tests_views.py:1678
 #: .\report\tests_views.py:1712 .\report\views.py:392
@@ -1109,7 +1113,8 @@ msgstr "Número de menções"
 msgid "Media clipping"
 msgstr "Recortes de mídia"
 
-#: .\metrics\models.py:215 .\report\templates\report\detail_report.html:155
+#: .\metrics\models.py:215 .\metrics\templates\metrics\translations.html:51
+#: .\report\templates\report\detail_report.html:155
 #: .\report\templates\report\operations.html:45
 #: .\report\templates\report\operations.html:128 .\report\tests_views.py:1678
 #: .\report\tests_views.py:1713 .\report\views.py:392
@@ -1120,18 +1125,19 @@ msgstr "Número de comunicações comunitárias"
 msgid "Number of communications and newsletters"
 msgstr "Número de comunicações comunitárias e boletins"
 
-#: .\metrics\models.py:216 .\report\templates\report\detail_report.html:151
+#: .\metrics\models.py:216 .\metrics\templates\metrics\translations.html:52
+#: .\report\templates\report\detail_report.html:151
 #: .\report\templates\report\operations.html:18
 #: .\report\templates\report\operations.html:101 .\report\tests_views.py:1677
 #: .\report\tests_views.py:1711 .\report\views.py:391
 msgid "Number of people reached through social media"
 msgstr "Número de pessoas alcançadas pela redes sociais"
 
-#: .\metrics\models.py:221
+#: .\metrics\models.py:221 .\metrics\templates\metrics\translations.html:47
 msgid "Number of donors"
 msgstr "Número de doadores"
 
-#: .\metrics\models.py:222
+#: .\metrics\models.py:222 .\metrics\templates\metrics\translations.html:48
 msgid "Number of submissions"
 msgstr "Número de submissões a editais"
 
@@ -1139,7 +1145,7 @@ msgstr "Número de submissões a editais"
 msgid "Number of grants submissions"
 msgstr "Número de submissões a editais"
 
-#: .\metrics\models.py:227 .\metrics\templates\metrics\translations.html:16
+#: .\metrics\models.py:227 .\metrics\templates\metrics\translations.html:45
 #: .\report\templates\report\detail_report.html:131
 #: .\report\templates\report\operations.html:63
 #: .\report\templates\report\operations.html:146 .\report\tests_views.py:1679
@@ -1151,7 +1157,7 @@ msgstr "Número de recursos"
 msgid "Number of resources produced"
 msgstr "Número de recursos produzidos"
 
-#: .\metrics\models.py:228 .\metrics\templates\metrics\translations.html:18
+#: .\metrics\models.py:228 .\metrics\templates\metrics\translations.html:46
 #: .\report\templates\report\detail_report.html:127
 #: .\report\templates\report\operations.html:54
 #: .\report\templates\report\operations.html:137 .\report\tests_views.py:1323
@@ -1351,102 +1357,132 @@ msgid "(Partial)"
 msgstr "(Parcial)"
 
 #: .\metrics\templates\metrics\translations.html:3
-#: .\report\templates\report\detail_report.html:251
-#: .\report\templates\report\quantitative.html:103
-#: .\report\templates\report\quantitative.html:191
-msgid "Wikipedia"
-msgstr "Wikipédia"
+msgid "Wikipedia (created)"
+msgstr "Wikipédia (criados)"
 
 #: .\metrics\templates\metrics\translations.html:4
-#: .\report\templates\report\detail_report.html:258
-#: .\report\templates\report\quantitative.html:109
-#: .\report\templates\report\quantitative.html:202
-msgid "Wikimedia Commons"
-msgstr "Wikimedia Commons"
+msgid "Wikipedia (edited)"
+msgstr "# Wikipédia (editados)"
 
 #: .\metrics\templates\metrics\translations.html:5
-#: .\report\templates\report\detail_report.html:265
-#: .\report\templates\report\quantitative.html:115
-#: .\report\templates\report\quantitative.html:213
-msgid "Wikidata"
-msgstr "Wikidata"
+msgid "Wikimedia Commons (created)"
+msgstr "Wikimedia Commons (carregados)"
 
 #: .\metrics\templates\metrics\translations.html:6
-#: .\report\templates\report\detail_report.html:272
-#: .\report\templates\report\quantitative.html:121
-#: .\report\templates\report\quantitative.html:224
-msgid "Wikiversity"
-msgstr "Wikiversidade"
+msgid "Wikimedia Commons (edited)"
+msgstr "Wikimedia Commons (editados)"
 
 #: .\metrics\templates\metrics\translations.html:7
-#: .\report\templates\report\detail_report.html:279
-#: .\report\templates\report\quantitative.html:133
-#: .\report\templates\report\quantitative.html:246
-msgid "Wikibooks"
-msgstr "Wikilivros"
+msgid "Wikidata (created)"
+msgstr "Wikidata (criados)"
 
 #: .\metrics\templates\metrics\translations.html:8
-#: .\report\templates\report\detail_report.html:286
-#: .\report\templates\report\quantitative.html:127
-#: .\report\templates\report\quantitative.html:235
-msgid "Wikisource"
-msgstr "Wikisource"
+msgid "Wikidata (edited)"
+msgstr "Wikidata (editados)"
 
 #: .\metrics\templates\metrics\translations.html:9
-#: .\report\templates\report\detail_report.html:293
-#: .\report\templates\report\quantitative.html:139
-#: .\report\templates\report\quantitative.html:257
-msgid "Wikinews"
-msgstr "Wikinotícias"
+msgid "Wikiversity (created)"
+msgstr "Wikiversidade (criados)"
 
 #: .\metrics\templates\metrics\translations.html:10
-#: .\report\templates\report\detail_report.html:300
-#: .\report\templates\report\quantitative.html:145
-#: .\report\templates\report\quantitative.html:268
-msgid "Wikiquote"
-msgstr "Wikiquote"
+msgid "Wikiversity (edited)"
+msgstr "Wikiversidade (editados)"
 
 #: .\metrics\templates\metrics\translations.html:11
-#: .\report\templates\report\detail_report.html:307
-#: .\report\templates\report\quantitative.html:151
-#: .\report\templates\report\quantitative.html:279
-msgid "Wiktionary"
-msgstr "Wikcionário"
+msgid "Wikibooks (created)"
+msgstr "Wikilivros (criados)"
 
 #: .\metrics\templates\metrics\translations.html:12
-#: .\report\templates\report\detail_report.html:314
-#: .\report\templates\report\quantitative.html:157
-#: .\report\templates\report\quantitative.html:290
-msgid "Wikivoyage"
-msgstr "Wikivoyage"
+msgid "Wikibooks (edited)"
+msgstr "Wikilivros (editados)"
 
 #: .\metrics\templates\metrics\translations.html:13
-#: .\report\templates\report\detail_report.html:321
-#: .\report\templates\report\quantitative.html:163
-#: .\report\templates\report\quantitative.html:301
-msgid "Wikispecies"
-msgstr "Wikispecies"
+msgid "Wikisource (created)"
+msgstr "Wikisource (criados)"
 
 #: .\metrics\templates\metrics\translations.html:14
-#: .\report\templates\report\quantitative.html:169
-#: .\report\templates\report\quantitative.html:312
-msgid "MetaWiki"
-msgstr "Metawiki"
+msgid "Wikisource (edited)"
+msgstr "Wikisource (editados)"
 
 #: .\metrics\templates\metrics\translations.html:15
-#: .\report\templates\report\detail_report.html:335
-#: .\report\templates\report\quantitative.html:175
-#: .\report\templates\report\quantitative.html:323
-msgid "MediaWiki"
-msgstr "MediaWiki"
+msgid "Wikinews (created)"
+msgstr "Wikinotícias (criados)"
+
+#: .\metrics\templates\metrics\translations.html:16
+msgid "Wikinews (edited)"
+msgstr "Wikinotícias (editados)"
+
+#: .\metrics\templates\metrics\translations.html:17
+msgid "Wikiquote (created)"
+msgstr "#Wikiquote (criados)"
+
+#: .\metrics\templates\metrics\translations.html:18
+msgid "Wikiquote (edited)"
+msgstr "Wikiquote (editados)"
+
+#: .\metrics\templates\metrics\translations.html:19
+msgid "Wiktionary (created)"
+msgstr "Wikcionário (criados)"
+
+#: .\metrics\templates\metrics\translations.html:20
+msgid "Wiktionary (edited)"
+msgstr "Wikcionário (editados)"
+
+#: .\metrics\templates\metrics\translations.html:21
+msgid "Wikivoyage (created)"
+msgstr "Wikivoyage (criados)"
+
+#: .\metrics\templates\metrics\translations.html:22
+msgid "Wikivoyage (edited)"
+msgstr "Wikivoyage (editados)"
+
+#: .\metrics\templates\metrics\translations.html:23
+msgid "Wikispecies (created)"
+msgstr "Wikispecies (criados)"
+
+#: .\metrics\templates\metrics\translations.html:24
+msgid "Wikispecies (edited)"
+msgstr "Wikispecies (editados)"
 
 #: .\metrics\templates\metrics\translations.html:25
-msgid "Other metric"
-msgstr "Outra métrica"
+msgid "MetaWiki (created)"
+msgstr "no Metawiki (criados)"
 
 #: .\metrics\templates\metrics\translations.html:26
+msgid "MetaWiki (edited)"
+msgstr "Metawiki (editados)"
+
+#: .\metrics\templates\metrics\translations.html:27
+msgid "MediaWiki (created)"
+msgstr "Mediawiki (criados)"
+
+#: .\metrics\templates\metrics\translations.html:28
+msgid "MediaWiki (edited)"
+msgstr "Mediawiki (editados)"
+
+#: .\metrics\templates\metrics\translations.html:29
+msgid "Wikifunctions (created)"
+msgstr "Wikifunctions (criados)"
+
+#: .\metrics\templates\metrics\translations.html:30
+msgid "Wikifunctions (edited)"
+msgstr "Wikifunctions (editados)"
+
+#: .\metrics\templates\metrics\translations.html:31
+msgid "Incubator (created)"
+msgstr "Incubator (criados)"
+
+#: .\metrics\templates\metrics\translations.html:32
+msgid "Incubator (edited)"
+msgstr "Incubator (editados)"
+
+#: .\metrics\templates\metrics\translations.html:53
 msgid "Occurrence"
 msgstr "Ocorrência"
+
+#: .\metrics\templates\metrics\translations.html:54
+msgid "Other metric"
+msgstr "Outra métrica"
 
 #: .\metrics\templatetags\metricstags.py:31
 msgid "Part."
@@ -1964,9 +2000,81 @@ msgstr "Criados(as)"
 msgid "Edited"
 msgstr "Editados(as)"
 
+#: .\report\templates\report\detail_report.html:251
+#: .\report\templates\report\quantitative.html:103
+#: .\report\templates\report\quantitative.html:191
+msgid "Wikipedia"
+msgstr "Wikipédia"
+
+#: .\report\templates\report\detail_report.html:258
+#: .\report\templates\report\quantitative.html:109
+#: .\report\templates\report\quantitative.html:202
+msgid "Wikimedia Commons"
+msgstr "Wikimedia Commons"
+
+#: .\report\templates\report\detail_report.html:265
+#: .\report\templates\report\quantitative.html:115
+#: .\report\templates\report\quantitative.html:213
+msgid "Wikidata"
+msgstr "Wikidata"
+
+#: .\report\templates\report\detail_report.html:272
+#: .\report\templates\report\quantitative.html:121
+#: .\report\templates\report\quantitative.html:224
+msgid "Wikiversity"
+msgstr "Wikiversidade"
+
+#: .\report\templates\report\detail_report.html:279
+#: .\report\templates\report\quantitative.html:133
+#: .\report\templates\report\quantitative.html:246
+msgid "Wikibooks"
+msgstr "Wikilivros"
+
+#: .\report\templates\report\detail_report.html:286
+#: .\report\templates\report\quantitative.html:127
+#: .\report\templates\report\quantitative.html:235
+msgid "Wikisource"
+msgstr "Wikisource"
+
+#: .\report\templates\report\detail_report.html:293
+#: .\report\templates\report\quantitative.html:139
+#: .\report\templates\report\quantitative.html:257
+msgid "Wikinews"
+msgstr "Wikinotícias"
+
+#: .\report\templates\report\detail_report.html:300
+#: .\report\templates\report\quantitative.html:145
+#: .\report\templates\report\quantitative.html:268
+msgid "Wikiquote"
+msgstr "Wikiquote"
+
+#: .\report\templates\report\detail_report.html:307
+#: .\report\templates\report\quantitative.html:151
+#: .\report\templates\report\quantitative.html:279
+msgid "Wiktionary"
+msgstr "Wikcionário"
+
+#: .\report\templates\report\detail_report.html:314
+#: .\report\templates\report\quantitative.html:157
+#: .\report\templates\report\quantitative.html:290
+msgid "Wikivoyage"
+msgstr "Wikivoyage"
+
+#: .\report\templates\report\detail_report.html:321
+#: .\report\templates\report\quantitative.html:163
+#: .\report\templates\report\quantitative.html:301
+msgid "Wikispecies"
+msgstr "Wikispecies"
+
 #: .\report\templates\report\detail_report.html:328
 msgid "Metawiki"
 msgstr "Metawiki"
+
+#: .\report\templates\report\detail_report.html:335
+#: .\report\templates\report\quantitative.html:175
+#: .\report\templates\report\quantitative.html:323
+msgid "MediaWiki"
+msgstr "MediaWiki"
 
 #: .\report\templates\report\detail_report.html:342
 #: .\report\templates\report\quantitative.html:181
@@ -2188,6 +2296,11 @@ msgstr "Quais projetos você está relatando?"
 msgid "Select only the ones that apply and you have records"
 msgstr "Selecione apenas aqueles que se aplicam e que você tem registros"
 
+#: .\report\templates\report\quantitative.html:169
+#: .\report\templates\report\quantitative.html:312
+msgid "MetaWiki"
+msgstr "Metawiki"
+
 #: .\report\templates\report\quantitative.html:334
 msgid "wikifunctions"
 msgstr "wikifunctions"
@@ -2290,181 +2403,181 @@ msgstr "# Submissões"
 #: .\report\tests_views.py:1239 .\report\tests_views.py:1324
 #: .\report\tests_views.py:1391 .\report\views.py:236 .\report\views.py:427
 msgid "# Wikipedia created"
-msgstr "# criados(as) na Wikipédia"
+msgstr "# criados na Wikipédia"
 
 #: .\report\tests_views.py:940 .\report\tests_views.py:1041
 #: .\report\tests_views.py:1239 .\report\tests_views.py:1324
 #: .\report\tests_views.py:1391 .\report\views.py:236 .\report\views.py:427
 msgid "# Wikipedia edited"
-msgstr "# editados(as) na Wikipédia"
+msgstr "# editados na Wikipédia"
 
 #: .\report\tests_views.py:941 .\report\tests_views.py:1042
 #: .\report\tests_views.py:1240 .\report\tests_views.py:1325
 #: .\report\tests_views.py:1392 .\report\views.py:237 .\report\views.py:428
 msgid "# Commons created"
-msgstr "# criados(as) no Commons"
+msgstr "# criados no Commons"
 
 #: .\report\tests_views.py:941 .\report\tests_views.py:1042
 #: .\report\tests_views.py:1240 .\report\tests_views.py:1325
 #: .\report\tests_views.py:1392 .\report\views.py:237 .\report\views.py:428
 msgid "# Commons edited"
-msgstr "# editados(as) no Commons"
+msgstr "# editados no Commons"
 
 #: .\report\tests_views.py:941 .\report\tests_views.py:1042
 #: .\report\tests_views.py:1240 .\report\tests_views.py:1326
 #: .\report\tests_views.py:1393 .\report\views.py:238 .\report\views.py:429
 msgid "# Wikidata created"
-msgstr "# criados(as) no Wikidata"
+msgstr "# criados no Wikidata"
 
 #: .\report\tests_views.py:942 .\report\tests_views.py:1043
 #: .\report\tests_views.py:1241 .\report\tests_views.py:1326
 #: .\report\tests_views.py:1393 .\report\views.py:238 .\report\views.py:429
 msgid "# Wikidata edited"
-msgstr "# editados(as) no Wikidata"
+msgstr "# editados no Wikidata"
 
 #: .\report\tests_views.py:942 .\report\tests_views.py:1043
 #: .\report\tests_views.py:1241 .\report\tests_views.py:1327
 #: .\report\tests_views.py:1394 .\report\views.py:239 .\report\views.py:430
 msgid "# Wikiversity created"
-msgstr "# criados(as) na Wikiversidade"
+msgstr "# criados na Wikiversidade"
 
 #: .\report\tests_views.py:942 .\report\tests_views.py:1043
 #: .\report\tests_views.py:1241 .\report\tests_views.py:1327
 #: .\report\tests_views.py:1394 .\report\views.py:239 .\report\views.py:430
 msgid "# Wikiversity edited"
-msgstr "# editados(as) na Wikiversidade"
+msgstr "# editados na Wikiversidade"
 
 #: .\report\tests_views.py:943 .\report\tests_views.py:1044
 #: .\report\tests_views.py:1242 .\report\tests_views.py:1328
 #: .\report\tests_views.py:1395 .\report\views.py:240 .\report\views.py:431
 msgid "# Wikibooks created"
-msgstr "# criados(as) no Wikilivros"
+msgstr "# criados no Wikilivros"
 
 #: .\report\tests_views.py:943 .\report\tests_views.py:1044
 #: .\report\tests_views.py:1242 .\report\tests_views.py:1328
 #: .\report\tests_views.py:1395 .\report\views.py:240 .\report\views.py:431
 msgid "# Wikibooks edited"
-msgstr "# editados(as) no Wikilivros"
+msgstr "# editados no Wikilivros"
 
 #: .\report\tests_views.py:943 .\report\tests_views.py:1044
 #: .\report\tests_views.py:1242 .\report\tests_views.py:1329
 #: .\report\tests_views.py:1396 .\report\views.py:241 .\report\views.py:432
 msgid "# Wikisource created"
-msgstr "# criados(as) no Wikisource"
+msgstr "# criados no Wikisource"
 
 #: .\report\tests_views.py:944 .\report\tests_views.py:1045
 #: .\report\tests_views.py:1243 .\report\tests_views.py:1329
 #: .\report\tests_views.py:1396 .\report\views.py:241 .\report\views.py:432
 msgid "# Wikisource edited"
-msgstr "# editados(as) no Wikisource"
+msgstr "# editados no Wikisource"
 
 #: .\report\tests_views.py:944 .\report\tests_views.py:1045
 #: .\report\tests_views.py:1243 .\report\tests_views.py:1330
 #: .\report\tests_views.py:1397 .\report\views.py:242 .\report\views.py:433
 msgid "# Wikinews created"
-msgstr "# criados(as) no Wikinotícias"
+msgstr "# criados no Wikinotícias"
 
 #: .\report\tests_views.py:944 .\report\tests_views.py:1045
 #: .\report\tests_views.py:1243 .\report\tests_views.py:1330
 #: .\report\tests_views.py:1397 .\report\views.py:242 .\report\views.py:433
 msgid "# Wikinews edited"
-msgstr "# editados(as) no Wikinotícias"
+msgstr "# editados no Wikinotícias"
 
 #: .\report\tests_views.py:945 .\report\tests_views.py:1046
 #: .\report\tests_views.py:1244 .\report\tests_views.py:1331
 #: .\report\tests_views.py:1398 .\report\views.py:243 .\report\views.py:434
 msgid "# Wikiquote created"
-msgstr "# criados(as) no Wikiquote"
+msgstr "# criados no Wikiquote"
 
 #: .\report\tests_views.py:945 .\report\tests_views.py:1046
 #: .\report\tests_views.py:1244 .\report\tests_views.py:1331
 #: .\report\tests_views.py:1398 .\report\views.py:243 .\report\views.py:434
 msgid "# Wikiquote edited"
-msgstr "# editados(as) no Wikiquote"
+msgstr "# editados no Wikiquote"
 
 #: .\report\tests_views.py:945 .\report\tests_views.py:1046
 #: .\report\tests_views.py:1244 .\report\tests_views.py:1332
 #: .\report\tests_views.py:1399 .\report\views.py:244 .\report\views.py:435
 msgid "# Wiktionary created"
-msgstr "# criados(as) no Wikcionário"
+msgstr "# criados no Wikcionário"
 
 #: .\report\tests_views.py:946 .\report\tests_views.py:1047
 #: .\report\tests_views.py:1245 .\report\tests_views.py:1332
 #: .\report\tests_views.py:1399 .\report\views.py:244 .\report\views.py:435
 msgid "# Wiktionary edited"
-msgstr "# editados(as) no Wikcionário"
+msgstr "# editados no Wikcionário"
 
 #: .\report\tests_views.py:946 .\report\tests_views.py:1047
 #: .\report\tests_views.py:1245 .\report\tests_views.py:1333
 #: .\report\tests_views.py:1400 .\report\views.py:245 .\report\views.py:436
 msgid "# Wikivoyage created"
-msgstr "# criados(as) no Wikivoyage"
+msgstr "# criados no Wikivoyage"
 
 #: .\report\tests_views.py:946 .\report\tests_views.py:1047
 #: .\report\tests_views.py:1245 .\report\tests_views.py:1333
 #: .\report\tests_views.py:1400 .\report\views.py:245 .\report\views.py:436
 msgid "# Wikivoyage edited"
-msgstr "# editados(as) no Wikivoyage"
+msgstr "# editados no Wikivoyage"
 
 #: .\report\tests_views.py:947 .\report\tests_views.py:1048
 #: .\report\tests_views.py:1246 .\report\tests_views.py:1334
 #: .\report\tests_views.py:1401 .\report\views.py:246 .\report\views.py:437
 msgid "# Wikispecies created"
-msgstr "# criados(as) no Wikispecies"
+msgstr "# criados no Wikispecies"
 
 #: .\report\tests_views.py:947 .\report\tests_views.py:1048
 #: .\report\tests_views.py:1246 .\report\tests_views.py:1334
 #: .\report\tests_views.py:1401 .\report\views.py:246 .\report\views.py:437
 msgid "# Wikispecies edited"
-msgstr "# editados(as) no Wikispecies"
+msgstr "# editados no Wikispecies"
 
 #: .\report\tests_views.py:947 .\report\tests_views.py:1048
 #: .\report\tests_views.py:1246 .\report\tests_views.py:1335
 #: .\report\tests_views.py:1402 .\report\views.py:247 .\report\views.py:438
 msgid "# Metawiki created"
-msgstr "# criados(as) no Metawiki"
+msgstr "# criados no Metawiki"
 
 #: .\report\tests_views.py:948 .\report\tests_views.py:1049
 #: .\report\tests_views.py:1247 .\report\tests_views.py:1335
 #: .\report\tests_views.py:1402 .\report\views.py:247 .\report\views.py:438
 msgid "# Metawiki edited"
-msgstr "# editados(as) no Metawiki"
+msgstr "# editados no Metawiki"
 
 #: .\report\tests_views.py:948 .\report\tests_views.py:1049
 #: .\report\tests_views.py:1247 .\report\tests_views.py:1336
 #: .\report\tests_views.py:1403 .\report\views.py:248 .\report\views.py:439
 msgid "# MediaWiki created"
-msgstr "# criados(as) no Mediawiki"
+msgstr "# criados no Mediawiki"
 
 #: .\report\tests_views.py:948 .\report\tests_views.py:1049
 #: .\report\tests_views.py:1247 .\report\tests_views.py:1336
 #: .\report\tests_views.py:1403 .\report\views.py:248 .\report\views.py:439
 msgid "# MediaWiki edited"
-msgstr "# editados(as) no Mediawiki"
+msgstr "# editados no Mediawiki"
 
 #: .\report\tests_views.py:949 .\report\tests_views.py:1050
 #: .\report\tests_views.py:1248 .\report\tests_views.py:1337
 #: .\report\tests_views.py:1404 .\report\views.py:249 .\report\views.py:440
 msgid "# Wikifunctions created"
-msgstr "# criados(as) no Wikifunctions"
+msgstr "# criados no Wikifunctions"
 
 #: .\report\tests_views.py:949 .\report\tests_views.py:1050
 #: .\report\tests_views.py:1248 .\report\tests_views.py:1337
 #: .\report\tests_views.py:1404 .\report\views.py:249 .\report\views.py:440
 msgid "# Wikifunctions edited"
-msgstr "# editados(as) no Wikifunctions"
+msgstr "# editados no Wikifunctions"
 
 #: .\report\tests_views.py:950 .\report\tests_views.py:1051
 #: .\report\tests_views.py:1249 .\report\tests_views.py:1338
 #: .\report\tests_views.py:1405 .\report\views.py:250 .\report\views.py:441
 msgid "# Incubator created"
-msgstr "# criados(as) no Incubator"
+msgstr "# criados no Incubator"
 
 #: .\report\tests_views.py:950 .\report\tests_views.py:1051
 #: .\report\tests_views.py:1249 .\report\tests_views.py:1338
 #: .\report\tests_views.py:1405 .\report\views.py:250 .\report\views.py:441
 msgid "# Incubator edited"
-msgstr "# editados(as) no Incubator"
+msgstr "# editados no Incubator"
 
 #: .\report\tests_views.py:951 .\report\tests_views.py:1052
 #: .\report\tests_views.py:1250 .\report\views.py:251
