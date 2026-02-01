@@ -15,7 +15,7 @@
                     {% if profile_form.instance.photograph %}
                         <img src="https://commons.wikimedia.org/wiki/Special:FilePath/{{ profile_form.instance.photograph }}?width=200px"
                              alt="{{ profile_form.instance.first_name }} {{ profile_form.instance.last_name }}"
-                             style="width: 100%;">
+                             style="width: 100%; height: 100%; object-fit: cover;">
                     {% else %}
                         <img src="{% static 'images/placeholder.svg' %}" alt="{% translate "Placeholder" %}"
                              width="100px">
