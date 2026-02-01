@@ -75,12 +75,6 @@ class UserProfile(models.Model):
                                   max_length=420,
                                   blank=True,
                                   default="")
-    position = models.ForeignKey(Position, on_delete=models.PROTECT,
-                                 related_name="users",
-                                 null=True,
-                                 blank=True,
-                                 verbose_name=_("Position"),
-                                 help_text=_("The position this user belongs to"))
 
     twitter = models.CharField(_("Twitter"), max_length=100, blank=True, default="", help_text=_("Twitter handle"))
     facebook = models.CharField(_("Facebook"), max_length=100, blank=True, default="", help_text=_("Facebook handle"))
@@ -98,6 +92,56 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.professional_wiki_handle or self.user.first_name or self.user.username
+
+
+class UserPosition(models.Model):
+    user_profile = models.ForeignKey(UserProfile,
+                                     on_delete=models.CASCADE,
+                                     related_name="position_history",
+                                     verbose_name=_("User profile"),
+                                     help_text=_("The user which this position belongs to during that period")
+                                     )
+    position = models.ForeignKey(Position,
+                                 on_delete=models.PROTECT,
+                                 related_name="user_assignments",
+                                 verbose_name=_("Position"),
+                                 help_text=_("The position this user had during that period")
+                                 )
+    start_date = models.DateField(verbose_name=_("Start date"),
+                                  blank=True,
+                                  null=True,
+                                  help_text=_("The start date for this user's position")
+                                  )
+    end_date = models.DateField(verbose_name=_("End date"),
+                                null=True,
+                                blank=True,
+                                help_text=_("The end date for this user's position. Leave empty if this is the current position"),
+                                )
+
+    class Meta:
+        verbose_name = _("User position")
+        verbose_name_plural = _("User positions")
+        ordering = ["-start_date", "end_date"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(end_date__isnull=True) | models.Q(end_date__gte=models.F("start_date")),
+                name="end_date_after_start_date",
+            )
+        ]
+
+    def __str__(self):
+        if self.end_date:
+            return _("%(user_profile)s – %(position)s (%(start_date)s → %(end_date)s)") % {
+                "user_profile": str(self.user_profile),
+                "position": str(self.position),
+                "start_date": self.start_date,
+                "end_date": self.end_date}
+        return _("%(user_profile)s – %(position)s (since %(start_date)s)") % {
+            "user_profile": str(self.user_profile),
+            "position": str(self.position),
+            "start_date": self.start_date,
+            "end_date": self.end_date
+        }
 
 
 @receiver(post_save, sender=User)

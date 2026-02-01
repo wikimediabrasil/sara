@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import permission_required, user_passes_test
 from django.shortcuts import render, redirect, reverse, get_object_or_404
-from django.utils.translation import gettext as _
+from django.utils.translation import get_language, gettext as _
 from .forms import UserProfileForm, UserForm
 from .models import User
 
@@ -63,7 +63,7 @@ def update_profile(request, username):
         else:
             messages.error(request, _("Something went wrong!"))
 
-    context = {"user_form": user_form, "profile_form": user_profile_form, "title": username}
+    context = {"user_form": user_form, "profile_form": user_profile_form, "title": username, "user": user}
     return render(request, "users/update_profile.html", context)
 
 
@@ -113,7 +113,9 @@ def detail_profile(request, username):
 def list_profiles(request):
     can_edit = request.user.is_superuser
     users = User.objects.all()
-    sorted_users = users.order_by("-is_staff", "username")
+    current_language = get_language()
+
+    sorted_users = users.order_by("-is_active", "-is_staff", "profile__position__text_", "username")
     context = {"users": sorted_users, "can_edit": can_edit}
     return render(request, "users/list_profiles.html", context)
 
