@@ -3061,7 +3061,7 @@ msgstr "Mulher"
 
 #: .\users\models.py:58
 msgid "Non Binary"
-msgstr "Não-binárie"
+msgstr "Pessoa não-binária"
 
 #: .\users\models.py:59
 msgid "Other"

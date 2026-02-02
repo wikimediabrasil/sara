@@ -1,7 +1,9 @@
+from datetime import date
 from django import forms
 from django.contrib.auth.models import User, Group
-from .models import UserProfile
+from .models import UserProfile, UserPosition
 from django.contrib.auth.forms import UserCreationForm
+from django.utils.translation import gettext as _
 
 """
 Forms related to user creation and profile management.
@@ -44,3 +46,34 @@ class UserProfileForm(forms.ModelForm):
         if commit:
             user_profile.save()
         return user_profile
+
+
+class UserPositionForm(forms.ModelForm):
+    """Form for managing user position data."""
+    class Meta:
+        model = UserPosition
+        fields = ["position", "start_date", "end_date"]
+        widgets = {
+            "start_date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d",),
+            "end_date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d",),
+        }
+
+    def __init__(self, *args, **kwargs):
+        request_user = kwargs.pop("request_user", None)
+        super().__init__(*args, **kwargs)
+
+        # permissions
+        if request_user and not request_user.is_superuser:
+            for field in self.fields.values():
+                field.disabled = True
+
+        # default only when creating a NEW position
+        if not self.instance.pk and not self.initial.get("start_date"):
+            self.initial["start_date"] = date.today()
+
+    def save(self, commit=True):
+        # Allow deferred save when profile is linked elsewhere
+        user_position = super(UserPositionForm, self).save(commit=False)
+        if commit:
+            user_position.save()
+        return user_position

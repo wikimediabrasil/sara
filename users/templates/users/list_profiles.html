@@ -61,7 +61,7 @@
                             <td>{{ user.id }}</td>
                             <td>{{ user.username }}</td>
                             <td>{{ user.first_name }} {{ user.last_name }}</td>
-                            <td>{{ user.profile.position|default:"—" }}</td>
+                            <td>{{ user.profile.position_history.position|default:"—" }}</td>
                             <td>{{ user.profile.team_area|default:"—" }}</td>
                             <td style="white-space: nowrap;">
                                 <a title="{% trans 'View' %}" href="{% url 'users:view_profile' username=user.username %}"><button title="{% trans 'View' %}" type="button" class="btn-circle btn-view"><i class="fa-solid fa-eye"></i></button></a>

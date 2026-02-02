@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
+from django.utils.formats import date_format
 
 User = get_user_model()
 
@@ -107,11 +108,7 @@ class UserPosition(models.Model):
                                  verbose_name=_("Position"),
                                  help_text=_("The position this user had during that period")
                                  )
-    start_date = models.DateField(verbose_name=_("Start date"),
-                                  blank=True,
-                                  null=True,
-                                  help_text=_("The start date for this user's position")
-                                  )
+    start_date = models.DateField(verbose_name=_("Start date"), help_text=_("The start date for this user's position"))
     end_date = models.DateField(verbose_name=_("End date"),
                                 null=True,
                                 blank=True,
@@ -121,13 +118,37 @@ class UserPosition(models.Model):
     class Meta:
         verbose_name = _("User position")
         verbose_name_plural = _("User positions")
-        ordering = ["-start_date", "end_date"]
+        ordering = ["-start_date", "-end_date"]
         constraints = [
             models.CheckConstraint(
                 check=models.Q(end_date__isnull=True) | models.Q(end_date__gte=models.F("start_date")),
                 name="end_date_after_start_date",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["user_profile"],
+                condition=models.Q(end_date__isnull=True),
+                name="one_current_position_per_user",
+            ),
         ]
+        indexes = [
+            models.Index(fields=["user_profile", "end_date"]),
+            models.Index(fields=["position", "end_date"]),
+            models.Index(fields=["start_date"]),
+        ]
+
+    def period_display(self):
+        start = date_format(self.start_date, format="DATE_FORMAT")
+
+        if self.end_date:
+            end = date_format(self.end_date, format="DATE_FORMAT")
+            return _("from %(start)s to %(end)s") % {
+                "start": start,
+                "end": end,
+            }
+
+        return _("since %(start)s") % {
+            "start": start,
+        }
 
     def __str__(self):
         if self.end_date:
@@ -139,8 +160,7 @@ class UserPosition(models.Model):
         return _("%(user_profile)s – %(position)s (since %(start_date)s)") % {
             "user_profile": str(self.user_profile),
             "position": str(self.position),
-            "start_date": self.start_date,
-            "end_date": self.end_date
+            "start_date": self.start_date
         }
 
 

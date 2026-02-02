@@ -80,8 +80,11 @@
             <div class="w3-quarter disappear">&nbsp;</div>
             <div class="w3-half">
                 <div class="w3-third field_title">{% trans "Position" %}</div>
-                <div class="w3-twothird formfield view_field">
-                    {% if user.profile.position %}{{ user.profile.position }}{% else %}-{% endif %}
+                <div class="w3-twothird formfield">
+                    <div class="view_field">
+                        {% if current_position %}{{ current_position.position }}{% else %}-{% endif %}
+                    </div>
+                    {% if current_position %}<div class="w3-row" style="font-size: small;">{{ current_position.period_display }}</div>{% endif %}
                 </div>
             </div>
         </div>

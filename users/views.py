@@ -1,11 +1,11 @@
-from django.db import transaction
+from django.db import transaction, models
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import permission_required, user_passes_test
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.utils.translation import get_language, gettext as _
-from .forms import UserProfileForm, UserForm
-from .models import User
+from .forms import UserProfileForm, UserForm, UserPositionForm
+from .models import User, UserPosition
 
 
 @permission_required("auth.change_user")
@@ -52,19 +52,70 @@ def update_profile(request, username):
     """
     user = get_object_or_404(User, username=username.replace("_", " "))
     request_user = request.user
+    profile = user.profile
+
+    current_position = (profile.position_history.filter(end_date__isnull=True).order_by("-start_date").first())
     user_form = UserForm(request.POST or None, instance=user)
     user_profile_form = UserProfileForm(request.POST or None, instance=user.profile, request_user=request_user)
+    user_position_form = UserPositionForm(request.POST or None, instance=current_position, request_user=request_user)
 
     if request.method == "POST":
-        if user_form.is_valid() and user_profile_form.is_valid():
-            user_form.save()
-            user_profile_form.save()
-            messages.success(request, _("Changes done successfully!"))
+        if user_form.is_valid() and user_profile_form.is_valid() and user_position_form.is_valid():
+            with transaction.atomic():
+                user_form.save()
+                user_profile_form.save()
+
+                # Only superusers can change positions
+                if request_user.is_superuser and user_position_form.cleaned_data.get("position"):
+                    update_user_position(
+                        profile=profile,
+                        position=user_position_form.cleaned_data["position"],
+                        start_date=user_position_form.cleaned_data["start_date"],
+                        end_date=user_position_form.cleaned_data["end_date"],
+                    )
+
+                    messages.success(request, _("Changes done successfully!"))
         else:
             messages.error(request, _("Something went wrong!"))
 
-    context = {"user_form": user_form, "profile_form": user_profile_form, "title": username, "user": user}
+    context = {
+        "user_form": user_form,
+        "profile_form": user_profile_form,
+        "position_form": user_position_form,
+        "title": username,
+        "user": user
+    }
+
     return render(request, "users/update_profile.html", context)
+
+
+def update_user_position(*, profile, position, start_date, end_date):
+    current = profile.position_history.filter(end_date__isnull=True).first()
+
+    if not current:
+        UserPosition.objects.create(
+            user_profile=profile,
+            position=position,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return
+
+    if current.position == position:
+        current.start_date = start_date
+        current.end_date = end_date
+        current.save()
+        return
+
+    current.end_date = start_date
+    current.save()
+
+    UserPosition.objects.create(
+        user_profile=profile,
+        position=position,
+        start_date=start_date,
+        end_date=end_date,
+    )
 
 
 @permission_required("auth.view_user")
@@ -103,9 +154,33 @@ def detail_profile(request, username):
     """
     user = get_object_or_404(User, username=username.replace("_", " "))
     request_user = request.user
+
     can_delete = request_user.has_perm("users.delete_user")
     can_edit = can_delete or request_user == user
-    context = {"user": user, "title": username, "can_edit": can_edit, "can_delete": can_delete}
+
+    profile = user.profile
+
+    current_or_last_position = (
+        profile.position_history
+        .annotate(
+            is_finished=models.Case(
+                models.When(end_date__isnull=True, then=0),
+                default=1,
+                output_field=models.IntegerField(),
+            )
+        )
+        .order_by("is_finished", "-start_date")
+        .first()
+    )
+
+    context = {
+        "user": user,
+        "profile": profile,
+        "current_position": current_or_last_position,
+        "title": username,
+        "can_edit": can_edit,
+        "can_delete": can_delete,
+    }
     return render(request, "users/detail_profile.html", context)
 
 
@@ -115,7 +190,7 @@ def list_profiles(request):
     users = User.objects.all()
     current_language = get_language()
 
-    sorted_users = users.order_by("-is_active", "-is_staff", "profile__position__text_", "username")
+    sorted_users = users.order_by("-is_active", "-is_staff", "profile__position_history__position__text_", "username")
     context = {"users": sorted_users, "can_edit": can_edit}
     return render(request, "users/list_profiles.html", context)
 

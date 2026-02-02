@@ -9,7 +9,7 @@ from django.contrib.auth.models import Permission, Group
 from django.utils.translation import gettext as _
 
 from metrics.models import Metric
-from users.models import TeamArea, UserProfile, User, Position
+from users.models import TeamArea, UserProfile, User, UserPosition
 from metrics.models import Activity, Area
 from strategy.models import Direction, StrategicAxis, LearningArea
 from report.models import Funding, Partner, Technology, StrategicLearningQuestion, Report, Editor, Organizer, Project, \
@@ -28,7 +28,7 @@ class ReportAddViewTest(TestCase):
         self.user_profile = UserProfile.objects.filter(user=self.user).first()
         self.group = Group.objects.create(name="Group_name")
         self.area_associated = TeamArea.objects.create(text="Team Area", code="team_area")
-        self.position = Position.objects.create(text="Position", type=self.group, area_associated=self.area_associated)
+        self.position = UserPosition.objects.create(text="Position", type=self.group, area_associated=self.area_associated)
         self.user_profile.position = self.position
         self.user_profile.save()
 
@@ -1425,7 +1425,7 @@ class ReportExportViewTest(TestCase):
                         user_profile.professional_wiki_handle or "",
                         user_profile.personal_wiki_handle or "",
                         user_profile.photograph or "",
-                        user_profile.position or "",
+                        user_profile.position_history.position or "",
                         user_profile.twitter or "",
                         user_profile.facebook or "",
                         user_profile.instagram or "",

@@ -292,8 +292,9 @@ def list_of_reports_of_area(code="", user=None):
             area = TeamArea.objects.get(code=code)
             manager = UserProfile.objects.filter(
                 user__is_active=True,
-                position__area_associated=area,
-                position__type__name="Manager").first()
+                user__email__isnull=False,
+                position_history__position__area_associated=area,
+                position_history__position__type__name="Manager").first()
         except ObjectDoesNotExist:
             return False
     else:

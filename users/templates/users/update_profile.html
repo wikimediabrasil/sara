@@ -72,6 +72,22 @@
                     <div class="w3-row">
                         <div class="w3-quarter disappear">&nbsp;</div>
                         <div class="w3-half">
+                            {% for field in position_form %}
+                                <label class="w3-third field_title" for="{{ field.id_for_label }}">
+                                    {{ field.label }}{% if field.field.required %} *{% endif %}
+                                </label>
+                                <div class="w3-twothird formfield">
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <div class="error">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="w3-row">
+                        <div class="w3-quarter disappear">&nbsp;</div>
+                        <div class="w3-half">
                             <div class="w3-third note field_title">
                                 {% translate "* Required fields" %}
                             </div>

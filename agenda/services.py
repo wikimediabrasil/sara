@@ -19,13 +19,16 @@ def send_event_reports():
         UserProfile.objects
         .filter(
             user__is_active=True,
-            position__type__name="Manager",
-            user__email__isnull=False
+            user__email__isnull=False,
+            position_history__position__type__name="Manager",
+            position_history__end_date__isnull=True,
         )
-        .select_related("user", "position__area_associated")
+        .select_related("user")
+        .prefetch_related("position_history__position__area_associated")
+        .distinct()
     )
 
-    areas_ids = {manager.position.area_associated_id for manager in managers}
+    areas_ids = {manager.position_history.position.area_associated_id for manager in managers}
 
     events = (
         Event.objects
@@ -66,7 +69,7 @@ def send_event_reports():
     emails = []
 
     for manager in managers:
-        area = manager.position.area_associated
+        area = manager.position_history.position.area_associated
         data = grouped.get(area.id)
 
         if not data:
