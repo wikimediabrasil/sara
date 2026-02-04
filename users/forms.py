@@ -31,12 +31,7 @@ class UserProfileForm(forms.ModelForm):
         required_css_class = 'required'
 
     def __init__(self, *args, **kwargs):
-        request_user = kwargs.pop("request_user", None)
         super().__init__(*args, **kwargs)
-
-        # Only superusers can change another user's position
-        if not (request_user and request_user.is_superuser):
-            self.fields["position"].disabled = True
 
         self.fields['professional_wiki_handle'].required = True
 
@@ -59,6 +54,7 @@ class UserPositionForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.user_profile = kwargs.pop("user_profile", None)
         request_user = kwargs.pop("request_user", None)
         super().__init__(*args, **kwargs)
 
@@ -72,8 +68,12 @@ class UserPositionForm(forms.ModelForm):
             self.initial["start_date"] = date.today()
 
     def save(self, commit=True):
-        # Allow deferred save when profile is linked elsewhere
-        user_position = super(UserPositionForm, self).save(commit=False)
+        user_position = super().save(commit=False)
+
+        if self.user_profile:
+            user_position.user_profile = self.user_profile
+
         if commit:
             user_position.save()
+
         return user_position

@@ -287,22 +287,37 @@ def send_email(request):
 
 
 def list_of_reports_of_area(code="", user=None):
-    if code:
-        try:
+    try:
+        if code:
             area = TeamArea.objects.get(code=code)
-            manager = UserProfile.objects.filter(
-                user__is_active=True,
-                user__email__isnull=False,
-                position_history__position__area_associated=area,
-                position_history__position__type__name="Manager").first()
-        except ObjectDoesNotExist:
-            return False
-    else:
-        try:
-            area = user.profile.position.area_associated
-            manager = user.first_name
-        except AttributeError:
-            return False
+        else:
+            if not user:
+                return False
+
+            current_position = (user.profile.position_history
+                                .filter(end_date__isnull=True)
+                                .order_by("-start_date")
+                                .first())
+            if not current_position:
+                return False
+
+            area = current_position.position.area_associated
+    except (ObjectDoesNotExist, AttributeError):
+        return False
+
+    manager = (
+        UserProfile.objects
+        .filter(
+            user__is_active=True,
+            user__email__isnull=False,
+            position_history__position__area_associated=area,
+            position_history__position__type__name="Manager",
+            position_history__end_date__isnull=True)
+        .order_by("-position_history__start_date")
+        .select_related("user")
+        .distinct()
+        .first()
+    )
 
     today = datetime.date.today()
     days_since_jan_01 = (today - datetime.date(today.year, 1, 1)).days

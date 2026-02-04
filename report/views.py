@@ -487,7 +487,7 @@ def export_user_profile(report_id=None, custom_query=Q()):
                          instance.professional_wiki_handle or "",
                          instance.personal_wiki_handle or "",
                          instance.photograph or "",
-                         instance.user.position_history or "",
+                         instance.user.profile.current_position or "",
                          instance.twitter or "",
                          instance.facebook or "",
                          instance.instagram or "",

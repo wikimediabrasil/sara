@@ -94,6 +94,21 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.professional_wiki_handle or self.user.first_name or self.user.username
 
+    @property
+    def current_position(self):
+        return (
+            self.position_history
+            .order_by(
+                models.Case(
+                    models.When(end_date__isnull=True, then=0),
+                    default=1,
+                    output_field=models.IntegerField(),
+                ),
+                "-start_date",
+            )
+            .first()
+        )
+
 
 class UserPosition(models.Model):
     user_profile = models.ForeignKey(UserProfile,

@@ -56,7 +56,7 @@ def update_profile(request, username):
 
     current_position = (profile.position_history.filter(end_date__isnull=True).order_by("-start_date").first())
     user_form = UserForm(request.POST or None, instance=user)
-    user_profile_form = UserProfileForm(request.POST or None, instance=user.profile, request_user=request_user)
+    user_profile_form = UserProfileForm(request.POST or None, instance=user.profile)
     user_position_form = UserPositionForm(request.POST or None, instance=current_position, request_user=request_user)
 
     if request.method == "POST":
@@ -74,7 +74,7 @@ def update_profile(request, username):
                         end_date=user_position_form.cleaned_data["end_date"],
                     )
 
-                    messages.success(request, _("Changes done successfully!"))
+                messages.success(request, _("Changes done successfully!"))
         else:
             messages.error(request, _("Something went wrong!"))
 
@@ -190,7 +190,7 @@ def list_profiles(request):
     users = User.objects.all()
     current_language = get_language()
 
-    sorted_users = users.order_by("-is_active", "-is_staff", "profile__position_history__position__text_", "username")
+    sorted_users = users.order_by("-is_active", "-is_staff", f"profile__position_history__position__text_{current_language}", "username")
     context = {"users": sorted_users, "can_edit": can_edit}
     return render(request, "users/list_profiles.html", context)
 

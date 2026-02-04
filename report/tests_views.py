@@ -9,7 +9,7 @@ from django.contrib.auth.models import Permission, Group
 from django.utils.translation import gettext as _
 
 from metrics.models import Metric
-from users.models import TeamArea, UserProfile, User, UserPosition
+from users.models import TeamArea, UserProfile, User, UserPosition, Position
 from metrics.models import Activity, Area
 from strategy.models import Direction, StrategicAxis, LearningArea
 from report.models import Funding, Partner, Technology, StrategicLearningQuestion, Report, Editor, Organizer, Project, \
@@ -28,9 +28,8 @@ class ReportAddViewTest(TestCase):
         self.user_profile = UserProfile.objects.filter(user=self.user).first()
         self.group = Group.objects.create(name="Group_name")
         self.area_associated = TeamArea.objects.create(text="Team Area", code="team_area")
-        self.position = UserPosition.objects.create(text="Position", type=self.group, area_associated=self.area_associated)
-        self.user_profile.position = self.position
-        self.user_profile.save()
+        self.position = Position.objects.create(text="Position", type=self.group, area_associated=self.area_associated)
+        self.user_position = UserPosition.objects.create(user_profile=self.user_profile, position=self.position, start_date= datetime.now())
 
         self.add_permission = Permission.objects.get(codename="add_report")
         self.delete_permission = Permission.objects.get(codename="delete_report")
@@ -1425,7 +1424,7 @@ class ReportExportViewTest(TestCase):
                         user_profile.professional_wiki_handle or "",
                         user_profile.personal_wiki_handle or "",
                         user_profile.photograph or "",
-                        user_profile.position_history.position or "",
+                        user_profile.current_position if user_profile.current_position else "",
                         user_profile.twitter or "",
                         user_profile.facebook or "",
                         user_profile.instagram or "",
@@ -1454,8 +1453,8 @@ class ReportExportViewTest(TestCase):
         self.report_2.created_by = user_profile_2
         self.report_2.save()
 
-        expected_row_1 = [user_profile_1.id, user_profile_1.user.first_name or "", user_profile_1.user.last_name or "", user_profile_1.professional_wiki_handle or "", user_profile_1.personal_wiki_handle or "", user_profile_1.photograph or "", user_profile_1.position or "", user_profile_1.twitter or "", user_profile_1.facebook or "", user_profile_1.instagram or "", user_profile_1.user.email or "", user_profile_1.wikidata_item or "", user_profile_1.linkedin or "", user_profile_1.lattes or "", user_profile_1.orcid or "", user_profile_1.google_scholar or ""]
-        expected_row_2 = [user_profile_2.id, user_profile_2.user.first_name or "", user_profile_2.user.last_name or "", user_profile_2.professional_wiki_handle or "", user_profile_2.personal_wiki_handle or "", user_profile_2.photograph or "", user_profile_2.position or "", user_profile_2.twitter or "", user_profile_2.facebook or "", user_profile_2.instagram or "", user_profile_2.user.email or "", user_profile_2.wikidata_item or "", user_profile_2.linkedin or "", user_profile_2.lattes or "", user_profile_2.orcid or "", user_profile_2.google_scholar or ""]
+        expected_row_1 = [user_profile_1.id, user_profile_1.user.first_name or "", user_profile_1.user.last_name or "", user_profile_1.professional_wiki_handle or "", user_profile_1.personal_wiki_handle or "", user_profile_1.photograph or "", user_profile_1.current_position or "", user_profile_1.twitter or "", user_profile_1.facebook or "", user_profile_1.instagram or "", user_profile_1.user.email or "", user_profile_1.wikidata_item or "", user_profile_1.linkedin or "", user_profile_1.lattes or "", user_profile_1.orcid or "", user_profile_1.google_scholar or ""]
+        expected_row_2 = [user_profile_2.id, user_profile_2.user.first_name or "", user_profile_2.user.last_name or "", user_profile_2.professional_wiki_handle or "", user_profile_2.personal_wiki_handle or "", user_profile_2.photograph or "", user_profile_2.current_position or "", user_profile_2.twitter or "", user_profile_2.facebook or "", user_profile_2.instagram or "", user_profile_2.user.email or "", user_profile_2.wikidata_item or "", user_profile_2.linkedin or "", user_profile_2.lattes or "", user_profile_2.orcid or "", user_profile_2.google_scholar or ""]
         expected_rows = [expected_row_1, expected_row_2]
         expected_df = pd.DataFrame(expected_rows, columns=expected_header).reset_index(drop=True)
         result = export_user_profile().reset_index(drop=True)

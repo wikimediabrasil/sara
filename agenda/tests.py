@@ -8,10 +8,11 @@ from django.core.management import call_command
 from django.db import IntegrityError, transaction
 from django.core import mail
 from unittest.mock import patch
+from django.utils.timezone import now
 
 from agenda.models import Event
-from agenda.services import send_event_reports
-from users.models import User, UserProfile, TeamArea, Position
+from agenda.services import send_event_reports, build_message_about_reports
+from users.models import User, UserProfile, TeamArea, Position, UserPosition
 from agenda.views import get_activities_soon_to_be_finished, get_activities_already_finished, \
     get_activities_about_to_kickoff, list_of_reports_of_area
 from agenda.templatetags.calendar_tags import date_tag, next_month_tag, previous_month_tag, next_year_tag, \
@@ -433,6 +434,58 @@ class EventEmailTests(TestCase):
         self.assertIn("Reports sent", out.getvalue())
 
 
+
+class SendEventReportsFullBranchTests(TestCase):
+    def setUp(self):
+        self.today = date.today()
+        self.area1 = TeamArea.objects.create(text="Area1", code="A1")
+        self.area2 = TeamArea.objects.create(text="Area2", code="A2")
+        self.group = Group.objects.create(name="Manager")
+
+        # Positions
+        self.pos1 = Position.objects.create(text="Pos1", type=self.group, area_associated=self.area1)
+        self.pos2 = Position.objects.create(text="Pos2", type=self.group, area_associated=self.area2)
+
+        # Users
+        self.user1 = User.objects.create_user(username="u1", email="u1@test.com", password="pass")
+        self.user2 = User.objects.create_user(username="u2", email="", password="pass")  # no email
+
+        # UserPositions (current)
+        UserPosition.objects.create(user_profile=self.user1.profile, position=self.pos1, start_date=self.today - timedelta(10), end_date=None)
+        UserPosition.objects.create(user_profile=self.user2.profile, position=self.pos2, start_date=self.today - timedelta(10), end_date=None)
+
+        # Events
+        self.late = Event.objects.create(name="Late", area_responsible=self.area1, initial_date=self.today - timedelta(20), end_date=self.today - timedelta(2))
+        self.upcoming = Event.objects.create(name="Upcoming", area_responsible=self.area1, initial_date=self.today - timedelta(1), end_date=self.today + timedelta(5))
+        self.kickoff = Event.objects.create(name="Kickoff", area_responsible=self.area1, initial_date=self.today + timedelta(3), end_date=self.today + timedelta(6))
+        self.ignored = Event.objects.create(name="Ignored", area_responsible=self.area1, initial_date=self.today + timedelta(60), end_date=self.today + timedelta(61))
+
+    def test_send_event_reports_groups_and_sends_correctly(self):
+        send_event_reports()
+
+        # Only user1 has email and events
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+
+        self.assertIn("Late", email.body)
+        self.assertIn("Upcoming", email.body)
+        self.assertIn("Kickoff", email.body)
+        self.assertNotIn("Ignored", email.body)
+        self.assertEqual(email.to, ["u1@test.com"])
+
+    def test_manager_without_email_does_not_receive_email(self):
+        # u1 without email
+        self.user1.email = ""
+        self.user1.save()
+
+        send_event_reports()
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_manager_with_no_events_does_not_receive_email(self):
+        Event.objects.all().delete()  # remove all events
+        send_event_reports()
+        self.assertEqual(len(mail.outbox), 0)
+
 class ListReportsTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
@@ -477,7 +530,7 @@ class ListReportsTests(TestCase):
     @patch("agenda.views.get_activities_already_finished")
     @patch("agenda.views.get_activities_soon_to_be_finished")
     @patch("agenda.views.build_message_about_reports")
-    def test_view_without_area_code(self, mock_build_message, mock_future, mock_past):
+    def test_view_without_area_code_redirects_if_request_user_does_not_have_a_position(self, mock_build_message, mock_future, mock_past):
         mock_past.return_value = "past"
         mock_future.return_value = "future"
         mock_build_message.side_effect = lambda x: f"built-{x}"
@@ -487,7 +540,55 @@ class ListReportsTests(TestCase):
 
         self.client.force_login(self.user)
         self.user.user_permissions.add(self.permission)
-        self.user.profile.position = self.position
+
+        response = self.client.get(
+            reverse("agenda:area_activities")
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('metrics:index'))
+
+    @patch("agenda.views.get_activities_already_finished")
+    @patch("agenda.views.get_activities_soon_to_be_finished")
+    @patch("agenda.views.build_message_about_reports")
+    def test_view_without_area_code_redirects_if_request_user_is_not_active(self, mock_build_message, mock_future, mock_past):
+        mock_past.return_value = "past"
+        mock_future.return_value = "future"
+        mock_build_message.side_effect = lambda x: f"built-{x}"
+
+        request = self.factory.get("/fake-url")
+        request.user = self.user
+
+        self.client.force_login(self.user)
+        self.user.user_permissions.add(self.permission)
+        position_history = UserPosition.objects.create(user_profile=self.user.profile, position=self.position,
+                                                       start_date=now().date() - timedelta(180), end_date=now().date())
+        self.user.profile.position_history.add(position_history)
+        self.user.profile.save()
+
+        response = self.client.get(
+            reverse("agenda:area_activities")
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('metrics:index'))
+
+    @patch("agenda.views.get_activities_already_finished")
+    @patch("agenda.views.get_activities_soon_to_be_finished")
+    @patch("agenda.views.build_message_about_reports")
+    def test_view_without_area_code_shows_activities_from_request_user_if_they_are_active(self, mock_build_message, mock_future, mock_past):
+        mock_past.return_value = "past"
+        mock_future.return_value = "future"
+        mock_build_message.side_effect = lambda x: f"built-{x}"
+
+        request = self.factory.get("/fake-url")
+        request.user = self.user
+
+        self.client.force_login(self.user)
+        self.user.user_permissions.add(self.permission)
+        position_history = UserPosition.objects.create(user_profile=self.user.profile, position=self.position,
+                                                       start_date=now().date() - timedelta(180))
+        self.user.profile.position_history.add(position_history)
         self.user.profile.save()
 
         response = self.client.get(
@@ -506,6 +607,9 @@ class ListReportsTests(TestCase):
         user = User.objects.create_user(username="u", password="x")
         result = list_of_reports_of_area(user=user)
         self.assertFalse(result)
+
+    def test_returns_false_when_user_does_not_exists(self):
+        self.assertFalse(list_of_reports_of_area(user=None))
 
     @patch("agenda.views.list_of_reports_of_area")
     def test_show_list_of_reports_of_area_with_context(self, mock_list):
@@ -557,6 +661,44 @@ class ListReportsTests(TestCase):
 
         self.assertRedirects(response, reverse("metrics:index"))
 
+class BuildMessageAboutReportsTests(TestCase):
+    def setUp(self):
+        self.area = TeamArea.objects.create(text="Area", code="A1")
+        self.today = date.today()
+
+    def test_single_day_event_generates_correct_html(self):
+        event = Event.objects.create(
+            name="Single Day",
+            area_responsible=self.area,
+            initial_date=self.today,
+            end_date=self.today
+        )
+
+        message = build_message_about_reports([event])
+        expected_date = self.today.strftime("%d/%m")
+        self.assertIn(expected_date, message)
+        self.assertIn(event.name, message)
+        self.assertTrue(message.startswith("<ul>"))
+        self.assertTrue(message.endswith("</ul>"))
+
+    def test_multi_day_event_generates_correct_html(self):
+        event = Event.objects.create(
+            name="Multi Day",
+            area_responsible=self.area,
+            initial_date=self.today,
+            end_date=self.today + timedelta(days=3)
+        )
+
+        message = build_message_about_reports([event])
+        expected_date = f"{self.today.strftime('%d/%m')} - {(self.today + timedelta(days=3)).strftime('%d/%m')}"
+        self.assertIn(expected_date, message)
+        self.assertIn(event.name, message)
+        self.assertTrue(message.startswith("<ul>"))
+        self.assertTrue(message.endswith("</ul>"))
+
+    def test_empty_list_returns_empty_string(self):
+        message = build_message_about_reports([])
+        self.assertEqual(message, "")
 
 class CalendarTagTest(TestCase):
     def setUp(self):

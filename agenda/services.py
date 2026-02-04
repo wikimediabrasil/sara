@@ -8,27 +8,28 @@ from django.conf import settings
 from django.db.models import Case, When, Value, CharField
 from django.utils.translation import gettext as _
 
-from users.models import UserProfile
+from users.models import UserProfile, UserPosition
 from agenda.models import Event
 
 def send_event_reports():
     template = get_template("agenda/email_template.html")
     today = now().date()
 
-    managers = (
-        UserProfile.objects
+    current_managers = (
+        UserPosition.objects
         .filter(
-            user__is_active=True,
-            user__email__isnull=False,
-            position_history__position__type__name="Manager",
-            position_history__end_date__isnull=True,
+            end_date__isnull=True,
+            position__type__name="Manager",
+            user_profile__user__is_active=True,
         )
-        .select_related("user")
-        .prefetch_related("position_history__position__area_associated")
-        .distinct()
+        .exclude(user_profile__user__email="")
+        .select_related(
+            "user_profile__user",
+            "position__area_associated",
+        )
     )
 
-    areas_ids = {manager.position_history.position.area_associated_id for manager in managers}
+    areas_ids = current_managers.values_list("position__area_associated_id", flat=True).distinct()
 
     events = (
         Event.objects
@@ -68,38 +69,33 @@ def send_event_reports():
 
     emails = []
 
-    for manager in managers:
-        area = manager.position_history.position.area_associated
+    for manager in current_managers:
+        area = manager.position.area_associated
         data = grouped.get(area.id)
 
-        if not data:
+        if not data or not any(data.values()):
             continue
-
-        context = {
-            "upcoming_reports": build_message_about_reports(data["upcoming"]),
-            "late_reports": build_message_about_reports(data["late"]),
-            "about_to_kickoff": build_message_about_reports(data["kickoff"]),
-            "manager": manager,
-            "area": area
-        }
 
         emails.append(
             EmailMessage(
                 subject=_("SARA Report - %(area)s") % {"area": area},
-                body=template.render(context),
+                body=template.render({
+                    "upcoming_reports": build_message_about_reports(data["upcoming"]),
+                    "late_reports": build_message_about_reports(data["late"]),
+                    "about_to_kickoff": build_message_about_reports(data["kickoff"]),
+                    "manager": manager.user_profile,
+                    "area": area,
+                }),
                 from_email=settings.EMAIL_HOST_USER,
-                to=[manager.user.email],
+                to=[manager.user_profile.user.email],
                 reply_to=[settings.EMAIL_HOST_USER],
                 bcc=[settings.EMAIL_COORDINATOR],
             )
         )
 
-    connection = get_connection()
     for email in emails:
         email.content_subtype = "html"
-    connection.send_messages(emails)
-
-    pass
+    get_connection().send_messages(emails)
 
 
 def build_message_about_reports(events):
