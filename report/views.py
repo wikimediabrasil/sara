@@ -5,6 +5,7 @@ from io import BytesIO
 
 from django.utils import timezone
 from django.forms import inlineformset_factory
+from django.conf import settings
 from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect, reverse, HttpResponse
@@ -399,7 +400,8 @@ def export_operation_report(report_id=None, custom_query=Q(), lang=""):
         reports = Report.objects.filter(custom_query)
         operation_reports = OperationReport.objects.filter(report_id__in=reports.values_list("id", flat=True))
 
-    metric_name_attr = f"text_{lang}" if lang == "en" else "text"
+    available_fields = [f.name for f in OperationReport._meta.get_fields() if f.name.startswith("text")]
+    metric_name_attr = get_localized_field(lang, available_fields)
 
     rows = []
     for operation_report in operation_reports:
@@ -750,3 +752,35 @@ def get_metrics(request):
         return JsonResponse({"objects": projects, "main": main_})
     else:
         return JsonResponse({"objects": None, "main": main_})
+
+
+def get_localized_field(lang, available_fields, default_field="text"):
+    """
+    Returns the name of the text field for the requested language.
+    Uses the fallbacks defined in settings.LANGUAGE_FALLBACKS.
+
+    :param lang: received language code (e.g., "en_GB")
+    :param available_fields: list of available fields in the model
+    :param default_field: generic field if none match
+
+    :return: name of the field to be used
+    """
+    raw_lang = lang.lower().replace("-", "_")
+
+    # Exact field
+    exact_field = f"text_{raw_lang}"
+    if exact_field in available_fields:
+        return exact_field
+
+    # Fallback
+    fallback_list = getattr(settings, "LANGUAGE_FALLBACKS", {}).get(raw_lang, [])
+    for fallback_lang in fallback_list:
+        fallback_field = f"text_{fallback_lang.lower().replace('-', '_')}"
+        if fallback_field in available_fields:
+            return fallback_field
+
+    # Generic fallback
+    if default_field in available_fields:
+        return default_field
+    else:
+        return None

@@ -1,11 +1,13 @@
-from django.db import transaction, models
+from django.db import transaction
+from django.db.models import OuterRef, Subquery, IntegerField, When, Case
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import permission_required, user_passes_test
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.utils.translation import get_language, gettext as _
 from .forms import UserProfileForm, UserForm, UserPositionForm
-from .models import User, UserPosition
+from .models import User, UserPosition, Position
+from report.views import get_localized_field
 
 
 @permission_required("auth.change_user")
@@ -163,10 +165,10 @@ def detail_profile(request, username):
     current_or_last_position = (
         profile.position_history
         .annotate(
-            is_finished=models.Case(
-                models.When(end_date__isnull=True, then=0),
+            is_finished=Case(
+                When(end_date__isnull=True, then=0),
                 default=1,
-                output_field=models.IntegerField(),
+                output_field=IntegerField(),
             )
         )
         .order_by("is_finished", "-start_date")
@@ -187,11 +189,23 @@ def detail_profile(request, username):
 @user_passes_test(lambda u: u.is_superuser)
 def list_profiles(request):
     can_edit = request.user.is_superuser
-    users = User.objects.all()
     current_language = get_language()
 
-    sorted_users = users.order_by("-is_active", "-is_staff", f"profile__position_history__position__text_{current_language}", "username")
-    context = {"users": sorted_users, "can_edit": can_edit}
+    available_fields = [f.name for f in Position._meta.get_fields() if f.name.startswith("text")]
+    current_field = get_localized_field(current_language, available_fields)
+
+    latest_position = UserPosition.objects.filter(user_profile=OuterRef('profile')).order_by('-start_date')
+    earliest_position = UserPosition.objects.filter(user_profile=OuterRef('profile')).order_by('start_date')
+    users_sorted = User.objects.annotate(
+        latest_end_date=Subquery(latest_position.values('end_date')[:1]),
+        earliest_start_date=Subquery(earliest_position.values('start_date')[:1]),
+        latest_position_text=Subquery(latest_position.values(f'position__{current_field}')[:1])
+    ).order_by("-is_staff", "latest_end_date", "earliest_start_date", "latest_position_text", "username")
+
+    active_users = users_sorted.filter(profile__position_history__end_date__isnull=True)
+    inactive_users = users_sorted.exclude(id__in=active_users.values_list("id", flat=True))
+
+    context = {"active_users": active_users, "inactive_users": inactive_users, "can_edit": can_edit}
     return render(request, "users/list_profiles.html", context)
 
 

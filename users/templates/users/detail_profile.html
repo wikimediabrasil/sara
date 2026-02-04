@@ -45,7 +45,7 @@
             <div class="w3-half">
                 <div class="w3-third field_title">{% trans "Gender" %}</div>
                 <div class="w3-twothird formfield view_field">
-                    {% if user.profile.gender %}{{ user.profile.gender }}{% else %}-{% endif %}
+                    {% if user.profile.gender %}{{ user.profile.get_gender_display }}{% else %}-{% endif %}
                 </div>
             </div>
         </div>
