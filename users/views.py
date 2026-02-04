@@ -196,14 +196,19 @@ def list_profiles(request):
 
     latest_position = UserPosition.objects.filter(user_profile=OuterRef('profile')).order_by('-start_date')
     earliest_position = UserPosition.objects.filter(user_profile=OuterRef('profile')).order_by('start_date')
-    users_sorted = User.objects.annotate(
-        latest_end_date=Subquery(latest_position.values('end_date')[:1]),
-        earliest_start_date=Subquery(earliest_position.values('start_date')[:1]),
-        latest_position_text=Subquery(latest_position.values(f'position__{current_field}')[:1])
-    ).order_by("-is_staff", "latest_end_date", "earliest_start_date", "latest_position_text", "username")
+    users_sorted = (
+        User.objects
+        .annotate(
+            latest_end_date=Subquery(latest_position.values('end_date')[:1]),
+            earliest_start_date=Subquery(earliest_position.values('start_date')[:1]),
+            latest_position_text=Subquery(latest_position.values(f'position__{current_field}')[:1]
+                                          )
+        )
+        .filter(profile__position_history__isnull=False)
+        .order_by("-is_staff", "latest_end_date", "earliest_start_date", "latest_position_text", "username"))
 
-    active_users = users_sorted.filter(profile__position_history__end_date__isnull=True)
-    inactive_users = users_sorted.exclude(id__in=active_users.values_list("id", flat=True))
+    active_users = users_sorted.filter(profile__position_history__end_date__isnull=True).distinct()
+    inactive_users = users_sorted.exclude(id__in=active_users.values_list("id", flat=True)).distinct()
 
     context = {"active_users": active_users, "inactive_users": inactive_users, "can_edit": can_edit}
     return render(request, "users/list_profiles.html", context)
