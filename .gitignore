@@ -9,3 +9,4 @@ Scripts/
 sara/settings_local.py
 fixtures/initial_data.json
 fixtures/users_data.json
+htmlReport/
