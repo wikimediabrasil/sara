@@ -1,6 +1,6 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.core.exceptions import ValidationError
 
 
 # ======================================================================================================================
@@ -22,9 +22,24 @@ class StrategicAxis(models.Model):
         - __str__: Returns the text of the strategic axis.
         - clean: Validates that the 'text' field is not empty.
     """
-    text = models.CharField(_("Text"), max_length=420, help_text=_("Human-readable name of the Strategic axis."))
-    intentionality = models.CharField(_("Intentionality"), max_length=420, null=True, blank=True, help_text=_("Explanation of the intentionality behind this axis."))
-    active = models.BooleanField(_("Active"), default=True, help_text=_("Whether this axis is from the active Strategy."))
+
+    text = models.CharField(
+        _("Text"),
+        max_length=420,
+        help_text=_("Human-readable name of the Strategic axis."),
+    )
+    intentionality = models.CharField(
+        _("Intentionality"),
+        max_length=420,
+        null=True,
+        blank=True,
+        help_text=_("Explanation of the intentionality behind this axis."),
+    )
+    active = models.BooleanField(
+        _("Active"),
+        default=True,
+        help_text=_("Whether this axis is from the active Strategy."),
+    )
 
     class Meta:
         verbose_name = _("Strategic axis")
@@ -52,8 +67,16 @@ class Direction(models.Model):
         - __str__: Returns the text of the direction.
         - clean: Validates that the 'text' field is not empty.
     """
-    text = models.CharField(_("Text"), max_length=420, help_text=_("Human-readable name of the direction."))
-    strategic_axis = models.ForeignKey(StrategicAxis, on_delete=models.CASCADE, related_name='directions', verbose_name=_("Strategic axis"))
+
+    text = models.CharField(
+        _("Text"), max_length=420, help_text=_("Human-readable name of the direction.")
+    )
+    strategic_axis = models.ForeignKey(
+        StrategicAxis,
+        on_delete=models.CASCADE,
+        related_name="directions",
+        verbose_name=_("Strategic axis"),
+    )
 
     class Meta:
         verbose_name = _("Direction")
@@ -85,8 +108,17 @@ class LearningArea(models.Model):
         - __str__: Returns the text of the direction.
         - clean: Validates that the 'text' field is not empty.
     """
-    text = models.CharField(_("Text"), max_length=420, help_text=_("Human-readable name of the learning area."))
-    active = models.BooleanField(_("Active"), default=True, help_text=_("Whether this learning area is from the active Strategy."))
+
+    text = models.CharField(
+        _("Text"),
+        max_length=420,
+        help_text=_("Human-readable name of the learning area."),
+    )
+    active = models.BooleanField(
+        _("Active"),
+        default=True,
+        help_text=_("Whether this learning area is from the active Strategy."),
+    )
 
     class Meta:
         verbose_name = _("Learning area")
@@ -115,8 +147,18 @@ class StrategicLearningQuestion(models.Model):
         - __str__: Returns the text of the direction.
         - clean: Validates that the 'text' field is not empty.
     """
-    text = models.CharField(_("Text"), max_length=420, help_text=_("Human-readable name of the learning question."))
-    learning_area = models.ForeignKey(LearningArea, on_delete=models.CASCADE, related_name='strategic_question', verbose_name=_("Learning area"))
+
+    text = models.CharField(
+        _("Text"),
+        max_length=420,
+        help_text=_("Human-readable name of the learning question."),
+    )
+    learning_area = models.ForeignKey(
+        LearningArea,
+        on_delete=models.CASCADE,
+        related_name="strategic_question",
+        verbose_name=_("Learning area"),
+    )
 
     class Meta:
         verbose_name = _("Strategic learning question")
@@ -145,8 +187,19 @@ class EvaluationObjective(models.Model):
         - __str__: Returns the text of the direction.
         - clean: Validates that the 'text' field is not empty.
     """
-    text = models.CharField(_("Text"), max_length=420, help_text=_("Human-readable name of the evaluation objective."))
-    learning_area = models.ForeignKey(LearningArea, on_delete=models.CASCADE, null=True, related_name='evaluation_objective', verbose_name=_("Learning area"))
+
+    text = models.CharField(
+        _("Text"),
+        max_length=420,
+        help_text=_("Human-readable name of the evaluation objective."),
+    )
+    learning_area = models.ForeignKey(
+        LearningArea,
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="evaluation_objective",
+        verbose_name=_("Learning area"),
+    )
 
     class Meta:
         verbose_name = _("Evaluation objective")

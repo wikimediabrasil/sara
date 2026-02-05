@@ -9,34 +9,62 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('metrics', '0001_initial'),
-        ('users', '0001_initial'),
+        ("metrics", "0001_initial"),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='activity',
-            name='area_responsible',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.RESTRICT, related_name='activity_manager', to='users.teamarea', verbose_name='Area responsible'),
+            model_name="activity",
+            name="area_responsible",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.RESTRICT,
+                related_name="activity_manager",
+                to="users.teamarea",
+                verbose_name="Area responsible",
+            ),
         ),
         migrations.AddField(
-            model_name='activity',
-            name='area',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.RESTRICT, related_name='activities', to='metrics.area', verbose_name='Area'),
+            model_name="activity",
+            name="area",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.RESTRICT,
+                related_name="activities",
+                to="metrics.area",
+                verbose_name="Area",
+            ),
         ),
         migrations.AddField(
-            model_name='metric',
-            name='activity',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='metrics', to='metrics.activity', verbose_name='Activity'),
+            model_name="metric",
+            name="activity",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="metrics",
+                to="metrics.activity",
+                verbose_name="Activity",
+            ),
         ),
         migrations.AddField(
-            model_name='metric',
-            name='project',
-            field=models.ManyToManyField(blank=True, related_name='project_associated', to='metrics.project', verbose_name='Project'),
+            model_name="metric",
+            name="project",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="project_associated",
+                to="metrics.project",
+                verbose_name="Project",
+            ),
         ),
         migrations.AddField(
-            model_name='area',
-            name='project',
-            field=models.ManyToManyField(blank=True, related_name='project_activity', to='metrics.project', verbose_name='Project'),
+            model_name="area",
+            name="project",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="project_activity",
+                to="metrics.project",
+                verbose_name="Project",
+            ),
         ),
     ]

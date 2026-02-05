@@ -1,18 +1,19 @@
 import calendar
 import datetime
 from datetime import date, timedelta
-from django.db import transaction
-from django.contrib import messages
-from django.shortcuts import render, redirect, reverse, get_object_or_404
-from django.contrib.auth.decorators import login_required, permission_required
-from django.utils.translation import gettext as _
-from django.db.models import Q
-from django.core.exceptions import ObjectDoesNotExist
 
-from users.models import TeamArea, UserProfile
-from agenda.models import Event
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect, render, reverse
+from django.utils.translation import gettext as _
+
 from agenda.forms import EventForm
-from agenda.services import send_event_reports, build_message_about_reports
+from agenda.models import Event
+from agenda.services import build_message_about_reports, send_event_reports
+from users.models import TeamArea, UserProfile
 
 
 # YEAR CALENDAR
@@ -25,7 +26,7 @@ def show_calendar_year(request):
     """
     year = datetime.datetime.now().year
 
-    return redirect('agenda:show_specific_calendar_year', year=year)
+    return redirect("agenda:show_specific_calendar_year", year=year)
 
 
 def show_specific_calendar_year(request, year):
@@ -41,9 +42,11 @@ def show_specific_calendar_year(request, year):
     start = date(year, 1, 1)
     end = date(year, 12, 31)
 
-    all_events = (Event.objects.filter(Q(initial_date__lte=end) & Q(end_date__gte=start))
-                  .select_related("area_responsible")
-                  .order_by("initial_date", "end_date"))
+    all_events = (
+        Event.objects.filter(Q(initial_date__lte=end) & Q(end_date__gte=start))
+        .select_related("area_responsible")
+        .order_by("initial_date", "end_date")
+    )
 
     events_by_date = {}
     for event in all_events:
@@ -63,21 +66,29 @@ def show_specific_calendar_year(request, year):
             for day in week:
                 if day:
                     key = f"{year}-{month:02d}-{day:02d}"
-                    filled_week.append({
-                        "day": day,
-                        "activities": events_by_date.get(key, []),
-                    })
+                    filled_week.append(
+                        {
+                            "day": day,
+                            "activities": events_by_date.get(key, []),
+                        }
+                    )
                 else:
                     filled_week.append(None)
             filled_days.append(filled_week)
 
-        days_year.append({
-            "month_name": month_name,
-            "month": month,
-            "days": filled_days,
-        })
+        days_year.append(
+            {
+                "month_name": month_name,
+                "month": month,
+                "days": filled_days,
+            }
+        )
 
-    context = {"calendar": days_year, "year": year, "title": _("Calendar %(year)s") % {"year": year}}
+    context = {
+        "calendar": days_year,
+        "year": year,
+        "title": _("Calendar %(year)s") % {"year": year},
+    }
     return render(request, "agenda/calendar_year.html", context)
 
 
@@ -92,7 +103,7 @@ def show_calendar(request):
     month = datetime.datetime.now().month
     year = datetime.datetime.now().year
 
-    return redirect('agenda:show_specific_calendar', year=year, month=month)
+    return redirect("agenda:show_specific_calendar", year=year, month=month)
 
 
 def show_specific_calendar(request, year, month):
@@ -111,9 +122,11 @@ def show_specific_calendar(request, year, month):
     last_day = calendar.monthrange(year, month)[1]
     end = date(year, month, last_day)
 
-    all_events = (Event.objects.filter(Q(initial_date__lte=end) & Q(end_date__gte=start))
-                  .select_related("area_responsible")
-                  .order_by("initial_date", "end_date"))
+    all_events = (
+        Event.objects.filter(Q(initial_date__lte=end) & Q(end_date__gte=start))
+        .select_related("area_responsible")
+        .order_by("initial_date", "end_date")
+    )
     events_by_date = {}
     for event in all_events:
         current = max(event.initial_date, start)
@@ -130,10 +143,12 @@ def show_specific_calendar(request, year, month):
         for day in week:
             if day:
                 key = f"{year}-{month:02d}-{day:02d}"
-                filled_week.append({
-                    "day": day,
-                    "activities": events_by_date.get(key, []),
-                })
+                filled_week.append(
+                    {
+                        "day": day,
+                        "activities": events_by_date.get(key, []),
+                    }
+                )
             else:
                 filled_week.append(None)
         filled_days.append(filled_week)
@@ -144,7 +159,7 @@ def show_specific_calendar(request, year, month):
         "month": month,
         "year": year,
         "calendar": filled_days,
-        "title": _("Calendar %(month)s/%(year)s") % {"month": month_name, "year": year}
+        "title": _("Calendar %(month)s/%(year)s") % {"month": month_name, "year": year},
     }
     return render(request, "agenda/calendar_month.html", context)
 
@@ -161,7 +176,9 @@ def show_calendar_day(request):
     month = datetime.datetime.now().month
     year = datetime.datetime.now().year
 
-    return redirect("agenda:show_specific_calendar_day", year=year, month=month, day=day)
+    return redirect(
+        "agenda:show_specific_calendar_day", year=year, month=month, day=day
+    )
 
 
 def show_specific_calendar_day(request, year, month, day):
@@ -182,11 +199,23 @@ def show_specific_calendar_day(request, year, month, day):
 
     month_name = _(calendar.month_name[month])
 
-    all_events = (Event.objects.filter(Q(initial_date__lte=current_day) & Q(end_date__gte=current_day))
-                  .select_related("area_responsible")
-                  .order_by("initial_date", "end_date"))
+    all_events = (
+        Event.objects.filter(
+            Q(initial_date__lte=current_day) & Q(end_date__gte=current_day)
+        )
+        .select_related("area_responsible")
+        .order_by("initial_date", "end_date")
+    )
 
-    context = { "year": year, "month": month, "day": day, "month_name": month_name, "activities": all_events, "title": _("Calendar %(day)s/%(month_name)s/%(year)s") % {"day": day, "month_name": month_name, "year": year}}
+    context = {
+        "year": year,
+        "month": month,
+        "day": day,
+        "month_name": month_name,
+        "activities": all_events,
+        "title": _("Calendar %(day)s/%(month_name)s/%(year)s")
+        % {"day": day, "month_name": month_name, "year": year},
+    }
     return render(request, "agenda/calendar_day.html", context)
 
 
@@ -243,13 +272,16 @@ def detail_event(request, event_id):
 @transaction.atomic
 def delete_event(request, event_id):
     event = Event.objects.get(pk=event_id)
-    context = {"event": event, "title": _("Delete event %(event_id)s") % {"event_id": event_id}}
+    context = {
+        "event": event,
+        "title": _("Delete event %(event_id)s") % {"event_id": event_id},
+    }
 
     if request.method == "POST":
         event.delete()
-        return redirect(reverse('agenda:list_events'))
+        return redirect(reverse("agenda:list_events"))
 
-    return render(request, 'agenda/delete_event.html', context)
+    return render(request, "agenda/delete_event.html", context)
 
 
 @login_required
@@ -276,7 +308,11 @@ def update_event(request, event_id):
     else:
         event_form = EventForm(instance=event)
 
-    context = {"event_form": event_form, "event_id": event_id, "title": _("Update event %(event_id)s") % {"event_id": event_id}}
+    context = {
+        "event_form": event_form,
+        "event_id": event_id,
+        "title": _("Update event %(event_id)s") % {"event_id": event_id},
+    }
     return render(request, "agenda/update_event.html", context)
 
 
@@ -294,10 +330,11 @@ def list_of_reports_of_area(code="", user=None):
             if not user:
                 return False
 
-            current_position = (user.profile.position_history
-                                .filter(end_date__isnull=True)
-                                .order_by("-start_date")
-                                .first())
+            current_position = (
+                user.profile.position_history.filter(end_date__isnull=True)
+                .order_by("-start_date")
+                .first()
+            )
             if not current_position:
                 return False
 
@@ -306,13 +343,13 @@ def list_of_reports_of_area(code="", user=None):
         return False
 
     manager = (
-        UserProfile.objects
-        .filter(
+        UserProfile.objects.filter(
             user__is_active=True,
             user__email__isnull=False,
             position_history__position__area_associated=area,
             position_history__position__type__name="Manager",
-            position_history__end_date__isnull=True)
+            position_history__end_date__isnull=True,
+        )
         .order_by("-position_history__start_date")
         .select_related("user")
         .distinct()
@@ -331,7 +368,7 @@ def list_of_reports_of_area(code="", user=None):
             get_activities_soon_to_be_finished(area, delta=days_until_dec_31)
         ),
         "manager": manager,
-        "area": area
+        "area": area,
     }
 
     return context
@@ -359,10 +396,11 @@ def show_list_of_reports_of_specific_area(request, code=""):
 def get_activities_soon_to_be_finished(area, delta=14):
     today = datetime.date.today()
     interval = min(today + timedelta(delta), datetime.date(today.year, 12, 31))
-    query = Q(end_date__lte=interval, # Before the interval
-              end_date__gte=today, # After today
-              area_responsible=area, # Under a specific manager responsibility
-              )
+    query = Q(
+        end_date__lte=interval,  # Before the interval
+        end_date__gte=today,  # After today
+        area_responsible=area,  # Under a specific manager responsibility
+    )
     events = Event.objects.filter(query)
     return events
 
@@ -370,10 +408,11 @@ def get_activities_soon_to_be_finished(area, delta=14):
 def get_activities_already_finished(area, delta=28):
     today = datetime.date.today()
     interval = max(today - timedelta(delta), datetime.date(today.year, 1, 1))
-    query = Q(end_date__lte=today - timedelta(1), # Before today
-              end_date__gte=interval, # After the interval
-              area_responsible=area, # Under a specific manager responsibility
-              )
+    query = Q(
+        end_date__lte=today - timedelta(1),  # Before today
+        end_date__gte=interval,  # After the interval
+        area_responsible=area,  # Under a specific manager responsibility
+    )
     events = Event.objects.filter(query).distinct()
     return events
 
@@ -381,9 +420,10 @@ def get_activities_already_finished(area, delta=28):
 def get_activities_about_to_kickoff(area, delta=14):
     today = datetime.date.today()
     interval = min(today + timedelta(delta), datetime.date(today.year, 12, 31))
-    query = Q(initial_date__gte=today, # Beginning after today
-              initial_date__lte=interval, # Beginning before interval
-              area_responsible=area # Under a specific manager responsibility
-              )
+    query = Q(
+        initial_date__gte=today,  # Beginning after today
+        initial_date__lte=interval,  # Beginning before interval
+        area_responsible=area,  # Under a specific manager responsibility
+    )
     events = Event.objects.filter(query)
     return events

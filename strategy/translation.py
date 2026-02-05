@@ -1,5 +1,7 @@
-from modeltranslation.translator import register, TranslationOptions
-from .models import StrategicAxis, Direction, StrategicLearningQuestion, EvaluationObjective, LearningArea
+from modeltranslation.translator import TranslationOptions, register
+
+from .models import (Direction, EvaluationObjective, LearningArea,
+                     StrategicAxis, StrategicLearningQuestion)
 
 
 @register(StrategicAxis)

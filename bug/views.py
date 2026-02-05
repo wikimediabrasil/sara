@@ -1,14 +1,15 @@
 import datetime
 import zipfile
-import pandas as pd
-
 from io import BytesIO
-from django.contrib.auth.decorators import permission_required
-from django.shortcuts import render, redirect, reverse, get_object_or_404, HttpResponse
-from django.utils.translation import gettext as _
-from django.contrib import messages
 
-from .forms import BugForm, ObservationForm, BugUpdateForm
+import pandas as pd
+from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
+from django.shortcuts import (HttpResponse, get_object_or_404, redirect,
+                              render, reverse)
+from django.utils.translation import gettext as _
+
+from .forms import BugForm, BugUpdateForm, ObservationForm
 from .models import Bug, Observation
 
 
@@ -64,20 +65,22 @@ def export_bugs(request):
     """
     buffer = BytesIO()
     zip_file = zipfile.ZipFile(buffer, mode="w")
-    pos_fix = " - {}".format(datetime.datetime.today().strftime('%Y-%m-%d %H-%M-%S'))
+    pos_fix = " - {}".format(datetime.datetime.today().strftime("%Y-%m-%d %H-%M-%S"))
     zip_name = _("SARA - Bugs")
 
     bugs = Bug.objects.all()
-    header = [_("ID"),
-              _("Title"),
-              _("Description"),
-              _("Type"),
-              _("Status"),
-              _("Date of report"),
-              _("Reporter"),
-              _("Update date"),
-              _("Observation"),
-              _("Answer date")]
+    header = [
+        _("ID"),
+        _("Title"),
+        _("Description"),
+        _("Type"),
+        _("Status"),
+        _("Date of report"),
+        _("Reporter"),
+        _("Update date"),
+        _("Observation"),
+        _("Answer date"),
+    ]
     rows = []
 
     for bug in bugs:
@@ -89,28 +92,36 @@ def export_bugs(request):
         observation = bug_observation.observation if bug_observation else ""
         answer_date = bug_observation.answer_date if bug_observation else ""
 
-        rows.append([bug.pk,
-                     bug.title,
-                     bug.description,
-                     bug.bug_type,
-                     bug.status,
-                     bug.report_date,
-                     bug.reporter_id,
-                     bug.update_date,
-                     observation,
-                     answer_date])
+        rows.append(
+            [
+                bug.pk,
+                bug.title,
+                bug.description,
+                bug.bug_type,
+                bug.status,
+                bug.report_date,
+                bug.reporter_id,
+                bug.update_date,
+                observation,
+                answer_date,
+            ]
+        )
 
     df = pd.DataFrame(rows, columns=header).drop_duplicates()
-    df = df.astype(dtype={_("ID"): int,
-                          _("Title"): str,
-                          _("Description"): str,
-                          _("Type"): int,
-                          _("Status"): int,
-                          _("Date of report"): "datetime64[ns]",
-                          _("Reporter"): int,
-                          _("Update date"): "datetime64[ns]",
-                          _("Observation"): str,
-                          _("Answer date"): "datetime64[ns]"})
+    df = df.astype(
+        dtype={
+            _("ID"): int,
+            _("Title"): str,
+            _("Description"): str,
+            _("Type"): int,
+            _("Status"): int,
+            _("Date of report"): "datetime64[ns]",
+            _("Reporter"): int,
+            _("Update date"): "datetime64[ns]",
+            _("Observation"): str,
+            _("Answer date"): "datetime64[ns]",
+        }
+    )
     df[_("Date of report")] = df[_("Date of report")].dt.tz_localize(None)
     df[_("Update date")] = df[_("Update date")].dt.tz_localize(None)
     df[_("Answer date")] = df[_("Answer date")].dt.tz_localize(None)
@@ -127,8 +138,10 @@ def export_bugs(request):
 
     zip_file.close()
     response = HttpResponse(buffer.getvalue())
-    response['Content-Type'] = 'application/x-zip-compressed'
-    response['Content-Disposition'] = 'attachment; filename=' + zip_name + pos_fix + '.zip'
+    response["Content-Type"] = "application/x-zip-compressed"
+    response["Content-Disposition"] = (
+        "attachment; filename=" + zip_name + pos_fix + ".zip"
+    )
 
     return response
 
@@ -167,7 +180,9 @@ def update_bug(request, bug_id):
             return redirect(reverse("bug:detail_bug", kwargs={"bug_id": bug_id}))
         else:
             messages.error(request, _("Something went wrong!"))
-    return render(request, "bug/update_bug.html", {"bug_form": bug_form, "bug_id": bug_id})
+    return render(
+        request, "bug/update_bug.html", {"bug_form": bug_form, "bug_id": bug_id}
+    )
 
 
 @permission_required("bug.add_observation")
@@ -194,7 +209,9 @@ def add_observation(request, bug_id):
             return redirect(reverse("bug:edit_obs", kwargs={"bug_id": bug_id}))
         else:
             obs_form = ObservationForm()
-    return render(request, "bug/add_observation.html", {"obs_form": obs_form, "bug_id": bug_id})
+    return render(
+        request, "bug/add_observation.html", {"obs_form": obs_form, "bug_id": bug_id}
+    )
 
 
 @permission_required("bug.change_observation")
@@ -221,4 +238,6 @@ def edit_observation(request, bug_id):
             messages.error(request, _("Something went wrong!"))
     else:
         obs_form = ObservationForm(instance=obs)
-    return render(request, "bug/update_observation.html", {"obs_form": obs_form, "bug_id": bug_id})
+    return render(
+        request, "bug/update_observation.html", {"obs_form": obs_form, "bug_id": bug_id}
+    )

@@ -11,8 +11,11 @@ Design goals:
 - Prevent accidental edits to immutable fields.
 - Keep forms thin; business rules live in models.
 """
+
 from django import forms
+
 from .models import Bug, Observation
+
 
 class BugForm(forms.ModelForm):
     """

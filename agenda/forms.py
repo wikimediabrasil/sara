@@ -1,4 +1,5 @@
 from django import forms
+
 from agenda.models import Event
 
 
@@ -24,7 +25,13 @@ class EventForm(forms.ModelForm):
         fields = ("name", "initial_date", "end_date", "area_responsible")
         widgets = {
             "name": forms.TextInput(attrs={"required": True}),
-            "initial_date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "required": True}),
-            "end_date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "required": True}),
-            "area_responsible": forms.Select(attrs={"required": True, "class":"select-with-text"})
+            "initial_date": forms.DateInput(
+                format="%Y-%m-%d", attrs={"type": "date", "required": True}
+            ),
+            "end_date": forms.DateInput(
+                format="%Y-%m-%d", attrs={"type": "date", "required": True}
+            ),
+            "area_responsible": forms.Select(
+                attrs={"required": True, "class": "select-with-text"}
+            ),
         }

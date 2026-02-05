@@ -1,7 +1,8 @@
 from django.contrib import admin
-from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
-from users.models import UserProfile, TeamArea, Position
+from django.contrib.auth.models import User
+
+from users.models import Position, TeamArea, UserProfile
 
 """
 Custom Django admin configuration for User.
@@ -13,6 +14,7 @@ Custom Django admin configuration for User.
 
 class UserProfileInline(admin.StackedInline):
     """Inline profile shown when editing an existing User."""
+
     model = UserProfile
     can_delete = False
 

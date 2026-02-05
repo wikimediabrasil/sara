@@ -7,28 +7,79 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='userprofile',
-            name='position',
+            model_name="userprofile",
+            name="position",
         ),
         migrations.CreateModel(
-            name='UserPosition',
+            name="UserPosition",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('start_date', models.DateField(blank=True, help_text="The start date for this user's position", null=True, verbose_name='Start date')),
-                ('end_date', models.DateField(blank=True, help_text="The end date for this user's position. Leave empty if this is the current position", null=True, verbose_name='End date')),
-                ('position', models.ForeignKey(help_text='The position this user had during that period', on_delete=django.db.models.deletion.PROTECT, related_name='user_assignments', to='users.position', verbose_name='Position')),
-                ('user_profile', models.ForeignKey(help_text='The user which this position belongs to during that period', on_delete=django.db.models.deletion.CASCADE, related_name='position_history', to='users.userprofile', verbose_name='User profile')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "start_date",
+                    models.DateField(
+                        blank=True,
+                        help_text="The start date for this user's position",
+                        null=True,
+                        verbose_name="Start date",
+                    ),
+                ),
+                (
+                    "end_date",
+                    models.DateField(
+                        blank=True,
+                        help_text="The end date for this user's position. Leave empty if this is the current position",
+                        null=True,
+                        verbose_name="End date",
+                    ),
+                ),
+                (
+                    "position",
+                    models.ForeignKey(
+                        help_text="The position this user had during that period",
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="user_assignments",
+                        to="users.position",
+                        verbose_name="Position",
+                    ),
+                ),
+                (
+                    "user_profile",
+                    models.ForeignKey(
+                        help_text="The user which this position belongs to during that period",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="position_history",
+                        to="users.userprofile",
+                        verbose_name="User profile",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'User position',
-                'verbose_name_plural': 'User positions',
-                'ordering': ['-start_date', 'end_date'],
-                'constraints': [models.CheckConstraint(condition=models.Q(('end_date__isnull', True), ('end_date__gte', models.F('start_date')), _connector='OR'), name='end_date_after_start_date')],
+                "verbose_name": "User position",
+                "verbose_name_plural": "User positions",
+                "ordering": ["-start_date", "end_date"],
+                "constraints": [
+                    models.CheckConstraint(
+                        condition=models.Q(
+                            ("end_date__isnull", True),
+                            ("end_date__gte", models.F("start_date")),
+                            _connector="OR",
+                        ),
+                        name="end_date_after_start_date",
+                    )
+                ],
             },
         ),
     ]

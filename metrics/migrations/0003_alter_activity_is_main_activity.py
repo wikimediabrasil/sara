@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('metrics', '0002_initial'),
+        ("metrics", "0002_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='activity',
-            name='is_main_activity',
-            field=models.BooleanField(default=False, help_text='Is this the main activity?', verbose_name='Is main activity?'),
+            model_name="activity",
+            name="is_main_activity",
+            field=models.BooleanField(
+                default=False,
+                help_text="Is this the main activity?",
+                verbose_name="Is main activity?",
+            ),
         ),
     ]

@@ -7,37 +7,124 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Bug',
+            name="Bug",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(help_text='Short, descriptive summary of the issue.', max_length=140, verbose_name='Title')),
-                ('description', models.TextField(help_text='Detailed explanation of the problem or request.', max_length=500, verbose_name='Description')),
-                ('bug_type', models.CharField(choices=[('1', 'Error'), ('2', 'Improvement request'), ('3', 'New feature request'), ('4', 'Question or clarification')], default='1', help_text='Category of the reported issue.', max_length=1, verbose_name='Type')),
-                ('status', models.CharField(choices=[('0', 'To do'), ('1', 'In evaluation'), ('2', 'In progress'), ('3', 'Testing'), ('4', 'Done'), ('5', 'Canceled')], default='1', help_text='Status of the reported issue.', max_length=1, verbose_name='Status')),
-                ('report_date', models.DateField(auto_now_add=True, help_text='Timestamp when the bug was created.', verbose_name='Date of report')),
-                ('update_date', models.DateField(auto_now=True, help_text='Date when the bug was updated.', verbose_name='Update date')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "title",
+                    models.CharField(
+                        help_text="Short, descriptive summary of the issue.",
+                        max_length=140,
+                        verbose_name="Title",
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        help_text="Detailed explanation of the problem or request.",
+                        max_length=500,
+                        verbose_name="Description",
+                    ),
+                ),
+                (
+                    "bug_type",
+                    models.CharField(
+                        choices=[
+                            ("1", "Error"),
+                            ("2", "Improvement request"),
+                            ("3", "New feature request"),
+                            ("4", "Question or clarification"),
+                        ],
+                        default="1",
+                        help_text="Category of the reported issue.",
+                        max_length=1,
+                        verbose_name="Type",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("0", "To do"),
+                            ("1", "In evaluation"),
+                            ("2", "In progress"),
+                            ("3", "Testing"),
+                            ("4", "Done"),
+                            ("5", "Canceled"),
+                        ],
+                        default="1",
+                        help_text="Status of the reported issue.",
+                        max_length=1,
+                        verbose_name="Status",
+                    ),
+                ),
+                (
+                    "report_date",
+                    models.DateField(
+                        auto_now_add=True,
+                        help_text="Timestamp when the bug was created.",
+                        verbose_name="Date of report",
+                    ),
+                ),
+                (
+                    "update_date",
+                    models.DateField(
+                        auto_now=True,
+                        help_text="Date when the bug was updated.",
+                        verbose_name="Update date",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Bug',
-                'verbose_name_plural': 'Bugs',
-                'ordering': ['-report_date', 'status'],
+                "verbose_name": "Bug",
+                "verbose_name_plural": "Bugs",
+                "ordering": ["-report_date", "status"],
             },
         ),
         migrations.CreateModel(
-            name='Observation',
+            name="Observation",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('observation', models.TextField(help_text='Resolution notes of final response', max_length=500, verbose_name='Observation')),
-                ('answer_date', models.DateTimeField(auto_now_add=True, help_text='Date of answer of the observation', verbose_name='Date of answer')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "observation",
+                    models.TextField(
+                        help_text="Resolution notes of final response",
+                        max_length=500,
+                        verbose_name="Observation",
+                    ),
+                ),
+                (
+                    "answer_date",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="Date of answer of the observation",
+                        verbose_name="Date of answer",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Observation',
-                'verbose_name_plural': 'Observations',
+                "verbose_name": "Observation",
+                "verbose_name_plural": "Observations",
             },
         ),
     ]

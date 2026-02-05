@@ -195,7 +195,7 @@ INVERTED_ARTICLES = {
     r"^Google:(.*)": "https://www.google.com/search?q=$2",
     r"^JSTOR:(.*)": "https://www.jstor.org/journals/$2",
     r"^PMID:(.*)": "https://www.ncbi.nlm.nih.gov/pubmed/$2?dopt=Abstract",
-    r"^ISSN:(.*)": "https://www.worldcat.org/issn/21"
+    r"^ISSN:(.*)": "https://www.worldcat.org/issn/21",
 }
 
 INVERTED_FRIENDLY_PROJECTS = {
@@ -266,9 +266,25 @@ INVERTED_TOOLFORGE = {
     r"^xtools:(.*)": "https://xtools.wmcloud.org/$2",
 }
 
-PATTERNS = AFFILIATES | ARTICLES | FRIENDLY_PROJECTS | LANGUAGE_BASED_PROJECTS | MAIN_PROJECTS | OTHER_WIKIMEDIA_PROJECTS | TOOLFORGE
+PATTERNS = (
+    AFFILIATES
+    | ARTICLES
+    | FRIENDLY_PROJECTS
+    | LANGUAGE_BASED_PROJECTS
+    | MAIN_PROJECTS
+    | OTHER_WIKIMEDIA_PROJECTS
+    | TOOLFORGE
+)
 
-INVERTED_PATTERNS = INVERTED_AFFILIATES | INVERTED_ARTICLES | INVERTED_FRIENDLY_PROJECTS | INVERTED_LANGUAGE_BASED_PROJECTS | INVERTED_MAIN_PROJECTS | INVERTED_OTHER_WIKIMEDIA_PROJECTS | INVERTED_TOOLFORGE
+INVERTED_PATTERNS = (
+    INVERTED_AFFILIATES
+    | INVERTED_ARTICLES
+    | INVERTED_FRIENDLY_PROJECTS
+    | INVERTED_LANGUAGE_BASED_PROJECTS
+    | INVERTED_MAIN_PROJECTS
+    | INVERTED_OTHER_WIKIMEDIA_PROJECTS
+    | INVERTED_TOOLFORGE
+)
 
 
 def process_all_references(input_string):
@@ -277,7 +293,11 @@ def process_all_references(input_string):
     All the references are in the format <ref name="sara-123">XYZ</ref>.
     """
     updated_references = []
-    re.sub(r'<ref name="sara-\d+">.*?</ref>', lambda match: unwikify_link(match, updated_references), input_string)
+    re.sub(
+        r'<ref name="sara-\d+">.*?</ref>',
+        lambda match: unwikify_link(match, updated_references),
+        input_string,
+    )
     return updated_references
 
 
@@ -294,14 +314,21 @@ def unwikify_link(match, updated_references):
     if match_ref:
         ref_id = match_ref.group(1)
         ref_content = match_ref.group(2)
-        updated_content = replace_with_links(ref_content) # Process the ref tag inner part
+        updated_content = replace_with_links(
+            ref_content
+        )  # Process the ref tag inner part
         if "bulleted list" in updated_content:
             bl_match = re.match(r"(.*)\{\{bulleted list\|(.*)\}\}(.*)", updated_content)
             if bl_match:
                 bullet_items = bl_match.group(2).split("|")
                 # Make the concatenation of the bulleted list as an HTML element
-                updated_content = bl_match.group(1) + "<ul>\n" + "\n".join(
-                    f"<li>{item}</li>" for item in bullet_items) + "\n</ul>" + bl_match.group(3)
+                updated_content = (
+                    bl_match.group(1)
+                    + "<ul>\n"
+                    + "\n".join(f"<li>{item}</li>" for item in bullet_items)
+                    + "\n</ul>"
+                    + bl_match.group(3)
+                )
         updated_link = f'<li id="sara-{ref_id}">{ref_id}. {updated_content}</li>'
 
         updated_references.append(updated_link)
@@ -313,29 +340,43 @@ def replace_with_links(input_string):
     def replace(match):
         substring = match.group(0)
 
-        if substring.startswith('[[') and substring.endswith(']]'):
+        if substring.startswith("[[") and substring.endswith("]]"):
             content = substring[2:-2]
             meta = False
             if "|" in content:
                 link, friendly = content.split("|", 1)
                 if ":" not in link:
                     meta = True
-                elif any(link.startswith(item) for item in ["Media:", "Special:", "User:", "Project:", "File:", "MediaWiki:", "Template:", "Help:", "Category:"]):
+                elif any(
+                    link.startswith(item)
+                    for item in [
+                        "Media:",
+                        "Special:",
+                        "User:",
+                        "Project:",
+                        "File:",
+                        "MediaWiki:",
+                        "Template:",
+                        "Help:",
+                        "Category:",
+                    ]
+                ):
                     meta = True
             else:
                 link = friendly = content
                 meta = True
 
-            link = ur.quote(dewikify_url(link.replace(" ","_"), meta), safe=":/")
+            link = ur.quote(dewikify_url(link.replace(" ", "_"), meta), safe=":/")
             return f'<a target="_blank" href="{link}">{friendly}</a>'
-        elif substring.startswith('[') and substring.endswith(']'):
+        elif substring.startswith("[") and substring.endswith("]"):
             content = substring[1:-1]
             if " " in content:
                 link, friendly = content.split(" ", 1)
             else:
                 link = friendly = content
             return f'<a target="_blank" href="{link}">{friendly}</a>'
-    result = re.sub(r'(\[\[.*?\]\]|\[.*?\])', replace, input_string)
+
+    result = re.sub(r"(\[\[.*?\]\]|\[.*?\])", replace, input_string)
     return result
 
 
@@ -398,8 +439,11 @@ def wikify_link(link):
             clean_page = page.replace("_", " ")
             clean_page = clean_page[:-1] if clean_page.endswith("/") else clean_page
 
-            return f"[[{prefix}{project}/{page}|{clean_page}]]" if project \
+            return (
+                f"[[{prefix}{project}/{page}|{clean_page}]]"
+                if project
                 else f"[[{prefix}{lang}:{page}|{clean_page}]]"
+            )
 
     return f"[{link}]" if link != "-" else ""
 
@@ -412,6 +456,6 @@ def build_wiki_ref(links, report_id):
 
     ref_content = ", ".join(formatted_links)
     if ref_content:
-        return f"<ref name=\"sara-{report_id}\">{ref_content}</ref>"
+        return f'<ref name="sara-{report_id}">{ref_content}</ref>'
     else:
         return ""

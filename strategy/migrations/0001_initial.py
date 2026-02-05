@@ -8,84 +8,326 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='LearningArea',
+            name="LearningArea",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(help_text='Human-readable name of the learning area.', max_length=420, verbose_name='Text')),
-                ('text_en', models.CharField(help_text='Human-readable name of the learning area.', max_length=420, null=True, verbose_name='Text')),
-                ('text_pt_br', models.CharField(help_text='Human-readable name of the learning area.', max_length=420, null=True, verbose_name='Text')),
-                ('text_es', models.CharField(help_text='Human-readable name of the learning area.', max_length=420, null=True, verbose_name='Text')),
-                ('active', models.BooleanField(default=True, help_text='Whether this learning area is from the active Strategy.', verbose_name='Active')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "text",
+                    models.CharField(
+                        help_text="Human-readable name of the learning area.",
+                        max_length=420,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_en",
+                    models.CharField(
+                        help_text="Human-readable name of the learning area.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_pt_br",
+                    models.CharField(
+                        help_text="Human-readable name of the learning area.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_es",
+                    models.CharField(
+                        help_text="Human-readable name of the learning area.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "active",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Whether this learning area is from the active Strategy.",
+                        verbose_name="Active",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Learning area',
-                'verbose_name_plural': 'Learning areas',
+                "verbose_name": "Learning area",
+                "verbose_name_plural": "Learning areas",
             },
         ),
         migrations.CreateModel(
-            name='StrategicAxis',
+            name="StrategicAxis",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(help_text='Human-readable name of the Strategic axis.', max_length=420, verbose_name='Text')),
-                ('text_en', models.CharField(help_text='Human-readable name of the Strategic axis.', max_length=420, null=True, verbose_name='Text')),
-                ('text_pt_br', models.CharField(help_text='Human-readable name of the Strategic axis.', max_length=420, null=True, verbose_name='Text')),
-                ('text_es', models.CharField(help_text='Human-readable name of the Strategic axis.', max_length=420, null=True, verbose_name='Text')),
-                ('intentionality', models.CharField(blank=True, help_text='Explanation of the intentionality behind this axis.', max_length=420, null=True, verbose_name='Intentionality')),
-                ('active', models.BooleanField(default=True, help_text='Whether this axis is from the active Strategy.', verbose_name='Active')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "text",
+                    models.CharField(
+                        help_text="Human-readable name of the Strategic axis.",
+                        max_length=420,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_en",
+                    models.CharField(
+                        help_text="Human-readable name of the Strategic axis.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_pt_br",
+                    models.CharField(
+                        help_text="Human-readable name of the Strategic axis.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_es",
+                    models.CharField(
+                        help_text="Human-readable name of the Strategic axis.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "intentionality",
+                    models.CharField(
+                        blank=True,
+                        help_text="Explanation of the intentionality behind this axis.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Intentionality",
+                    ),
+                ),
+                (
+                    "active",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Whether this axis is from the active Strategy.",
+                        verbose_name="Active",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Strategic axis',
-                'verbose_name_plural': 'Strategic axes',
+                "verbose_name": "Strategic axis",
+                "verbose_name_plural": "Strategic axes",
             },
         ),
         migrations.CreateModel(
-            name='EvaluationObjective',
+            name="EvaluationObjective",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(help_text='Human-readable name of the evaluation objective.', max_length=420, verbose_name='Text')),
-                ('text_en', models.CharField(help_text='Human-readable name of the evaluation objective.', max_length=420, null=True, verbose_name='Text')),
-                ('text_pt_br', models.CharField(help_text='Human-readable name of the evaluation objective.', max_length=420, null=True, verbose_name='Text')),
-                ('text_es', models.CharField(help_text='Human-readable name of the evaluation objective.', max_length=420, null=True, verbose_name='Text')),
-                ('learning_area', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='evaluation_objective', to='strategy.learningarea', verbose_name='Learning area')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "text",
+                    models.CharField(
+                        help_text="Human-readable name of the evaluation objective.",
+                        max_length=420,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_en",
+                    models.CharField(
+                        help_text="Human-readable name of the evaluation objective.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_pt_br",
+                    models.CharField(
+                        help_text="Human-readable name of the evaluation objective.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_es",
+                    models.CharField(
+                        help_text="Human-readable name of the evaluation objective.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "learning_area",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="evaluation_objective",
+                        to="strategy.learningarea",
+                        verbose_name="Learning area",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Evaluation objective',
-                'verbose_name_plural': 'Evaluation objectives',
+                "verbose_name": "Evaluation objective",
+                "verbose_name_plural": "Evaluation objectives",
             },
         ),
         migrations.CreateModel(
-            name='Direction',
+            name="Direction",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(help_text='Human-readable name of the direction.', max_length=420, verbose_name='Text')),
-                ('text_en', models.CharField(help_text='Human-readable name of the direction.', max_length=420, null=True, verbose_name='Text')),
-                ('text_pt_br', models.CharField(help_text='Human-readable name of the direction.', max_length=420, null=True, verbose_name='Text')),
-                ('text_es', models.CharField(help_text='Human-readable name of the direction.', max_length=420, null=True, verbose_name='Text')),
-                ('strategic_axis', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='directions', to='strategy.strategicaxis', verbose_name='Strategic axis')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "text",
+                    models.CharField(
+                        help_text="Human-readable name of the direction.",
+                        max_length=420,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_en",
+                    models.CharField(
+                        help_text="Human-readable name of the direction.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_pt_br",
+                    models.CharField(
+                        help_text="Human-readable name of the direction.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_es",
+                    models.CharField(
+                        help_text="Human-readable name of the direction.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "strategic_axis",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="directions",
+                        to="strategy.strategicaxis",
+                        verbose_name="Strategic axis",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Direction',
-                'verbose_name_plural': 'Directions',
+                "verbose_name": "Direction",
+                "verbose_name_plural": "Directions",
             },
         ),
         migrations.CreateModel(
-            name='StrategicLearningQuestion',
+            name="StrategicLearningQuestion",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(help_text='Human-readable name of the learning question.', max_length=420, verbose_name='Text')),
-                ('text_en', models.CharField(help_text='Human-readable name of the learning question.', max_length=420, null=True, verbose_name='Text')),
-                ('text_pt_br', models.CharField(help_text='Human-readable name of the learning question.', max_length=420, null=True, verbose_name='Text')),
-                ('text_es', models.CharField(help_text='Human-readable name of the learning question.', max_length=420, null=True, verbose_name='Text')),
-                ('learning_area', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='strategic_question', to='strategy.learningarea', verbose_name='Learning area')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "text",
+                    models.CharField(
+                        help_text="Human-readable name of the learning question.",
+                        max_length=420,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_en",
+                    models.CharField(
+                        help_text="Human-readable name of the learning question.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_pt_br",
+                    models.CharField(
+                        help_text="Human-readable name of the learning question.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "text_es",
+                    models.CharField(
+                        help_text="Human-readable name of the learning question.",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Text",
+                    ),
+                ),
+                (
+                    "learning_area",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="strategic_question",
+                        to="strategy.learningarea",
+                        verbose_name="Learning area",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Strategic learning question',
-                'verbose_name_plural': 'Strategic learning questions',
+                "verbose_name": "Strategic learning question",
+                "verbose_name_plural": "Strategic learning questions",
             },
         ),
     ]

@@ -1,25 +1,32 @@
 import re
-from unittest.mock import patch, MagicMock
-from datetime import datetime, timedelta, date
-from django.test import TestCase, RequestFactory, override_settings
+from datetime import date, datetime, timedelta
+from unittest.mock import MagicMock, patch
+
 from django.conf import settings
-from django.db.utils import IntegrityError
-from django.core.exceptions import ValidationError
-from django.urls import reverse
-from django.db.models import Q
 from django.contrib.auth.models import Permission
-from django.utils.translation import activate, gettext_lazy as _
+from django.core.exceptions import ValidationError
+from django.db.models import Q
+from django.db.utils import IntegrityError
+from django.test import RequestFactory, TestCase, override_settings
+from django.urls import reverse
+from django.utils.translation import activate
+from django.utils.translation import gettext_lazy as _
 
-from report.models import Report, Editor, OperationReport, Direction, StrategicLearningQuestion
-from users.models import User, UserProfile, TeamArea
-from strategy.models import StrategicAxis, LearningArea
-from metrics.models import Area, Metric, Activity, Project
-
-from metrics.views import get_metrics_and_aggregate_per_project, build_wiki_ref_for_reports, \
-    show_metrics_for_specific_project, get_results_for_timespan, get_timespan_array
-from metrics.templatetags.metricstags import categorize, perc, bool_yesno, is_yesno, bool_yesnopartial
+from metrics.link_utils import (build_wiki_ref, dewikify_url,
+                                process_all_references, replace_with_links,
+                                unwikify_link)
+from metrics.models import Activity, Area, Metric, Project
+from metrics.templatetags.metricstags import (bool_yesno, bool_yesnopartial,
+                                              categorize, is_yesno, perc)
 from metrics.utils import render_to_pdf
-from metrics.link_utils import process_all_references, unwikify_link, replace_with_links, dewikify_url, build_wiki_ref
+from metrics.views import (build_wiki_ref_for_reports,
+                           get_metrics_and_aggregate_per_project,
+                           get_results_for_timespan, get_timespan_array,
+                           show_metrics_for_specific_project)
+from report.models import (Direction, Editor, OperationReport, Report,
+                           StrategicLearningQuestion)
+from strategy.models import LearningArea, StrategicAxis
+from users.models import TeamArea, User, UserProfile
 
 
 class AreaModelTests(TestCase):
@@ -28,7 +35,7 @@ class AreaModelTests(TestCase):
         self.area = Area.objects.create(text="Area")
 
     def test_area_str_method_returns_area_text(self):
-        self.assertEqual(str(self.area), 'Area')
+        self.assertEqual(str(self.area), "Area")
 
     def test_area_text_cannot_be_empty(self):
         with self.assertRaises(ValidationError):
@@ -39,7 +46,9 @@ class AreaModelTests(TestCase):
 class ActivityModelTests(TestCase):
     def setUp(self):
         self.area = Area.objects.create(text="Area")
-        self.activity = Activity.objects.create(text="Activity", code="A1", area=self.area)
+        self.activity = Activity.objects.create(
+            text="Activity", code="A1", area=self.area
+        )
 
     def test_activity_str_returns_text(self):
         self.assertEqual(str(self.activity), "Activity")
@@ -100,10 +109,14 @@ class MetricViewsTests(TestCase):
     def setUp(self):
         self.username = "testuser"
         self.password = "testpass"
-        self.user = User.objects.create_user(username=self.username, password=self.password)
+        self.user = User.objects.create_user(
+            username=self.username, password=self.password
+        )
         self.user_profile = UserProfile.objects.get(user=self.user)
         self.view_metrics_permission = Permission.objects.get(codename="view_metric")
-        self.change_metrics_permission = Permission.objects.get(codename="change_metric")
+        self.change_metrics_permission = Permission.objects.get(
+            codename="change_metric"
+        )
         self.user.user_permissions.add(self.view_metrics_permission)
         self.user.user_permissions.add(self.change_metrics_permission)
 
@@ -125,7 +138,10 @@ class MetricViewsTests(TestCase):
         url = reverse("metrics:show_activities")
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, "https://meta.wikimedia.org/wiki/Wikimedia_Brasil/Plan_of_Activities")
+        self.assertEqual(
+            response.url,
+            "https://meta.wikimedia.org/wiki/Wikimedia_Brasil/Plan_of_Activities",
+        )
 
     def test_show_metrics_per_project(self):
         self.client.login(username=self.username, password=self.password)
@@ -135,7 +151,9 @@ class MetricViewsTests(TestCase):
         response = self.client.get(url)
         self.assertIn("dataset", str(response.context))
 
-    def test_show_detailed_metrics_per_project_fails_if_user_doesnt_have_permission(self):
+    def test_show_detailed_metrics_per_project_fails_if_user_doesnt_have_permission(
+        self,
+    ):
         self.client.login(username=self.username, password=self.password)
         Project.objects.create(text="Project", current_poa=True)
         url = reverse("metrics:detailed_per_project")
@@ -164,18 +182,32 @@ class MetricViewsTests(TestCase):
         area.project.add(project)
         area.save()
         activity = Activity.objects.create(text="Activity", area=area)
-        metric_1 = Metric.objects.create(text="Metric 1", text_en="Metric 1", boolean_type=True, activity=activity)
+        metric_1 = Metric.objects.create(
+            text="Metric 1", text_en="Metric 1", boolean_type=True, activity=activity
+        )
         metric_1.project.add(project)
         metric_1.save()
-        metric_2 = Metric.objects.create(text="Metric 2", text_en="Metric 2", is_operation=True, activity=activity)
+        metric_2 = Metric.objects.create(
+            text="Metric 2", text_en="Metric 2", is_operation=True, activity=activity
+        )
         metric_2.project.add(project)
         metric_2.save()
 
         url = reverse("metrics:per_project")
         response = self.client.get(url)
         self.assertIn("poa_dataset", str(response.context))
-        self.assertEqual(response.context["poa_dataset"][1]["project_metrics"][0]["activity_metrics"][1]["title"], str(metric_1))
-        self.assertEqual(response.context["poa_dataset"][1]["project_metrics"][1]["activity_metrics"][2]["title"], str(metric_2))
+        self.assertEqual(
+            response.context["poa_dataset"][1]["project_metrics"][0][
+                "activity_metrics"
+            ][1]["title"],
+            str(metric_1),
+        )
+        self.assertEqual(
+            response.context["poa_dataset"][1]["project_metrics"][1][
+                "activity_metrics"
+            ][2]["title"],
+            str(metric_2),
+        )
 
     def test_update_metrics(self):
         self.client.login(username=self.username, password=self.password)
@@ -183,14 +215,20 @@ class MetricViewsTests(TestCase):
 
         area = Area.objects.create(text="Area")
         activity = Activity.objects.create(text="Activity", area=area)
-        project_1 = Project.objects.create(text="Wikimedia Community Fund", main_funding=True)
+        project_1 = Project.objects.create(
+            text="Wikimedia Community Fund", main_funding=True
+        )
 
-        metric = Metric.objects.create(text="Metric 1", activity=activity, number_of_editors=10)
+        metric = Metric.objects.create(
+            text="Metric 1", activity=activity, number_of_editors=10
+        )
         metric.project.add(project_1)
 
         team_area = TeamArea.objects.create(text="Area")
         activity_1 = Activity.objects.create(text="Activity 1")
-        metric_2 = Metric.objects.create(text="Metric 2", activity=activity_1, number_of_editors=9)
+        metric_2 = Metric.objects.create(
+            text="Metric 2", activity=activity_1, number_of_editors=9
+        )
 
         report_1 = Report.objects.create(
             created_by=self.user_profile,
@@ -209,15 +247,19 @@ class MetricViewsTests(TestCase):
         url = reverse("metrics:update_metrics")
         response = self.client.get(url, follow=True)
 
-        self.assertRedirects(response, reverse('metrics:per_project'))
+        self.assertRedirects(response, reverse("metrics:per_project"))
 
-    def test_do_not_show_reports_associated_to_a_metric_to_users_without_permission(self):
+    def test_do_not_show_reports_associated_to_a_metric_to_users_without_permission(
+        self,
+    ):
         self.user.user_permissions.remove(self.view_metrics_permission)
         self.client.login(username=self.username, password=self.password)
 
         area = Area.objects.create(text="Area")
         activity = Activity.objects.create(text="Activity", area=area)
-        metric = Metric.objects.create(text="Metric 1", activity=activity, number_of_editors=10)
+        metric = Metric.objects.create(
+            text="Metric 1", activity=activity, number_of_editors=10
+        )
 
         url = reverse("metrics:metrics_reports", args=[metric.id])
         response = self.client.get(url)
@@ -230,7 +272,9 @@ class MetricViewsTests(TestCase):
 
         area = Area.objects.create(text="Area")
         activity = Activity.objects.create(text="Activity", area=area)
-        metric = Metric.objects.create(text="Metric 1", activity=activity, number_of_editors=10)
+        metric = Metric.objects.create(
+            text="Metric 1", activity=activity, number_of_editors=10
+        )
         team_area = TeamArea.objects.create(text="Area")
         report_1 = Report.objects.create(
             created_by=self.user_profile,
@@ -260,7 +304,9 @@ class MetricViewsTests(TestCase):
         area.project.add(project)
         area.save()
         activity = Activity.objects.create(text="Activity", area=area)
-        metric = Metric.objects.create(text="Metric 1", activity=activity, number_of_editors=10)
+        metric = Metric.objects.create(
+            text="Metric 1", activity=activity, number_of_editors=10
+        )
         metric.project.add(project)
         metric.save()
         team_area = TeamArea.objects.create(text="Area")
@@ -294,8 +340,8 @@ class ShowMetricsForProjectTests(TestCase):
 
     @patch("metrics.views.get_metrics_and_aggregate_per_project")
     def test_metrics_view_with_current_poa_and_data(self, mock_get_metrics):
-        operational_data = { self.project.id: {"project_metrics": [1, 2]} }
-        bool_data = { self.project.id: {"project_metrics": [3]} }
+        operational_data = {self.project.id: {"project_metrics": [1, 2]}}
+        bool_data = {self.project.id: {"project_metrics": [3]}}
 
         mock_get_metrics.side_effect = [
             operational_data,
@@ -329,8 +375,8 @@ class ShowMetricsForProjectTests(TestCase):
         project = Project.objects.create(text="Old Project", current_poa=False)
         mock_get_metrics.return_value = {project.id: {"project_metrics": [42]}}
 
-        operational_data = { project.id: {"project_metrics": [1, 2]} }
-        bool_data = { project.id: {"project_metrics": [3]} }
+        operational_data = {project.id: {"project_metrics": [1, 2]}}
+        bool_data = {project.id: {"project_metrics": [3]}}
 
         def side_effect(*args, **kwargs):
             if "Occurrence" in args:
@@ -365,35 +411,40 @@ class ShowMetricsForProjectTests(TestCase):
     def test_view_requires_permission(self):
         request = self.factory.get("/fake-url/")
         request.user = User.objects.create_user("user2", "test@example.com", "pass")
-        response = self.client.get(reverse("metrics:specific_project", args=[self.project.id]))
+        response = self.client.get(
+            reverse("metrics:specific_project", args=[self.project.id])
+        )
         self.assertEqual(response.status_code, 302)
 
 
 class PreparePDFViewTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='password')
-        self.permission = Permission.objects.get(codename='view_metric')
+        self.user = User.objects.create_user(username="testuser", password="password")
+        self.permission = Permission.objects.get(codename="view_metric")
         self.user.user_permissions.add(self.permission)
-        self.client.login(username='testuser', password='password')
-        self.project = Project.objects.create(text='Main Project', main_funding=True)
+        self.client.login(username="testuser", password="password")
+        self.project = Project.objects.create(text="Main Project", main_funding=True)
 
-    @patch('metrics.views.get_results_for_timespan')
-    @patch('metrics.views.process_all_references')
+    @patch("metrics.views.get_results_for_timespan")
+    @patch("metrics.views.process_all_references")
     def test_prepare_pdf_view_success(self, mock_process_refs, mock_get_results):
         mock_get_results.return_value = [
             {"metric": "Test Metric", "done": [1, 2, 3, 4, 10, "sara-123 sara-456", 20]}
         ]
         mock_process_refs.return_value = ["Reference 1", "Reference 2"]
-        response = self.client.get(reverse('metrics:wmf_report'))
+        response = self.client.get(reverse("metrics:wmf_report"))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'metrics/wmf_report.html')
-        self.assertIn('metrics', response.context)
+        self.assertTemplateUsed(response, "metrics/wmf_report.html")
+        self.assertIn("metrics", response.context)
 
     def test_prepare_pdf_view_no_permission(self):
         self.user.user_permissions.remove(self.permission)
-        response = self.client.get(reverse('metrics:wmf_report'))
+        response = self.client.get(reverse("metrics:wmf_report"))
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('metrics:wmf_report')}")
+        self.assertEqual(
+            response.url,
+            f"{reverse('users:login')}?next={reverse('metrics:wmf_report')}",
+        )
 
     @patch("metrics.utils.get_template")
     @patch("metrics.utils.pisa.pisaDocument")
@@ -464,7 +515,9 @@ class MetricFunctionsTests(TestCase):
         self.editor_2 = Editor.objects.create(username="Editor 2")
         self.editor_3 = Editor.objects.create(username="Editor 3")
 
-    def test_get_metrics_and_aggregate_per_project_with_data_and_metric_unclear_when_id_ge_1(self):
+    def test_get_metrics_and_aggregate_per_project_with_data_and_metric_unclear_when_id_ge_1(
+        self,
+    ):
         project = Project.objects.create(text="Project")
         self.metric_3.project.add(project)
         self.metric_3.save()
@@ -479,13 +532,44 @@ class MetricFunctionsTests(TestCase):
         aggregated_metrics = get_metrics_and_aggregate_per_project()
         self.assertEqual(list(aggregated_metrics.keys())[0], project.id)
         self.assertEqual(aggregated_metrics[1]["project"], project.text)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_id"], self.activity_2.id)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity"], self.activity_2.text)
-        self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"].keys())[0], self.metric_3.id)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3]["title"], self.metric_3.text)
-        self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3]["metrics"].keys())[0], "Other metric")
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3]["metrics"]["Other metric"]["goal"], "-")
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3]["metrics"]["Other metric"]["done"], "-")
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_id"],
+            self.activity_2.id,
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity"],
+            self.activity_2.text,
+        )
+        self.assertEqual(
+            list(
+                aggregated_metrics[1]["project_metrics"][0]["activity_metrics"].keys()
+            )[0],
+            self.metric_3.id,
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3]["title"],
+            self.metric_3.text,
+        )
+        self.assertEqual(
+            list(
+                aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3][
+                    "metrics"
+                ].keys()
+            )[0],
+            "Other metric",
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3][
+                "metrics"
+            ]["Other metric"]["goal"],
+            "-",
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3][
+                "metrics"
+            ]["Other metric"]["done"],
+            "-",
+        )
 
     def test_get_metrics_and_aggregate_per_project_with_data_and_metric_unclear(self):
         project = Project.objects.create(text="Project")
@@ -499,13 +583,44 @@ class MetricFunctionsTests(TestCase):
         aggregated_metrics = get_metrics_and_aggregate_per_project()
         self.assertEqual(list(aggregated_metrics.keys())[0], project.id)
         self.assertEqual(aggregated_metrics[1]["project"], project.text)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_id"], self.activity_1.id)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity"], self.activity_1.text)
-        self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"].keys())[0], self.metric_2.id)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["title"], self.metric_2.text)
-        self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"].keys())[0], "Other metric")
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Other metric"]["goal"], "-")
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Other metric"]["done"], "-")
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_id"],
+            self.activity_1.id,
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity"],
+            self.activity_1.text,
+        )
+        self.assertEqual(
+            list(
+                aggregated_metrics[1]["project_metrics"][0]["activity_metrics"].keys()
+            )[0],
+            self.metric_2.id,
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["title"],
+            self.metric_2.text,
+        )
+        self.assertEqual(
+            list(
+                aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2][
+                    "metrics"
+                ].keys()
+            )[0],
+            "Other metric",
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2][
+                "metrics"
+            ]["Other metric"]["goal"],
+            "-",
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2][
+                "metrics"
+            ]["Other metric"]["done"],
+            "-",
+        )
 
     def test_get_metrics_and_aggregate_per_project_with_goal_but_none_done(self):
         project = Project.objects.create(text="Project")
@@ -520,13 +635,44 @@ class MetricFunctionsTests(TestCase):
         aggregated_metrics = get_metrics_and_aggregate_per_project()
         self.assertEqual(list(aggregated_metrics.keys())[0], project.id)
         self.assertEqual(aggregated_metrics[1]["project"], project.text)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_id"], self.activity_1.id)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity"], self.activity_1.text)
-        self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"].keys())[0], self.metric_2.id)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["title"], self.metric_2.text)
-        self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"].keys())[0], "Wikipedia (created)")
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Wikipedia (created)"]["goal"], 500)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Wikipedia (created)"]["done"], 0)
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_id"],
+            self.activity_1.id,
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity"],
+            self.activity_1.text,
+        )
+        self.assertEqual(
+            list(
+                aggregated_metrics[1]["project_metrics"][0]["activity_metrics"].keys()
+            )[0],
+            self.metric_2.id,
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["title"],
+            self.metric_2.text,
+        )
+        self.assertEqual(
+            list(
+                aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2][
+                    "metrics"
+                ].keys()
+            )[0],
+            "Wikipedia (created)",
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2][
+                "metrics"
+            ]["Wikipedia (created)"]["goal"],
+            500,
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2][
+                "metrics"
+            ]["Wikipedia (created)"]["done"],
+            0,
+        )
 
     def test_get_metrics_and_aggregate_per_project_with_goal_and_some_done(self):
         project = Project.objects.create(text="Project")
@@ -545,13 +691,44 @@ class MetricFunctionsTests(TestCase):
         aggregated_metrics = get_metrics_and_aggregate_per_project()
         self.assertEqual(list(aggregated_metrics.keys())[0], project.id)
         self.assertEqual(aggregated_metrics[1]["project"], project.text)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_id"], self.activity_1.id)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity"], self.activity_1.text)
-        self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"].keys())[0], self.metric_2.id)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["title"], self.metric_2.text)
-        self.assertEqual(list(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"].keys())[0], "Wikipedia (created)")
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Wikipedia (created)"]["goal"], 500)
-        self.assertEqual(aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["metrics"]["Wikipedia (created)"]["done"], 200)
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_id"],
+            self.activity_1.id,
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity"],
+            self.activity_1.text,
+        )
+        self.assertEqual(
+            list(
+                aggregated_metrics[1]["project_metrics"][0]["activity_metrics"].keys()
+            )[0],
+            self.metric_2.id,
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["title"],
+            self.metric_2.text,
+        )
+        self.assertEqual(
+            list(
+                aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2][
+                    "metrics"
+                ].keys()
+            )[0],
+            "Wikipedia (created)",
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2][
+                "metrics"
+            ]["Wikipedia (created)"]["goal"],
+            500,
+        )
+        self.assertEqual(
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2][
+                "metrics"
+            ]["Wikipedia (created)"]["done"],
+            200,
+        )
 
     def test_get_metrics_and_aggregate_per_project_without_data(self):
         aggregated_metrics = get_metrics_and_aggregate_per_project()
@@ -562,7 +739,12 @@ class MetricFunctionsTests(TestCase):
         self.report_1.save()
 
         response = build_wiki_ref_for_reports(self.metric_1)
-        self.assertEqual(response, "<ref name=\"sara-"+str(self.report_1.id)+"\">[https://testlink.com]</ref>")
+        self.assertEqual(
+            response,
+            '<ref name="sara-'
+            + str(self.report_1.id)
+            + '">[https://testlink.com]</ref>',
+        )
 
     def test_get_references_for_report_with_internal_references_formats_it(self):
         links = "https://pt.wikipedia.org/wiki/Página_inicial"
@@ -572,7 +754,12 @@ class MetricFunctionsTests(TestCase):
         self.report_1.save()
 
         response = build_wiki_ref_for_reports(self.metric_1)
-        self.assertEqual(response, "<ref name=\"sara-"+str(self.report_1.id)+"\">[[w:pt:Página_inicial|Página inicial]]</ref>")
+        self.assertEqual(
+            response,
+            '<ref name="sara-'
+            + str(self.report_1.id)
+            + '">[[w:pt:Página_inicial|Página inicial]]</ref>',
+        )
 
     def test_get_references_for_report_with_reference_text_field(self):
         self.report_1.metrics_related.add(self.metric_1)
@@ -592,12 +779,29 @@ class MetricFunctionsTests(TestCase):
         self.metric_1.save()
 
         timespan_array = [
-            (datetime.now().date() - timedelta(days=10), datetime.now().date() + timedelta(days=10)),
-            (datetime.now().date() - timedelta(days=10), datetime.now().date() - timedelta(days=5))
+            (
+                datetime.now().date() - timedelta(days=10),
+                datetime.now().date() + timedelta(days=10),
+            ),
+            (
+                datetime.now().date() - timedelta(days=10),
+                datetime.now().date() - timedelta(days=5),
+            ),
         ]
 
-        response = get_results_for_timespan(timespan_array, metric_query=Q(project=main_project), with_goal=True)
-        self.assertEqual([{"activity": self.metric_1.activity.text, "metric": self.metric_1.text, "done": ["-", "-", "", 10]}], response)
+        response = get_results_for_timespan(
+            timespan_array, metric_query=Q(project=main_project), with_goal=True
+        )
+        self.assertEqual(
+            [
+                {
+                    "activity": self.metric_1.activity.text,
+                    "metric": self.metric_1.text,
+                    "done": ["-", "-", "", 10],
+                }
+            ],
+            response,
+        )
 
     def test_get_results_for_timespan_without_metrics_goals(self):
         self.report_1.metrics_related.add(self.metric_1)
@@ -607,12 +811,29 @@ class MetricFunctionsTests(TestCase):
         self.metric_1.save()
 
         timespan_array = [
-            (datetime.now().date() - timedelta(days=10), datetime.now().date() + timedelta(days=10)),
-            (datetime.now().date() - timedelta(days=10), datetime.now().date() - timedelta(days=5))
+            (
+                datetime.now().date() - timedelta(days=10),
+                datetime.now().date() + timedelta(days=10),
+            ),
+            (
+                datetime.now().date() - timedelta(days=10),
+                datetime.now().date() - timedelta(days=5),
+            ),
         ]
 
-        response = get_results_for_timespan(timespan_array, metric_query=Q(project=main_project), with_goal=True)
-        self.assertEqual([{"activity": self.metric_1.activity.text, "metric": self.metric_1.text, "done": ["", "?"]}], response)
+        response = get_results_for_timespan(
+            timespan_array, metric_query=Q(project=main_project), with_goal=True
+        )
+        self.assertEqual(
+            [
+                {
+                    "activity": self.metric_1.activity.text,
+                    "metric": self.metric_1.text,
+                    "done": ["", "?"],
+                }
+            ],
+            response,
+        )
 
     def test_get_results_for_timespan_in_English(self):
         self.report_1.metrics_related.add(self.metric_1)
@@ -623,12 +844,32 @@ class MetricFunctionsTests(TestCase):
         self.metric_1.save()
 
         timespan_array = [
-            (datetime.now().date() - timedelta(days=10), datetime.now().date() + timedelta(days=10)),
-            (datetime.now().date() - timedelta(days=10), datetime.now().date() - timedelta(days=5))
+            (
+                datetime.now().date() - timedelta(days=10),
+                datetime.now().date() + timedelta(days=10),
+            ),
+            (
+                datetime.now().date() - timedelta(days=10),
+                datetime.now().date() - timedelta(days=5),
+            ),
         ]
 
-        response = get_results_for_timespan(timespan_array, metric_query=Q(project=main_project), with_goal=True, lang="en")
-        self.assertEqual([{"activity": self.metric_1.activity.text, "metric": self.metric_1.text_en, "done": ["-", "-", "", 10]}], response)
+        response = get_results_for_timespan(
+            timespan_array,
+            metric_query=Q(project=main_project),
+            with_goal=True,
+            lang="en",
+        )
+        self.assertEqual(
+            [
+                {
+                    "activity": self.metric_1.activity.text,
+                    "metric": self.metric_1.text_en,
+                    "done": ["-", "-", "", 10],
+                }
+            ],
+            response,
+        )
 
     def test_invalid_timeframe_raises_value_error(self):
         settings.REPORT_TIMESPANS = {}
@@ -640,26 +881,32 @@ class MetricFunctionsTests(TestCase):
 class ReferencesFunctionsTests(TestCase):
     def test_single_internal_link(self):
         input_string = '<ref name="sara-123">[[Main Page|Main Page]]</ref>'
-        expected = ['<li id="sara-123">123. <a target="_blank" href="https://meta.wikimedia.org/wiki/Main_Page">Main Page</a></li>']
+        expected = [
+            '<li id="sara-123">123. <a target="_blank" href="https://meta.wikimedia.org/wiki/Main_Page">Main Page</a></li>'
+        ]
         result = process_all_references(input_string)
         self.assertEqual(result, expected)
 
     def test_single_internal_link_with_alias(self):
         input_string = '<ref name="sara-456">[[Main Page|Homepage]]</ref>'
-        expected = ['<li id="sara-456">456. <a target="_blank" href="https://meta.wikimedia.org/wiki/Main_Page">Homepage</a></li>']
+        expected = [
+            '<li id="sara-456">456. <a target="_blank" href="https://meta.wikimedia.org/wiki/Main_Page">Homepage</a></li>'
+        ]
         result = process_all_references(input_string)
         self.assertEqual(result, expected)
 
     def test_single_external_link(self):
         input_string = '<ref name="sara-789">[https://example.org Example]</ref>'
-        expected = ['<li id="sara-789">789. <a target="_blank" href="https://example.org">Example</a></li>']
+        expected = [
+            '<li id="sara-789">789. <a target="_blank" href="https://example.org">Example</a></li>'
+        ]
         result = process_all_references(input_string)
         self.assertEqual(result, expected)
 
     def test_multiple_references(self):
         input_string = (
             '<ref name="sara-1">[[Link A]]</ref> '
-            'text in between '
+            "text in between "
             '<ref name="sara-2">[https://example.org Example]</ref>'
         )
         result = process_all_references(input_string)
@@ -676,7 +923,7 @@ class ReferencesFunctionsTests(TestCase):
         self.assertIn("<li>item2</li>", result[0])
 
     def test_invalid_reference_format(self):
-        input_string = 'No ref tags here'
+        input_string = "No ref tags here"
         result = process_all_references(input_string)
         self.assertEqual(result, [])
 
@@ -698,15 +945,15 @@ class ReferencesFunctionsTests(TestCase):
 
         expected = (
             '<li id="sara-202">202. Intro <ul>\n'
-            '<li>A</li>\n<li>B</li>\n<li>C</li>\n</ul> end</li>'
+            "<li>A</li>\n<li>B</li>\n<li>C</li>\n</ul> end</li>"
         )
         self.assertEqual(result, expected)
         self.assertEqual(updated_refs, [expected])
 
     def test_unwikify_invalid_format_reference(self):
-        input_ref = '<ref>Malformed ref without sara-343 name</ref>'
+        input_ref = "<ref>Malformed ref without sara-343 name</ref>"
         updated_refs = []
-        match = re.match(r'<ref.*?</ref>', input_ref)
+        match = re.match(r"<ref.*?</ref>", input_ref)
         result = unwikify_link(match, updated_refs)
 
         self.assertEqual(result, input_ref)
@@ -720,7 +967,7 @@ class ReferencesFunctionsTests(TestCase):
 
         expected = (
             '<li id="sara-303">303. Text with <ul>\n'
-            '<li>Item 1</li>\n<li>Item 2</li>\n</ul> and more.</li>'
+            "<li>Item 1</li>\n<li>Item 2</li>\n</ul> and more.</li>"
         )
         self.assertEqual(result, expected)
 
@@ -731,7 +978,7 @@ class ReferencesFunctionsTests(TestCase):
 
     def test_plain_url(self):
         input_text = "https://meta.wikimedia.org/wiki/Main_Page"
-        expected = 'https://meta.wikimedia.org/wiki/Main_Page'
+        expected = "https://meta.wikimedia.org/wiki/Main_Page"
         self.assertEqual(replace_with_links(input_text), expected)
 
     def test_text_with_url(self):
@@ -777,25 +1024,35 @@ class ReferencesFunctionsTests(TestCase):
         self.assertEqual(replace_with_links(input_text), expected)
 
     def test_language_wiki_link(self):
-        self.assertEqual(dewikify_url("w:en:Main_Page"),"https://en.wikipedia.org/wiki/Main Page")
+        self.assertEqual(
+            dewikify_url("w:en:Main_Page"), "https://en.wikipedia.org/wiki/Main Page"
+        )
 
     def test_commons_link(self):
-        self.assertEqual(dewikify_url("c:Category:Birds"),"https://commons.wikimedia.org/wiki/Category:Birds")
+        self.assertEqual(
+            dewikify_url("c:Category:Birds"),
+            "https://commons.wikimedia.org/wiki/Category:Birds",
+        )
 
     def test_wikidata_link(self):
-        self.assertEqual(dewikify_url("d:Q42"),"https://www.wikidata.org/wiki/Q42")
+        self.assertEqual(dewikify_url("d:Q42"), "https://www.wikidata.org/wiki/Q42")
 
     def test_meta_link_flag_true(self):
-        self.assertEqual(dewikify_url("Sandbox", meta=True),"https://meta.wikimedia.org/wiki/Sandbox")
+        self.assertEqual(
+            dewikify_url("Sandbox", meta=True),
+            "https://meta.wikimedia.org/wiki/Sandbox",
+        )
 
     def test_meta_link_flag_false(self):
-        self.assertEqual(dewikify_url("Sandbox", meta=False),"Sandbox")
+        self.assertEqual(dewikify_url("Sandbox", meta=False), "Sandbox")
 
     def test_dash_as_link(self):
-        self.assertEqual(dewikify_url("-", meta=False),"")
+        self.assertEqual(dewikify_url("-", meta=False), "")
 
     def test_trailing_slash_is_removed(self):
-        self.assertEqual(dewikify_url("w:en:Main_Page/"),"https://en.wikipedia.org/wiki/Main Page")
+        self.assertEqual(
+            dewikify_url("w:en:Main_Page/"), "https://en.wikipedia.org/wiki/Main Page"
+        )
 
     def test_url_decoding(self):
         encoded = "w:en:Main_Page%2FSubpage"
@@ -806,7 +1063,10 @@ class ReferencesFunctionsTests(TestCase):
         links = "https://sara-wmb.toolforge.org/calendar\r\nhttps://pt.wikipedia.org/wiki/Wikipedia:Pagina_inicial\r\nhttps://commons.wikimedia.org/wiki/Main_Page\r\nhttps://example.com"
 
         wiki_ref = build_wiki_ref(links, 1)
-        self.assertEqual(wiki_ref, "<ref name=\"sara-1\">[[toolforge:sara-wmb/calendar|calendar]], [[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]], [[c:Main_Page|Main Page]], [https://example.com]</ref>")
+        self.assertEqual(
+            wiki_ref,
+            '<ref name="sara-1">[[toolforge:sara-wmb/calendar|calendar]], [[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]], [[c:Main_Page|Main Page]], [https://example.com]</ref>',
+        )
 
     def test_build_wiki_ref_with_hifen_returns_empty_string(self):
         links = "-"
@@ -928,10 +1188,14 @@ class MetricsExportTests(TestCase):
     def setUp(self):
         self.username = "testuser"
         self.password = "testpass"
-        self.user = User.objects.create_user(username=self.username, password=self.password)
+        self.user = User.objects.create_user(
+            username=self.username, password=self.password
+        )
         self.user_profile = UserProfile.objects.get(user=self.user)
         self.view_metrics_permission = Permission.objects.get(codename="view_metric")
-        self.change_metrics_permission = Permission.objects.get(codename="change_metric")
+        self.change_metrics_permission = Permission.objects.get(
+            codename="change_metric"
+        )
         self.user.user_permissions.add(self.view_metrics_permission)
         self.user.user_permissions.add(self.change_metrics_permission)
         self.poa_project = Project.objects.create(text="POA", current_poa=True)
@@ -948,7 +1212,7 @@ class MetricsExportTests(TestCase):
                     ((10, 1), (12, 31)),
                 ],
                 "total": ((1, 1), (12, 31)),
-                "labels": ["Q1", "Q2", "Q3", "Q4"]
+                "labels": ["Q1", "Q2", "Q3", "Q4"],
             },
             "semester": {
                 "periods": [
@@ -956,15 +1220,13 @@ class MetricsExportTests(TestCase):
                     ((7, 1), (12, 31)),
                 ],
                 "total": ((1, 1), (12, 31)),
-                "labels": ["S1", "S2"]
+                "labels": ["S1", "S2"],
             },
             "year": {
-                "periods": [
-                    ((1, 1), (12, 31))
-                ],
+                "periods": [((1, 1), (12, 31))],
                 "total": ((1, 1), (12, 31)),
-                "labels": ["Year"]
-            }
+                "labels": ["Year"],
+            },
         }
 
     def test_export_trimester_report_succeeds_if_user_has_permission(self):
@@ -974,12 +1236,17 @@ class MetricsExportTests(TestCase):
         with override_settings(REPORT_TIMESPANS=self.report_timespans):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-            self.assertIn('Content-Disposition', response)
-            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-            self.assertNotEqual(response.content, b'')
+            self.assertEqual(response["Content-Type"], "text/plain; charset=UTF-8")
+            self.assertIn("Content-Disposition", response)
+            self.assertEqual(
+                response["Content-Disposition"],
+                'attachment; filename="trimester_report.txt"',
+            )
+            self.assertNotEqual(response.content, b"")
             expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n|}\n"
-            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+            self.assertEqual(
+                response.content.decode("utf-8"), expected_content.decode("utf-8")
+            )
 
     def test_export_trimester_report_fails_if_user_is_not_authorized(self):
         self.user.user_permissions.remove(self.view_metrics_permission)
@@ -998,12 +1265,17 @@ class MetricsExportTests(TestCase):
         with override_settings(REPORT_TIMESPANS=self.report_timespans):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-            self.assertIn('Content-Disposition', response)
-            self.assertEqual(response['Content-Disposition'], 'attachment; filename="semester_report.txt"')
-            self.assertNotEqual(response.content, b'')
+            self.assertEqual(response["Content-Type"], "text/plain; charset=UTF-8")
+            self.assertIn("Content-Disposition", response)
+            self.assertEqual(
+                response["Content-Disposition"],
+                'attachment; filename="semester_report.txt"',
+            )
+            self.assertNotEqual(response.content, b"")
             expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! S1 !! S2 !! Total !! References\n|-\n|}\n"
-            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+            self.assertEqual(
+                response.content.decode("utf-8"), expected_content.decode("utf-8")
+            )
 
     def test_export_semester_report_fails_if_user_is_not_authorized(self):
         self.user.user_permissions.remove(self.view_metrics_permission)
@@ -1022,12 +1294,17 @@ class MetricsExportTests(TestCase):
         with override_settings(REPORT_TIMESPANS=self.report_timespans):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-            self.assertIn('Content-Disposition', response)
-            self.assertEqual(response['Content-Disposition'], 'attachment; filename="year_report.txt"')
-            self.assertNotEqual(response.content, b'')
+            self.assertEqual(response["Content-Type"], "text/plain; charset=UTF-8")
+            self.assertIn("Content-Disposition", response)
+            self.assertEqual(
+                response["Content-Disposition"],
+                'attachment; filename="year_report.txt"',
+            )
+            self.assertNotEqual(response.content, b"")
             expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Year !! Total !! References\n|-\n|}\n"
-            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+            self.assertEqual(
+                response.content.decode("utf-8"), expected_content.decode("utf-8")
+            )
 
     def test_export_yearly_report_fails_if_user_is_not_authorized(self):
         self.user.user_permissions.remove(self.view_metrics_permission)
@@ -1039,10 +1316,13 @@ class MetricsExportTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"{reverse('users:login')}?next={url}")
 
-    def test_export_trimester_report_exports_activities_results_with_hyphens_when_nothing_was_done(self):
+    def test_export_trimester_report_exports_activities_results_with_hyphens_when_nothing_was_done(
+        self,
+    ):
         self.client.login(username=self.username, password=self.password)
-        metric = Metric.objects.create(text="Metric", activity=self.activity, is_operation=True,
-                                       number_of_events=5)
+        metric = Metric.objects.create(
+            text="Metric", activity=self.activity, is_operation=True, number_of_events=5
+        )
         metric.project.add(self.poa_project)
         metric.save()
 
@@ -1051,90 +1331,158 @@ class MetricsExportTests(TestCase):
         with override_settings(REPORT_TIMESPANS=self.report_timespans):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-            self.assertIn('Content-Disposition', response)
-            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-            self.assertNotEqual(response.content, b'')
+            self.assertEqual(response["Content-Type"], "text/plain; charset=UTF-8")
+            self.assertIn("Content-Disposition", response)
+            self.assertEqual(
+                response["Content-Disposition"],
+                'attachment; filename="trimester_report.txt"',
+            )
+            self.assertNotEqual(response.content, b"")
             expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| Activity || Metric || - || - || - || - || - || \n|-\n|}\n"
-            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+            self.assertEqual(
+                response.content.decode("utf-8"), expected_content.decode("utf-8")
+            )
 
-    def test_export_trimester_report_exports_activities_results_with_number_when_something_was_done(self):
+    def test_export_trimester_report_exports_activities_results_with_number_when_something_was_done(
+        self,
+    ):
         self.client.login(username=self.username, password=self.password)
         url = reverse("metrics:export_reports_per_trimester")
         area_responsible = TeamArea.objects.create(text="Area")
         area_responsible.project.add(self.main_project)
         area_responsible.save()
-        report = Report.objects.create(description="Report 1",
-                                       created_by=self.user_profile,
-                                       modified_by=self.user_profile,
-                                       initial_date=date(datetime.today().year, 2, 28),
-                                       learning="Learnings!" * 51,
-                                       activity_associated=self.activity,
-                                       area_responsible=area_responsible,
-                                       links="Links")
-        metric = Metric.objects.create(text="Metric", activity=self.activity, is_operation=True, number_of_events=5)
+        report = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=date(datetime.today().year, 2, 28),
+            learning="Learnings!" * 51,
+            activity_associated=self.activity,
+            area_responsible=area_responsible,
+            links="Links",
+        )
+        metric = Metric.objects.create(
+            text="Metric", activity=self.activity, is_operation=True, number_of_events=5
+        )
         metric.project.add(self.poa_project)
         metric.save()
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        directions_related = Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
+        directions_related = Direction.objects.create(
+            text="Direction", strategic_axis=strategic_axis
+        )
         learning_area = LearningArea.objects.create(text="Learning area")
-        learning_questions_related = StrategicLearningQuestion.objects.create(text="Strategic Learning Question", learning_area=learning_area)
+        learning_questions_related = StrategicLearningQuestion.objects.create(
+            text="Strategic Learning Question", learning_area=learning_area
+        )
 
         report.directions_related.add(directions_related)
         report.learning_questions_related.add(learning_questions_related)
         report.metrics_related.add(metric)
         report.save()
 
-        operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=3, number_of_resources=2)
+        operation_report = OperationReport.objects.create(
+            metric=metric, report=report, number_of_events=3, number_of_resources=2
+        )
 
         with override_settings(REPORT_TIMESPANS=self.report_timespans):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-            self.assertIn('Content-Disposition', response)
-            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-            self.assertNotEqual(response.content, b'')
-            expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| " + bytes(self.activity.text, 'utf-8') + b" || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n"
-            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+            self.assertEqual(response["Content-Type"], "text/plain; charset=UTF-8")
+            self.assertIn("Content-Disposition", response)
+            self.assertEqual(
+                response["Content-Disposition"],
+                'attachment; filename="trimester_report.txt"',
+            )
+            self.assertNotEqual(response.content, b"")
+            expected_content = (
+                b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| "
+                + bytes(self.activity.text, "utf-8")
+                + b" || "
+                + bytes(metric.text, "utf-8")
+                + b" || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b" || - || - || - || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b' || <ref name="sara-'
+                + bytes(str(report.id), "utf-8")
+                + b'">['
+                + bytes(str(report.links), "utf-8")
+                + b"]</ref>\n|-\n|}\n"
+            )
+            self.assertEqual(
+                response.content.decode("utf-8"), expected_content.decode("utf-8")
+            )
 
-    def test_export_trimester_report_exports_activities_results_of_main_funding_project(self):
+    def test_export_trimester_report_exports_activities_results_of_main_funding_project(
+        self,
+    ):
         self.client.login(username=self.username, password=self.password)
         url = reverse("metrics:export_reports_per_trimester")
         area_responsible = TeamArea.objects.create(text="Area")
         area_responsible.project.add(self.main_project)
         area_responsible.save()
-        report = Report.objects.create(description="Report 1",
-                                       created_by=self.user_profile,
-                                       modified_by=self.user_profile,
-                                       initial_date=date(datetime.today().year, 2, 28),
-                                       learning="Learnings!" * 51,
-                                       activity_associated=self.activity,
-                                       area_responsible=area_responsible,
-                                       links="Links")
-        metric = Metric.objects.create(text="Metric", activity=self.other_activity, number_of_events=5, is_operation=True)
+        report = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=date(datetime.today().year, 2, 28),
+            learning="Learnings!" * 51,
+            activity_associated=self.activity,
+            area_responsible=area_responsible,
+            links="Links",
+        )
+        metric = Metric.objects.create(
+            text="Metric",
+            activity=self.other_activity,
+            number_of_events=5,
+            is_operation=True,
+        )
         metric.project.add(self.main_project)
         metric.save()
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        directions_related = Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
+        directions_related = Direction.objects.create(
+            text="Direction", strategic_axis=strategic_axis
+        )
         learning_area = LearningArea.objects.create(text="Learning area")
-        learning_questions_related = StrategicLearningQuestion.objects.create(text="Strategic Learning Question", learning_area=learning_area)
+        learning_questions_related = StrategicLearningQuestion.objects.create(
+            text="Strategic Learning Question", learning_area=learning_area
+        )
 
         report.directions_related.add(directions_related)
         report.learning_questions_related.add(learning_questions_related)
         report.metrics_related.add(metric)
         report.save()
 
-        operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=6, number_of_resources=2)
+        operation_report = OperationReport.objects.create(
+            metric=metric, report=report, number_of_events=6, number_of_resources=2
+        )
 
         with override_settings(REPORT_TIMESPANS=self.report_timespans):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-            self.assertIn('Content-Disposition', response)
-            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-            self.assertNotEqual(response.content, b'')
-            expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| - || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n"
-            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+            self.assertEqual(response["Content-Type"], "text/plain; charset=UTF-8")
+            self.assertIn("Content-Disposition", response)
+            self.assertEqual(
+                response["Content-Disposition"],
+                'attachment; filename="trimester_report.txt"',
+            )
+            self.assertNotEqual(response.content, b"")
+            expected_content = (
+                b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| - || "
+                + bytes(metric.text, "utf-8")
+                + b" || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b" || - || - || - || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b' || <ref name="sara-'
+                + bytes(str(report.id), "utf-8")
+                + b'">['
+                + bytes(str(report.links), "utf-8")
+                + b"]</ref>\n|-\n|}\n"
+            )
+            self.assertEqual(
+                response.content.decode("utf-8"), expected_content.decode("utf-8")
+            )
 
     def test_export_trimester_report_by_area_succeeds_if_user_is_authenticated(self):
         self.client.login(username=self.username, password=self.password)
@@ -1143,39 +1491,75 @@ class MetricsExportTests(TestCase):
         area_responsible = TeamArea.objects.create(text="Area", code="area")
         area_responsible.project.add(self.main_project)
         area_responsible.save()
-        report = Report.objects.create(description="Report 1",
-                                       created_by=self.user_profile,
-                                       modified_by=self.user_profile,
-                                       initial_date=date(datetime.today().year, 2, 28),
-                                       learning="Learnings!" * 51,
-                                       activity_associated=self.activity,
-                                       area_responsible=area_responsible,
-                                       links="Links")
-        metric = Metric.objects.create(text="Metric", activity=self.activity, is_operation=True, number_of_events=5)
+        report = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=date(datetime.today().year, 2, 28),
+            learning="Learnings!" * 51,
+            activity_associated=self.activity,
+            area_responsible=area_responsible,
+            links="Links",
+        )
+        metric = Metric.objects.create(
+            text="Metric", activity=self.activity, is_operation=True, number_of_events=5
+        )
         metric.project.add(self.main_project)
         metric.save()
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        directions_related = Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
+        directions_related = Direction.objects.create(
+            text="Direction", strategic_axis=strategic_axis
+        )
         learning_area = LearningArea.objects.create(text="Learning area")
-        learning_questions_related = StrategicLearningQuestion.objects.create(text="Strategic Learning Question",
-                                                                              learning_area=learning_area)
+        learning_questions_related = StrategicLearningQuestion.objects.create(
+            text="Strategic Learning Question", learning_area=learning_area
+        )
 
         report.directions_related.add(directions_related)
         report.learning_questions_related.add(learning_questions_related)
         report.metrics_related.add(metric)
         report.save()
 
-        operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=6, number_of_resources=2)
+        operation_report = OperationReport.objects.create(
+            metric=metric, report=report, number_of_events=6, number_of_resources=2
+        )
 
         with override_settings(REPORT_TIMESPANS=self.report_timespans):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-            self.assertIn('Content-Disposition', response)
-            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-            self.assertNotEqual(response.content, b'')
-            expected_content = b"==" + bytes(area_responsible.text, 'utf-8') + b"==\n<div class='wmb_report_table_container bd-" + bytes(area_responsible.code, 'utf-8') + b"'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-" + bytes(area_responsible.code, 'utf-8') + b" co-" + bytes(area_responsible.code, 'utf-8') + b"' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| " + bytes(self.activity.text, 'utf-8') + b" || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n</div>\n"
-            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+            self.assertEqual(response["Content-Type"], "text/plain; charset=UTF-8")
+            self.assertIn("Content-Disposition", response)
+            self.assertEqual(
+                response["Content-Disposition"],
+                'attachment; filename="trimester_report.txt"',
+            )
+            self.assertNotEqual(response.content, b"")
+            expected_content = (
+                b"=="
+                + bytes(area_responsible.text, "utf-8")
+                + b"==\n<div class='wmb_report_table_container bd-"
+                + bytes(area_responsible.code, "utf-8")
+                + b"'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-"
+                + bytes(area_responsible.code, "utf-8")
+                + b" co-"
+                + bytes(area_responsible.code, "utf-8")
+                + b"' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| "
+                + bytes(self.activity.text, "utf-8")
+                + b" || "
+                + bytes(metric.text, "utf-8")
+                + b" || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b" || - || - || - || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b' || <ref name="sara-'
+                + bytes(str(report.id), "utf-8")
+                + b'">['
+                + bytes(str(report.links), "utf-8")
+                + b"]</ref>\n|-\n|}\n</div>\n"
+            )
+            self.assertEqual(
+                response.content.decode("utf-8"), expected_content.decode("utf-8")
+            )
 
     def test_export_trimester_report_by_area_fails_if_user_is_unauthenticated(self):
         self.user.user_permissions.remove(self.view_metrics_permission)
@@ -1194,39 +1578,75 @@ class MetricsExportTests(TestCase):
         area_responsible = TeamArea.objects.create(text="Area", code="area")
         area_responsible.project.add(self.main_project)
         area_responsible.save()
-        report = Report.objects.create(description="Report 1",
-                                       created_by=self.user_profile,
-                                       modified_by=self.user_profile,
-                                       initial_date=date(datetime.today().year, 2, 28),
-                                       learning="Learnings!" * 51,
-                                       activity_associated=self.activity,
-                                       area_responsible=area_responsible,
-                                       links="Links")
-        metric = Metric.objects.create(text="Metric", activity=self.activity, is_operation=True, number_of_events=5)
+        report = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=date(datetime.today().year, 2, 28),
+            learning="Learnings!" * 51,
+            activity_associated=self.activity,
+            area_responsible=area_responsible,
+            links="Links",
+        )
+        metric = Metric.objects.create(
+            text="Metric", activity=self.activity, is_operation=True, number_of_events=5
+        )
         metric.project.add(self.main_project)
         metric.save()
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        directions_related = Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
+        directions_related = Direction.objects.create(
+            text="Direction", strategic_axis=strategic_axis
+        )
         learning_area = LearningArea.objects.create(text="Learning area")
-        learning_questions_related = StrategicLearningQuestion.objects.create(text="Strategic Learning Question",
-                                                                              learning_area=learning_area)
+        learning_questions_related = StrategicLearningQuestion.objects.create(
+            text="Strategic Learning Question", learning_area=learning_area
+        )
 
         report.directions_related.add(directions_related)
         report.learning_questions_related.add(learning_questions_related)
         report.metrics_related.add(metric)
         report.save()
 
-        operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=6, number_of_resources=2)
+        operation_report = OperationReport.objects.create(
+            metric=metric, report=report, number_of_events=6, number_of_resources=2
+        )
 
         with override_settings(REPORT_TIMESPANS=self.report_timespans):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-            self.assertIn('Content-Disposition', response)
-            self.assertEqual(response['Content-Disposition'], 'attachment; filename="semester_report.txt"')
-            self.assertNotEqual(response.content, b'')
-            expected_content = b"==" + bytes(area_responsible.text, 'utf-8') + b"==\n<div class='wmb_report_table_container bd-" + bytes(area_responsible.code, 'utf-8') + b"'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-" + bytes(area_responsible.code, 'utf-8') + b" co-" + bytes(area_responsible.code, 'utf-8') + b"' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n!Activity !! Metrics !! S1 !! S2 !! Total !! References\n|-\n| " + bytes(self.activity.text, 'utf-8') + b" || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n</div>\n"
-            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+            self.assertEqual(response["Content-Type"], "text/plain; charset=UTF-8")
+            self.assertIn("Content-Disposition", response)
+            self.assertEqual(
+                response["Content-Disposition"],
+                'attachment; filename="semester_report.txt"',
+            )
+            self.assertNotEqual(response.content, b"")
+            expected_content = (
+                b"=="
+                + bytes(area_responsible.text, "utf-8")
+                + b"==\n<div class='wmb_report_table_container bd-"
+                + bytes(area_responsible.code, "utf-8")
+                + b"'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-"
+                + bytes(area_responsible.code, "utf-8")
+                + b" co-"
+                + bytes(area_responsible.code, "utf-8")
+                + b"' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n!Activity !! Metrics !! S1 !! S2 !! Total !! References\n|-\n| "
+                + bytes(self.activity.text, "utf-8")
+                + b" || "
+                + bytes(metric.text, "utf-8")
+                + b" || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b" || - || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b' || <ref name="sara-'
+                + bytes(str(report.id), "utf-8")
+                + b'">['
+                + bytes(str(report.links), "utf-8")
+                + b"]</ref>\n|-\n|}\n</div>\n"
+            )
+            self.assertEqual(
+                response.content.decode("utf-8"), expected_content.decode("utf-8")
+            )
 
     def test_export_semester_report_by_area_fails_if_user_is_unauthenticated(self):
         self.user.user_permissions.remove(self.view_metrics_permission)
@@ -1245,39 +1665,75 @@ class MetricsExportTests(TestCase):
         area_responsible = TeamArea.objects.create(text="Area", code="area")
         area_responsible.project.add(self.main_project)
         area_responsible.save()
-        report = Report.objects.create(description="Report 1",
-                                       created_by=self.user_profile,
-                                       modified_by=self.user_profile,
-                                       initial_date=date(datetime.today().year, 2, 28),
-                                       learning="Learnings!" * 51,
-                                       activity_associated=self.activity,
-                                       area_responsible=area_responsible,
-                                       links="Links")
-        metric = Metric.objects.create(text="Metric", activity=self.activity, is_operation=True, number_of_events=5)
+        report = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=date(datetime.today().year, 2, 28),
+            learning="Learnings!" * 51,
+            activity_associated=self.activity,
+            area_responsible=area_responsible,
+            links="Links",
+        )
+        metric = Metric.objects.create(
+            text="Metric", activity=self.activity, is_operation=True, number_of_events=5
+        )
         metric.project.add(self.main_project)
         metric.save()
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        directions_related = Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
+        directions_related = Direction.objects.create(
+            text="Direction", strategic_axis=strategic_axis
+        )
         learning_area = LearningArea.objects.create(text="Learning area")
-        learning_questions_related = StrategicLearningQuestion.objects.create(text="Strategic Learning Question",
-                                                                              learning_area=learning_area)
+        learning_questions_related = StrategicLearningQuestion.objects.create(
+            text="Strategic Learning Question", learning_area=learning_area
+        )
 
         report.directions_related.add(directions_related)
         report.learning_questions_related.add(learning_questions_related)
         report.metrics_related.add(metric)
         report.save()
 
-        operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=6, number_of_resources=2)
+        operation_report = OperationReport.objects.create(
+            metric=metric, report=report, number_of_events=6, number_of_resources=2
+        )
 
         with override_settings(REPORT_TIMESPANS=self.report_timespans):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-            self.assertIn('Content-Disposition', response)
-            self.assertEqual(response['Content-Disposition'], 'attachment; filename="year_report.txt"')
-            self.assertNotEqual(response.content, b'')
-            expected_content = b"==" + bytes(area_responsible.text, 'utf-8') + b"==\n<div class='wmb_report_table_container bd-" + bytes(area_responsible.code, 'utf-8') + b"'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-" + bytes(area_responsible.code, 'utf-8') + b" co-" + bytes(area_responsible.code, 'utf-8') + b"' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n!Activity !! Metrics !! Year !! Total !! References\n|-\n| " + bytes(self.activity.text, 'utf-8') + b" || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[" + bytes(str(report.links), 'utf-8') + b"]</ref>\n|-\n|}\n</div>\n"
-            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+            self.assertEqual(response["Content-Type"], "text/plain; charset=UTF-8")
+            self.assertIn("Content-Disposition", response)
+            self.assertEqual(
+                response["Content-Disposition"],
+                'attachment; filename="year_report.txt"',
+            )
+            self.assertNotEqual(response.content, b"")
+            expected_content = (
+                b"=="
+                + bytes(area_responsible.text, "utf-8")
+                + b"==\n<div class='wmb_report_table_container bd-"
+                + bytes(area_responsible.code, "utf-8")
+                + b"'>\n{| class='wikitable wmb_report_table'\n! colspan='8' class='bg-"
+                + bytes(area_responsible.code, "utf-8")
+                + b" co-"
+                + bytes(area_responsible.code, "utf-8")
+                + b"' | <h5 id='Metrics'>Operational and General metrics</h5>\n|-\n!Activity !! Metrics !! Year !! Total !! References\n|-\n| "
+                + bytes(self.activity.text, "utf-8")
+                + b" || "
+                + bytes(metric.text, "utf-8")
+                + b" || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b" || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b' || <ref name="sara-'
+                + bytes(str(report.id), "utf-8")
+                + b'">['
+                + bytes(str(report.links), "utf-8")
+                + b"]</ref>\n|-\n|}\n</div>\n"
+            )
+            self.assertEqual(
+                response.content.decode("utf-8"), expected_content.decode("utf-8")
+            )
 
     def test_export_yearly_report_by_area_fails_if_user_is_unauthenticated(self):
         self.user.user_permissions.remove(self.view_metrics_permission)
@@ -1295,71 +1751,110 @@ class MetricsExportTests(TestCase):
         area_responsible = TeamArea.objects.create(text="Area")
         area_responsible.project.add(self.main_project)
         area_responsible.save()
-        report = Report.objects.create(description="Report 1",
-                                       created_by=self.user_profile,
-                                       modified_by=self.user_profile,
-                                       initial_date=date(datetime.today().year, 2, 28),
-                                       learning="Learnings!" * 51,
-                                       activity_associated=self.activity,
-                                       area_responsible=area_responsible,
-                                       links="https://sara-wmb.toolforge.org/calendar\r\nhttps://pt.wikipedia.org/wiki/Wikipedia:Pagina_inicial\r\nhttps://commons.wikimedia.org/wiki/Main_Page\r\nhttps://example.com")
-        metric = Metric.objects.create(text="Metric", activity=self.other_activity, number_of_events=5)
+        report = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=date(datetime.today().year, 2, 28),
+            learning="Learnings!" * 51,
+            activity_associated=self.activity,
+            area_responsible=area_responsible,
+            links="https://sara-wmb.toolforge.org/calendar\r\nhttps://pt.wikipedia.org/wiki/Wikipedia:Pagina_inicial\r\nhttps://commons.wikimedia.org/wiki/Main_Page\r\nhttps://example.com",
+        )
+        metric = Metric.objects.create(
+            text="Metric", activity=self.other_activity, number_of_events=5
+        )
         metric.project.add(self.main_project)
         metric.save()
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        directions_related = Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
+        directions_related = Direction.objects.create(
+            text="Direction", strategic_axis=strategic_axis
+        )
         learning_area = LearningArea.objects.create(text="Learning area")
-        learning_questions_related = StrategicLearningQuestion.objects.create(text="Strategic Learning Question", learning_area=learning_area)
+        learning_questions_related = StrategicLearningQuestion.objects.create(
+            text="Strategic Learning Question", learning_area=learning_area
+        )
 
         report.directions_related.add(directions_related)
         report.learning_questions_related.add(learning_questions_related)
         report.metrics_related.add(metric)
         report.save()
 
-        operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=6, number_of_resources=2)
+        operation_report = OperationReport.objects.create(
+            metric=metric, report=report, number_of_events=6, number_of_resources=2
+        )
 
         with override_settings(REPORT_TIMESPANS=self.report_timespans):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-            self.assertIn('Content-Disposition', response)
-            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-            self.assertNotEqual(response.content, b'')
-            expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| - || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[[toolforge:sara-wmb/calendar|calendar]], [[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]], [[c:Main_Page|Main Page]], [https://example.com]</ref>\n|-\n|}\n"
-            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+            self.assertEqual(response["Content-Type"], "text/plain; charset=UTF-8")
+            self.assertIn("Content-Disposition", response)
+            self.assertEqual(
+                response["Content-Disposition"],
+                'attachment; filename="trimester_report.txt"',
+            )
+            self.assertNotEqual(response.content, b"")
+            expected_content = (
+                b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| - || "
+                + bytes(metric.text, "utf-8")
+                + b" || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b" || - || - || - || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b' || <ref name="sara-'
+                + bytes(str(report.id), "utf-8")
+                + b'">[[toolforge:sara-wmb/calendar|calendar]], [[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]], [[c:Main_Page|Main Page]], [https://example.com]</ref>\n|-\n|}\n'
+            )
+            self.assertEqual(
+                response.content.decode("utf-8"), expected_content.decode("utf-8")
+            )
 
-    def test_export_trimester_report_exports_wiki_links_as_wikitext_and_deals_with_duplicates(self):
+    def test_export_trimester_report_exports_wiki_links_as_wikitext_and_deals_with_duplicates(
+        self,
+    ):
         self.client.login(username=self.username, password=self.password)
         url = reverse("metrics:export_reports_per_trimester")
         area_responsible = TeamArea.objects.create(text="Area")
         area_responsible.project.add(self.main_project)
         area_responsible.save()
-        report = Report.objects.create(description="Report 1",
-                                       created_by=self.user_profile,
-                                       modified_by=self.user_profile,
-                                       initial_date=date(datetime.today().year, 2, 28),
-                                       learning="Learnings!" * 51,
-                                       activity_associated=self.activity,
-                                       area_responsible=area_responsible,
-                                       links="https://sara-wmb.toolforge.org/calendar\r\nhttps://pt.wikipedia.org/wiki/Wikipedia:Pagina_inicial\r\nhttps://commons.wikimedia.org/wiki/Main_Page\r\nhttps://example.com")
-        report_2 = Report.objects.create(description="Report 2",
-                                       created_by=self.user_profile,
-                                       modified_by=self.user_profile,
-                                       initial_date=date(datetime.today().year, 2, 28),
-                                       learning="Learnings!" * 51,
-                                       activity_associated=self.activity,
-                                       area_responsible=area_responsible,
-                                       links="https://pt.wikipedia.org/wiki/Wikipedia:Pagina_inicial")
-        metric = Metric.objects.create(text="Metric", activity=self.other_activity, number_of_events=5)
+        report = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=date(datetime.today().year, 2, 28),
+            learning="Learnings!" * 51,
+            activity_associated=self.activity,
+            area_responsible=area_responsible,
+            links="https://sara-wmb.toolforge.org/calendar\r\nhttps://pt.wikipedia.org/wiki/Wikipedia:Pagina_inicial\r\nhttps://commons.wikimedia.org/wiki/Main_Page\r\nhttps://example.com",
+        )
+        report_2 = Report.objects.create(
+            description="Report 2",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=date(datetime.today().year, 2, 28),
+            learning="Learnings!" * 51,
+            activity_associated=self.activity,
+            area_responsible=area_responsible,
+            links="https://pt.wikipedia.org/wiki/Wikipedia:Pagina_inicial",
+        )
+        metric = Metric.objects.create(
+            text="Metric", activity=self.other_activity, number_of_events=5
+        )
         metric.project.add(self.main_project)
         metric.save()
-        metric_2 = Metric.objects.create(text="Metric 2", activity=self.other_activity, number_of_events=10)
+        metric_2 = Metric.objects.create(
+            text="Metric 2", activity=self.other_activity, number_of_events=10
+        )
         metric_2.project.add(self.main_project)
         metric_2.save()
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        directions_related = Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
+        directions_related = Direction.objects.create(
+            text="Direction", strategic_axis=strategic_axis
+        )
         learning_area = LearningArea.objects.create(text="Learning area")
-        learning_questions_related = StrategicLearningQuestion.objects.create(text="Strategic Learning Question", learning_area=learning_area)
+        learning_questions_related = StrategicLearningQuestion.objects.create(
+            text="Strategic Learning Question", learning_area=learning_area
+        )
 
         report.directions_related.add(directions_related)
         report.learning_questions_related.add(learning_questions_related)
@@ -1371,15 +1866,44 @@ class MetricsExportTests(TestCase):
         report_2.metrics_related.add(metric_2)
         report_2.save()
 
-        operation_report = OperationReport.objects.create(metric=metric, report=report, number_of_events=6, number_of_resources=2)
-        operation_report_2 = OperationReport.objects.create(metric=metric_2, report=report_2, number_of_events=2, number_of_resources=6)
+        operation_report = OperationReport.objects.create(
+            metric=metric, report=report, number_of_events=6, number_of_resources=2
+        )
+        operation_report_2 = OperationReport.objects.create(
+            metric=metric_2, report=report_2, number_of_events=2, number_of_resources=6
+        )
 
         with override_settings(REPORT_TIMESPANS=self.report_timespans):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response['Content-Type'], 'text/plain; charset=UTF-8')
-            self.assertIn('Content-Disposition', response)
-            self.assertEqual(response['Content-Disposition'], 'attachment; filename="trimester_report.txt"')
-            self.assertNotEqual(response.content, b'')
-            expected_content = b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| rowspan='2' | - || " + bytes(metric.text, 'utf-8') + b" || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\">[[toolforge:sara-wmb/calendar|calendar]], [[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]], [[c:Main_Page|Main Page]], [https://example.com]</ref>\n|-\n| " + bytes(metric_2.text, 'utf-8') + b" || " + bytes(str(operation_report_2.number_of_events), 'utf-8') + b" || - || - || - || " + bytes(str(operation_report_2.number_of_events), 'utf-8') + b" || <ref name=\"sara-" + bytes(str(report.id), 'utf-8') + b"\"/><ref name=\"sara-" + bytes(str(report_2.id), 'utf-8') + b"\">[[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]]</ref>\n|-\n|}\n"
-            self.assertEqual(response.content.decode('utf-8'), expected_content.decode('utf-8'))
+            self.assertEqual(response["Content-Type"], "text/plain; charset=UTF-8")
+            self.assertIn("Content-Disposition", response)
+            self.assertEqual(
+                response["Content-Disposition"],
+                'attachment; filename="trimester_report.txt"',
+            )
+            self.assertNotEqual(response.content, b"")
+            expected_content = (
+                b"{| class='wikitable wmb_report_table'\n!Activity !! Metrics !! Q1 !! Q2 !! Q3 !! Q4 !! Total !! References\n|-\n| rowspan='2' | - || "
+                + bytes(metric.text, "utf-8")
+                + b" || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b" || - || - || - || "
+                + bytes(str(operation_report.number_of_events), "utf-8")
+                + b' || <ref name="sara-'
+                + bytes(str(report.id), "utf-8")
+                + b'">[[toolforge:sara-wmb/calendar|calendar]], [[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]], [[c:Main_Page|Main Page]], [https://example.com]</ref>\n|-\n| '
+                + bytes(metric_2.text, "utf-8")
+                + b" || "
+                + bytes(str(operation_report_2.number_of_events), "utf-8")
+                + b" || - || - || - || "
+                + bytes(str(operation_report_2.number_of_events), "utf-8")
+                + b' || <ref name="sara-'
+                + bytes(str(report.id), "utf-8")
+                + b'"/><ref name="sara-'
+                + bytes(str(report_2.id), "utf-8")
+                + b'">[[w:pt:Wikipedia:Pagina_inicial|Wikipedia:Pagina inicial]]</ref>\n|-\n|}\n'
+            )
+            self.assertEqual(
+                response.content.decode("utf-8"), expected_content.decode("utf-8")
+            )

@@ -1,5 +1,6 @@
-from modeltranslation.translator import register, TranslationOptions
-from .models import Project, Area, Activity, Metric
+from modeltranslation.translator import TranslationOptions, register
+
+from .models import Activity, Area, Metric, Project
 
 
 @register(Project)

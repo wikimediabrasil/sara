@@ -1,41 +1,55 @@
 import zipfile
-import pandas as pd
-from io import BytesIO
 from datetime import datetime
+from io import BytesIO
 from unittest.mock import patch
-from django.test import TestCase
+
+import pandas as pd
+from django.contrib.auth.models import Group, Permission
+from django.test import TestCase, override_settings
 from django.urls import reverse
-from django.contrib.auth.models import Permission, Group
 from django.utils.translation import gettext as _
 
-from metrics.models import Metric
-from users.models import TeamArea, UserProfile, User, UserPosition, Position
-from metrics.models import Activity, Area
-from strategy.models import Direction, StrategicAxis, LearningArea
-from report.models import Funding, Partner, Technology, StrategicLearningQuestion, Report, Editor, Organizer, Project, \
-    OperationReport
-from report.forms import NewReportForm, activities_associated_as_choices
-from report.views import export_report_instance, export_metrics, export_user_profile, export_directions_related, \
-    export_editors, export_learning_questions_related, export_organizers, export_partners_activated, \
-    export_technologies_used, export_operation_report, export_funding, export_area_activated
+from metrics.models import Activity, Area, Metric
+from report.forms import NewReportForm
+from report.models import (Editor, Funding, OperationReport, Organizer,
+                           Partner, Project, Report, StrategicLearningQuestion,
+                           Technology)
+from report.views import (export_area_activated, export_directions_related,
+                          export_editors, export_funding,
+                          export_learning_questions_related, export_metrics,
+                          export_operation_report, export_organizers,
+                          export_partners_activated, export_report_instance,
+                          export_technologies_used, export_user_profile,
+                          get_localized_field)
+from strategy.models import Direction, LearningArea, StrategicAxis
+from users.models import Position, TeamArea, User, UserPosition, UserProfile
 
 
 class ReportAddViewTest(TestCase):
     def setUp(self):
         self.username = "testuser"
         self.password = "testpass"
-        self.user = User.objects.create_user(username=self.username, password=self.password)
+        self.user = User.objects.create_user(
+            username=self.username, password=self.password
+        )
         self.user_profile = UserProfile.objects.filter(user=self.user).first()
         self.group = Group.objects.create(name="Group_name")
-        self.area_associated = TeamArea.objects.create(text="Team Area", code="team_area")
-        self.position = Position.objects.create(text="Position", type=self.group, area_associated=self.area_associated)
-        self.user_position = UserPosition.objects.create(user_profile=self.user_profile, position=self.position, start_date= datetime.now())
+        self.area_associated = TeamArea.objects.create(
+            text="Team Area", code="team_area"
+        )
+        self.position = Position.objects.create(
+            text="Position", type=self.group, area_associated=self.area_associated
+        )
+        self.user_position = UserPosition.objects.create(
+            user_profile=self.user_profile,
+            position=self.position,
+            start_date=datetime.now(),
+        )
 
         self.add_permission = Permission.objects.get(codename="add_report")
         self.delete_permission = Permission.objects.get(codename="delete_report")
         self.user.user_permissions.add(self.add_permission)
         self.user.user_permissions.add(self.delete_permission)
-
 
     def test_add_report_view_fails_if_user_doesnt_have_permission(self):
         self.user.user_permissions.remove(self.add_permission)
@@ -44,7 +58,10 @@ class ReportAddViewTest(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('report:add_report')}")
+        self.assertEqual(
+            response.url,
+            f"{reverse('users:login')}?next={reverse('report:add_report')}",
+        )
 
     def test_add_report_view_get(self):
         self.client.login(username=self.username, password=self.password)
@@ -58,49 +75,76 @@ class ReportAddViewTest(TestCase):
         self.client.login(username=self.username, password=self.password)
         url = reverse("report:add_report")
 
-        project = Project.objects.create(text="Wikimedia Community Fund", main_funding=True)
+        project = Project.objects.create(
+            text="Wikimedia Community Fund", main_funding=True
+        )
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        direction = Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
+        direction = Direction.objects.create(
+            text="Direction", strategic_axis=strategic_axis
+        )
         learning_area = LearningArea.objects.create(text="Learning area")
-        slq = StrategicLearningQuestion.objects.create(text="SLQ", learning_area=learning_area)
+        slq = StrategicLearningQuestion.objects.create(
+            text="SLQ", learning_area=learning_area
+        )
         activity_associated = Activity.objects.create(text="Activity")
         area_responsible = TeamArea.objects.create(text="Area")
-        metric = Metric.objects.create(text="Metric", activity=activity_associated, number_of_editors=10)
-        metric_2 = Metric.objects.create(text="Metric 2", activity=activity_associated, wikipedia_edited=2)
+        metric = Metric.objects.create(
+            text="Metric", activity=activity_associated, number_of_editors=10
+        )
+        metric_2 = Metric.objects.create(
+            text="Metric 2", activity=activity_associated, wikipedia_edited=2
+        )
         metric_2.project.add(project)
         metric_2.save()
         Editor.objects.create(username="Editor")
 
         data = {
-            "wikipedia_created": 0, "wikipedia_edited": 5,
-            "commons_created": 0, "commons_edited": 0,
-            "wikidata_created": 0, "wikidata_edited": 0,
-            "wikiversity_created": 0, "wikiversity_edited": 0,
-            "wikibooks_created": 0, "wikibooks_edited": 0,
-            "wikisource_created": 0, "wikisource_edited": 0,
-            "wikinews_created": 0, "wikinews_edited": 0,
-            "wikiquote_created": 0, "wikiquote_edited": 0,
-            "wiktionary_created": 0, "wiktionary_edited": 0,
-            "wikivoyage_created": 0, "wikivoyage_edited": 0,
-            "wikispecies_created": 0, "wikispecies_edited": 0,
-            "metawiki_created": 0, "metawiki_edited": 0,
-            "mediawiki_created": 0, "mediawiki_edited": 0,
-            "wikifunctions_created": 0, "wikifunctions_edited": 0,
-            "incubator_created": 0, "incubator_edited": 0,
-            "participants": 10, "resources": 0, "feedbacks": 0,
+            "wikipedia_created": 0,
+            "wikipedia_edited": 5,
+            "commons_created": 0,
+            "commons_edited": 0,
+            "wikidata_created": 0,
+            "wikidata_edited": 0,
+            "wikiversity_created": 0,
+            "wikiversity_edited": 0,
+            "wikibooks_created": 0,
+            "wikibooks_edited": 0,
+            "wikisource_created": 0,
+            "wikisource_edited": 0,
+            "wikinews_created": 0,
+            "wikinews_edited": 0,
+            "wikiquote_created": 0,
+            "wikiquote_edited": 0,
+            "wiktionary_created": 0,
+            "wiktionary_edited": 0,
+            "wikivoyage_created": 0,
+            "wikivoyage_edited": 0,
+            "wikispecies_created": 0,
+            "wikispecies_edited": 0,
+            "metawiki_created": 0,
+            "metawiki_edited": 0,
+            "mediawiki_created": 0,
+            "mediawiki_edited": 0,
+            "wikifunctions_created": 0,
+            "wikifunctions_edited": 0,
+            "incubator_created": 0,
+            "incubator_edited": 0,
+            "participants": 10,
+            "resources": 0,
+            "feedbacks": 0,
             "number_of_people_reached_through_social_media": 0,
             "description": "Report",
             "initial_date": datetime.now().date().strftime("%Y-%m-%d"),
             "directions_related": [direction.id],
             "editors_string": "Editor",
-            "learning": "Learnings!"*51,
+            "learning": "Learnings!" * 51,
             "learning_questions_related": [slq.id],
             "activity_associated": activity_associated.id,
             "area_responsible": area_responsible.id,
             "links": "Links",
             "donors": 0,
             "submissions": 0,
-            "metrics_related": [metric.id]
+            "metrics_related": [metric.id],
         }
         operation_data = {
             "Operation-TOTAL_FORMS": 1,
@@ -115,7 +159,7 @@ class ReportAddViewTest(TestCase):
             "Operation-0-number_of_events": 4,
             "Operation-0-number_of_resources": 5,
             "Operation-0-number_of_partnerships_activated": 6,
-            "Operation-0-number_of_new_partnerships": 0
+            "Operation-0-number_of_new_partnerships": 0,
         }
         data.update(operation_data)
         self.client.post(url, data=data)
@@ -128,127 +172,56 @@ class ReportAddViewTest(TestCase):
 
         Project.objects.create(text="Wikimedia Community Fund", main_funding=True)
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        direction = Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
+        direction = Direction.objects.create(
+            text="Direction", strategic_axis=strategic_axis
+        )
         learning_area = LearningArea.objects.create(text="Learning area")
-        slq = StrategicLearningQuestion.objects.create(text="SLQ", learning_area=learning_area)
+        slq = StrategicLearningQuestion.objects.create(
+            text="SLQ", learning_area=learning_area
+        )
         activity_associated = Activity.objects.create(text="Activity")
         area_responsible = TeamArea.objects.create(text="Area")
-        metric = Metric.objects.create(text="Metric", activity=activity_associated, number_of_editors=10, is_operation=True)
+        metric = Metric.objects.create(
+            text="Metric",
+            activity=activity_associated,
+            number_of_editors=10,
+            is_operation=True,
+        )
 
         data = {
-            "wikipedia_created": 0, "wikipedia_edited": 0,
-            "commons_created": 0, "commons_edited": 0,
-            "wikidata_created": 0, "wikidata_edited": 0,
-            "wikiversity_created": 0, "wikiversity_edited": 0,
-            "wikibooks_created": 0, "wikibooks_edited": 0,
-            "wikisource_created": 0, "wikisource_edited": 0,
-            "wikinews_created": 0, "wikinews_edited": 0,
-            "wikiquote_created": 0, "wikiquote_edited": 0,
-            "wiktionary_created": 0, "wiktionary_edited": 0,
-            "wikivoyage_created": 0, "wikivoyage_edited": 0,
-            "wikispecies_created": 0, "wikispecies_edited": 0,
-            "metawiki_created": 0, "metawiki_edited": 0,
-            "mediawiki_created": 0, "mediawiki_edited": 0,
-            "wikifunctions_created": 0, "wikifunctions_edited": 0,
-            "incubator_created": 0, "incubator_edited": 0,
-            "participants": 0, "resources": 0, "feedbacks": 0,
-            "number_of_people_reached_through_social_media": 0,
-            "description": "Report",
-            "initial_date": datetime.now().date().strftime("%Y-%m-%d"),
-            "directions_related": [direction.id],
-            "learning": "Learnings!"*51,
-            "learning_questions_related": [slq.id],
-            "activity_associated": activity_associated.id,
-            "area_responsible": area_responsible.id,
-            "links": "Links",
-            "metrics_related": [metric.id],
-            "organizers_string": "Organizer 1;Institution 1;Institution 2",
-            "donors": 0,
-            "submissions": 0
-        }
-        form = NewReportForm(data, user=self.user)
-        self.assertTrue(form.is_valid())
-
-        operation_data = {
-            "Operation-TOTAL_FORMS": 1,
-            "Operation-INITIAL_FORMS": 0,
-            "Operation-MIN_NUM_FORMS": 0,
-            "Operation-MAX_NUM_FORMS": 1000,
-            "Operation-0-metric":metric.id,
-            "Operation-0-number_of_people_reached_through_social_media": 1,
-            "Operation-0-number_of_new_followers": 2,
-            "Operation-0-number_of_mentions": 3,
-            "Operation-0-number_of_community_communications": 0,
-            "Operation-0-number_of_events": 4,
-            "Operation-0-number_of_resources": 5,
-            "Operation-0-number_of_partnerships_activated": 6,
-            "Operation-0-number_of_new_partnerships": 0
-        }
-
-        data.update(operation_data)
-        response = self.client.post(url, data=data)
-        report = Report.objects.get(description=data["description"])
-        self.assertRedirects(response, reverse("report:detail_report", kwargs={"report_id": report.id}), target_status_code=302)
-
-        report = Report.objects.get(id=1)
-        self.assertEqual(report.description, "Report")
-
-    def test_add_report_view_post_fails_with_invalid_parameters(self):
-        self.client.login(username=self.username, password=self.password)
-        url = reverse("report:add_report")
-
-        strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        direction = Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
-        learning_area = LearningArea.objects.create(text="Learning area")
-        slq = StrategicLearningQuestion.objects.create(text="SLQ", learning_area=learning_area)
-        activity_associated = Activity.objects.create(text="Activity")
-        area_responsible = TeamArea.objects.create(text="Area")
-
-        data = {
-            "description": "Report",
-            "initial_date": datetime.now().date().strftime("%Y-%m-%d"),
-            "directions_related": [direction.id],
-            "learning": "Learnings!" * 49,
-            "learning_questions_related": [slq.id],
-            "activity_associated": activity_associated.id,
-            "area_responsible": area_responsible.id,
-            "links": "Links"
-        }
-        form = NewReportForm(data, user=self.user)
-        self.assertFalse(form.is_valid())
-        self.client.post(url, data=data)
-        self.assertFalse(Report.objects.filter(description=data["description"]).exists())
-
-    def test_add_report_fails_if_it_is_a_duplicate(self):
-        self.client.login(username=self.username, password=self.password)
-        url = reverse("report:add_report")
-
-        Project.objects.create(text="Wikimedia Community Fund", main_funding=True)
-        strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        direction = Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
-        learning_area = LearningArea.objects.create(text="Learning area")
-        slq = StrategicLearningQuestion.objects.create(text="SLQ", learning_area=learning_area)
-        activity_associated = Activity.objects.create(text="Activity")
-        area_responsible = TeamArea.objects.create(text="Area")
-        metric = Metric.objects.create(text="Metric", activity=activity_associated, number_of_editors=10, is_operation=True)
-
-        data = {
-            "wikipedia_created": 0, "wikipedia_edited": 0,
-            "commons_created": 0, "commons_edited": 0,
-            "wikidata_created": 0, "wikidata_edited": 0,
-            "wikiversity_created": 0, "wikiversity_edited": 0,
-            "wikibooks_created": 0, "wikibooks_edited": 0,
-            "wikisource_created": 0, "wikisource_edited": 0,
-            "wikinews_created": 0, "wikinews_edited": 0,
-            "wikiquote_created": 0, "wikiquote_edited": 0,
-            "wiktionary_created": 0, "wiktionary_edited": 0,
-            "wikivoyage_created": 0, "wikivoyage_edited": 0,
-            "wikispecies_created": 0, "wikispecies_edited": 0,
-            "metawiki_created": 0, "metawiki_edited": 0,
-            "mediawiki_created": 0, "mediawiki_edited": 0,
-            "wikifunctions_created": 0, "wikifunctions_edited": 0,
-            "incubator_created": 0, "incubator_edited": 0,
-            "participants": 0, "resources": 0, "feedbacks": 0,
+            "wikipedia_created": 0,
+            "wikipedia_edited": 0,
+            "commons_created": 0,
+            "commons_edited": 0,
+            "wikidata_created": 0,
+            "wikidata_edited": 0,
+            "wikiversity_created": 0,
+            "wikiversity_edited": 0,
+            "wikibooks_created": 0,
+            "wikibooks_edited": 0,
+            "wikisource_created": 0,
+            "wikisource_edited": 0,
+            "wikinews_created": 0,
+            "wikinews_edited": 0,
+            "wikiquote_created": 0,
+            "wikiquote_edited": 0,
+            "wiktionary_created": 0,
+            "wiktionary_edited": 0,
+            "wikivoyage_created": 0,
+            "wikivoyage_edited": 0,
+            "wikispecies_created": 0,
+            "wikispecies_edited": 0,
+            "metawiki_created": 0,
+            "metawiki_edited": 0,
+            "mediawiki_created": 0,
+            "mediawiki_edited": 0,
+            "wikifunctions_created": 0,
+            "wikifunctions_edited": 0,
+            "incubator_created": 0,
+            "incubator_edited": 0,
+            "participants": 0,
+            "resources": 0,
+            "feedbacks": 0,
             "number_of_people_reached_through_social_media": 0,
             "description": "Report",
             "initial_date": datetime.now().date().strftime("%Y-%m-%d"),
@@ -261,7 +234,7 @@ class ReportAddViewTest(TestCase):
             "metrics_related": [metric.id],
             "organizers_string": "Organizer 1;Institution 1;Institution 2",
             "donors": 0,
-            "submissions": 0
+            "submissions": 0,
         }
         form = NewReportForm(data, user=self.user)
         self.assertTrue(form.is_valid())
@@ -279,7 +252,140 @@ class ReportAddViewTest(TestCase):
             "Operation-0-number_of_events": 4,
             "Operation-0-number_of_resources": 5,
             "Operation-0-number_of_partnerships_activated": 6,
-            "Operation-0-number_of_new_partnerships": 0
+            "Operation-0-number_of_new_partnerships": 0,
+        }
+
+        data.update(operation_data)
+        response = self.client.post(url, data=data)
+        report = Report.objects.get(description=data["description"])
+        self.assertRedirects(
+            response,
+            reverse("report:detail_report", kwargs={"report_id": report.id}),
+            target_status_code=302,
+        )
+
+        report = Report.objects.get(id=1)
+        self.assertEqual(report.description, "Report")
+
+    def test_add_report_view_post_fails_with_invalid_parameters(self):
+        self.client.login(username=self.username, password=self.password)
+        url = reverse("report:add_report")
+
+        strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
+        direction = Direction.objects.create(
+            text="Direction", strategic_axis=strategic_axis
+        )
+        learning_area = LearningArea.objects.create(text="Learning area")
+        slq = StrategicLearningQuestion.objects.create(
+            text="SLQ", learning_area=learning_area
+        )
+        activity_associated = Activity.objects.create(text="Activity")
+        area_responsible = TeamArea.objects.create(text="Area")
+
+        data = {
+            "description": "Report",
+            "initial_date": datetime.now().date().strftime("%Y-%m-%d"),
+            "directions_related": [direction.id],
+            "learning": "Learnings!" * 49,
+            "learning_questions_related": [slq.id],
+            "activity_associated": activity_associated.id,
+            "area_responsible": area_responsible.id,
+            "links": "Links",
+        }
+        form = NewReportForm(data, user=self.user)
+        self.assertFalse(form.is_valid())
+        self.client.post(url, data=data)
+        self.assertFalse(
+            Report.objects.filter(description=data["description"]).exists()
+        )
+
+    def test_add_report_fails_if_it_is_a_duplicate(self):
+        self.client.login(username=self.username, password=self.password)
+        url = reverse("report:add_report")
+
+        Project.objects.create(text="Wikimedia Community Fund", main_funding=True)
+        strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
+        direction = Direction.objects.create(
+            text="Direction", strategic_axis=strategic_axis
+        )
+        learning_area = LearningArea.objects.create(text="Learning area")
+        slq = StrategicLearningQuestion.objects.create(
+            text="SLQ", learning_area=learning_area
+        )
+        activity_associated = Activity.objects.create(text="Activity")
+        area_responsible = TeamArea.objects.create(text="Area")
+        metric = Metric.objects.create(
+            text="Metric",
+            activity=activity_associated,
+            number_of_editors=10,
+            is_operation=True,
+        )
+
+        data = {
+            "wikipedia_created": 0,
+            "wikipedia_edited": 0,
+            "commons_created": 0,
+            "commons_edited": 0,
+            "wikidata_created": 0,
+            "wikidata_edited": 0,
+            "wikiversity_created": 0,
+            "wikiversity_edited": 0,
+            "wikibooks_created": 0,
+            "wikibooks_edited": 0,
+            "wikisource_created": 0,
+            "wikisource_edited": 0,
+            "wikinews_created": 0,
+            "wikinews_edited": 0,
+            "wikiquote_created": 0,
+            "wikiquote_edited": 0,
+            "wiktionary_created": 0,
+            "wiktionary_edited": 0,
+            "wikivoyage_created": 0,
+            "wikivoyage_edited": 0,
+            "wikispecies_created": 0,
+            "wikispecies_edited": 0,
+            "metawiki_created": 0,
+            "metawiki_edited": 0,
+            "mediawiki_created": 0,
+            "mediawiki_edited": 0,
+            "wikifunctions_created": 0,
+            "wikifunctions_edited": 0,
+            "incubator_created": 0,
+            "incubator_edited": 0,
+            "participants": 0,
+            "resources": 0,
+            "feedbacks": 0,
+            "number_of_people_reached_through_social_media": 0,
+            "description": "Report",
+            "initial_date": datetime.now().date().strftime("%Y-%m-%d"),
+            "directions_related": [direction.id],
+            "learning": "Learnings!" * 51,
+            "learning_questions_related": [slq.id],
+            "activity_associated": activity_associated.id,
+            "area_responsible": area_responsible.id,
+            "links": "Links",
+            "metrics_related": [metric.id],
+            "organizers_string": "Organizer 1;Institution 1;Institution 2",
+            "donors": 0,
+            "submissions": 0,
+        }
+        form = NewReportForm(data, user=self.user)
+        self.assertTrue(form.is_valid())
+
+        operation_data = {
+            "Operation-TOTAL_FORMS": 1,
+            "Operation-INITIAL_FORMS": 0,
+            "Operation-MIN_NUM_FORMS": 0,
+            "Operation-MAX_NUM_FORMS": 1000,
+            "Operation-0-metric": metric.id,
+            "Operation-0-number_of_people_reached_through_social_media": 1,
+            "Operation-0-number_of_new_followers": 2,
+            "Operation-0-number_of_mentions": 3,
+            "Operation-0-number_of_community_communications": 0,
+            "Operation-0-number_of_events": 4,
+            "Operation-0-number_of_resources": 5,
+            "Operation-0-number_of_partnerships_activated": 6,
+            "Operation-0-number_of_new_partnerships": 0,
         }
 
         data.update(operation_data)
@@ -288,21 +394,23 @@ class ReportAddViewTest(TestCase):
         with self.assertRaises(ValueError) as e:
             self.client.post(url, data=data)
 
-        self.assertEqual(str(e.exception),_("Report already exists!"))
+        self.assertEqual(str(e.exception), _("Report already exists!"))
         self.assertEqual(Report.objects.count(), 1)
 
     def test_delete_report_fails_if_user_doesnt_have_permission(self):
         activity_associated = Activity.objects.create(text="Activity")
         area_responsible = TeamArea.objects.create(text="Area")
 
-        report_1 = Report.objects.create(description="Report 1",
-                                         created_by=self.user_profile,
-                                         modified_by=self.user_profile,
-                                         initial_date=datetime.now().date(),
-                                         learning="Learnings!" * 51,
-                                         activity_associated=activity_associated,
-                                         area_responsible=area_responsible,
-                                         links="Links")
+        report_1 = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=datetime.now().date(),
+            learning="Learnings!" * 51,
+            activity_associated=activity_associated,
+            area_responsible=area_responsible,
+            links="Links",
+        )
 
         self.user.user_permissions.remove(self.delete_permission)
         self.client.login(username=self.username, password=self.password)
@@ -310,20 +418,25 @@ class ReportAddViewTest(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('report:delete_report', kwargs={'report_id': report_1.id})}")
+        self.assertEqual(
+            response.url,
+            f"{reverse('users:login')}?next={reverse('report:delete_report', kwargs={'report_id': report_1.id})}",
+        )
 
     def test_delete_report_view_get(self):
         activity_associated = Activity.objects.create(text="Activity")
         area_responsible = TeamArea.objects.create(text="Area")
 
-        report_1 = Report.objects.create(description="Report 1",
-                                         created_by=self.user_profile,
-                                         modified_by=self.user_profile,
-                                         initial_date=datetime.now().date(),
-                                         learning="Learnings!" * 51,
-                                         activity_associated=activity_associated,
-                                         area_responsible=area_responsible,
-                                         links="Links")
+        report_1 = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=datetime.now().date(),
+            learning="Learnings!" * 51,
+            activity_associated=activity_associated,
+            area_responsible=area_responsible,
+            links="Links",
+        )
         self.client.login(username=self.username, password=self.password)
         url = reverse("report:delete_report", kwargs={"report_id": report_1.id})
         response = self.client.get(url)
@@ -335,14 +448,16 @@ class ReportAddViewTest(TestCase):
         activity_associated = Activity.objects.create(text="Activity")
         area_responsible = TeamArea.objects.create(text="Area")
 
-        report_1 = Report.objects.create(description="Report 1",
-                                         created_by=self.user_profile,
-                                         modified_by=self.user_profile,
-                                         initial_date=datetime.now().date(),
-                                         learning="Learnings!" * 51,
-                                         activity_associated=activity_associated,
-                                         area_responsible=area_responsible,
-                                         links="Links")
+        report_1 = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=datetime.now().date(),
+            learning="Learnings!" * 51,
+            activity_associated=activity_associated,
+            area_responsible=area_responsible,
+            links="Links",
+        )
         self.assertEqual(Report.objects.count(), 1)
         self.client.login(username=self.username, password=self.password)
         url = reverse("report:delete_report", kwargs={"report_id": report_1.id})
@@ -350,7 +465,9 @@ class ReportAddViewTest(TestCase):
 
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse("report:list_reports"), target_status_code=302)
+        self.assertRedirects(
+            response, reverse("report:list_reports"), target_status_code=302
+        )
 
     # def test_get_or_create_editors_with_empty_string(self):
     #     editors_string = ""
@@ -423,16 +540,20 @@ class ReportAddViewTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["objects"][0]["project"], "Activities plan")
-        self.assertEqual(response.json()["objects"][0]["metrics"][0]["activity_id"], activity.id)
+        self.assertEqual(
+            response.json()["objects"][0]["metrics"][0]["activity_id"], activity.id
+        )
 
-    def test_get_metrics_with_activity_not_from_the_activities_plan_and_metric_associated_to_project(self):
+    def test_get_metrics_with_activity_not_from_the_activities_plan_and_metric_associated_to_project(
+        self,
+    ):
         activities_plan = Project.objects.create(text="Activities plan")
         project = Project.objects.create(text="Project")
         other_area = Area.objects.create(text="Other area")
         other_area.project.add(project)
         other_area.save()
         other_activity = Activity.objects.create(text="Other")
-        metric=Metric.objects.create(activity=other_activity, text="Metric 1")
+        metric = Metric.objects.create(activity=other_activity, text="Metric 1")
         metric.project.add(project)
         metric.save()
 
@@ -448,11 +569,18 @@ class ReportAddViewTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["objects"][0]["project"], "Project")
-        self.assertEqual(response.json()["objects"][0]["metrics"][0]["activity_id"], other_activity.id)
+        self.assertEqual(
+            response.json()["objects"][0]["metrics"][0]["activity_id"],
+            other_activity.id,
+        )
         self.assertNotEqual(response.json()["objects"][0]["project"], "Activities plan")
-        self.assertNotEqual(response.json()["objects"][0]["metrics"][0]["activity_id"], activity.id)
+        self.assertNotEqual(
+            response.json()["objects"][0]["metrics"][0]["activity_id"], activity.id
+        )
 
-    def test_get_metrics_with_activity_not_from_the_activities_plan_and_metric_not_associated_to_project(self):
+    def test_get_metrics_with_activity_not_from_the_activities_plan_and_metric_not_associated_to_project(
+        self,
+    ):
         activities_plan = Project.objects.create(text="Activities plan")
         project = Project.objects.create(text="Project")
         other_area = Area.objects.create(text="Other area")
@@ -495,9 +623,13 @@ class ReportAddViewTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["objects"][0]["project"], "Project 1")
-        self.assertEqual(response.json()["objects"][0]["metrics"][0]["activity_id"], activity_1.id)
+        self.assertEqual(
+            response.json()["objects"][0]["metrics"][0]["activity_id"], activity_1.id
+        )
         self.assertNotEqual(response.json()["objects"][0]["project"], "Project 2")
-        self.assertNotEqual(response.json()["objects"][0]["metrics"][0]["activity_id"], activity_2.id)
+        self.assertNotEqual(
+            response.json()["objects"][0]["metrics"][0]["activity_id"], activity_2.id
+        )
 
     def test_get_metrics_of_report_instance(self):
         Project.objects.create(text="Activities plan")
@@ -509,18 +641,21 @@ class ReportAddViewTest(TestCase):
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
         Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
         learning_area = LearningArea.objects.create(text="Learning area")
-        StrategicLearningQuestion.objects.create(text="Strategic Learning Question",
-                                                                                   learning_area=learning_area)
+        StrategicLearningQuestion.objects.create(
+            text="Strategic Learning Question", learning_area=learning_area
+        )
         metric_1 = Metric.objects.create(text="Metric 1", activity=activity)
 
-        report_1 = Report.objects.create(description="Report 1",
-                                         created_by=self.user_profile,
-                                         modified_by=self.user_profile,
-                                         initial_date=datetime.now().date().strftime("%Y-%m-%d"),
-                                         learning="Learnings!" * 51,
-                                         activity_associated=activity,
-                                         area_responsible=area_responsible,
-                                         links="Links")
+        report_1 = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=datetime.now().date().strftime("%Y-%m-%d"),
+            learning="Learnings!" * 51,
+            activity_associated=activity,
+            area_responsible=area_responsible,
+            links="Links",
+        )
 
         report_1.metrics_related.add(metric_1)
         report_1.save()
@@ -531,7 +666,9 @@ class ReportAddViewTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["objects"][0]["project"], "Other metrics")
-        self.assertEqual(response.json()["objects"][0]["metrics"][0]["activity_id"], activity.id)
+        self.assertEqual(
+            response.json()["objects"][0]["metrics"][0]["activity_id"], activity.id
+        )
 
     def test_get_metrics_of_report_instance_with_other_metrics(self):
         Project.objects.create(text="Activities plan")
@@ -546,18 +683,22 @@ class ReportAddViewTest(TestCase):
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
         Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
         learning_area = LearningArea.objects.create(text="Learning area")
-        StrategicLearningQuestion.objects.create(text="Strategic Learning Question", learning_area=learning_area)
+        StrategicLearningQuestion.objects.create(
+            text="Strategic Learning Question", learning_area=learning_area
+        )
         metric_1 = Metric.objects.create(text="Metric 1", activity=activity)
         metric_2 = Metric.objects.create(text="Metric 2", activity=other_activity)
 
-        report_1 = Report.objects.create(description="Report 1",
-                                         created_by=self.user_profile,
-                                         modified_by=self.user_profile,
-                                         initial_date=datetime.now().date().strftime("%Y-%m-%d"),
-                                         learning="Learnings!" * 51,
-                                         activity_associated=activity,
-                                         area_responsible=area_responsible,
-                                         links="Links")
+        report_1 = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=datetime.now().date().strftime("%Y-%m-%d"),
+            learning="Learnings!" * 51,
+            activity_associated=activity,
+            area_responsible=area_responsible,
+            links="Links",
+        )
 
         report_1.metrics_related.add(metric_1)
         report_1.metrics_related.add(metric_2)
@@ -565,11 +706,15 @@ class ReportAddViewTest(TestCase):
 
         self.client.login(username=self.username, password=self.password)
         url = reverse("report:get_metrics")
-        response = self.client.get(url, {"instance": [report_1.id], "activity": activity.id})
+        response = self.client.get(
+            url, {"instance": [report_1.id], "activity": activity.id}
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["objects"][0]["project"], "Project 1")
-        self.assertEqual(response.json()["objects"][0]["metrics"][0]["activity_id"], activity.id)
+        self.assertEqual(
+            response.json()["objects"][0]["metrics"][0]["activity_id"], activity.id
+        )
 
     def test_get_metrics_without_activities(self):
         activity = Activity.objects.create(text="Activity")
@@ -604,7 +749,9 @@ class ReportViewViewTest(TestCase):
     def setUp(self):
         self.username = "testuser"
         self.password = "testpass"
-        self.user = User.objects.create_user(username=self.username, password=self.password)
+        self.user = User.objects.create_user(
+            username=self.username, password=self.password
+        )
         self.user_profile = UserProfile.objects.filter(user=self.user).first()
         self.change_permission = Permission.objects.get(codename="change_report")
         self.view_permission = Permission.objects.get(codename="view_report")
@@ -614,27 +761,37 @@ class ReportViewViewTest(TestCase):
         self.activity_associated = Activity.objects.create(text="Activity")
         self.area_responsible = TeamArea.objects.create(text="Area")
         self.strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        self.directions_related = Direction.objects.create(text="Direction", strategic_axis=self.strategic_axis)
+        self.directions_related = Direction.objects.create(
+            text="Direction", strategic_axis=self.strategic_axis
+        )
         self.learning_area = LearningArea.objects.create(text="Learning area")
-        self.learning_questions_related = StrategicLearningQuestion.objects.create(text="Strategic Learning Question", learning_area=self.learning_area)
-        self.metrics_related = Metric.objects.create(text="Metric", activity=self.activity_associated)
+        self.learning_questions_related = StrategicLearningQuestion.objects.create(
+            text="Strategic Learning Question", learning_area=self.learning_area
+        )
+        self.metrics_related = Metric.objects.create(
+            text="Metric", activity=self.activity_associated
+        )
 
-        self.report_1 = Report.objects.create(description="Report 1",
-                                              created_by=self.user_profile,
-                                              modified_by=self.user_profile,
-                                              initial_date=datetime.now().date().strftime("%Y-%m-%d"),
-                                              learning="Learnings!" * 51,
-                                              activity_associated=self.activity_associated,
-                                              area_responsible=self.area_responsible,
-                                              links="Links")
-        self.report_2 = Report.objects.create(description="Report 2",
-                                              created_by=self.user_profile,
-                                              modified_by=self.user_profile,
-                                              initial_date=datetime.now().date().strftime("%Y-%m-%d"),
-                                              learning="Learnings!" * 51,
-                                              activity_associated=self.activity_associated,
-                                              area_responsible=self.area_responsible,
-                                              links="Links")
+        self.report_1 = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=datetime.now().date().strftime("%Y-%m-%d"),
+            learning="Learnings!" * 51,
+            activity_associated=self.activity_associated,
+            area_responsible=self.area_responsible,
+            links="Links",
+        )
+        self.report_2 = Report.objects.create(
+            description="Report 2",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=datetime.now().date().strftime("%Y-%m-%d"),
+            learning="Learnings!" * 51,
+            activity_associated=self.activity_associated,
+            area_responsible=self.area_responsible,
+            links="Links",
+        )
 
     def test_list_reports_is_only_possible_for_users_with_permissions(self):
         self.user.user_permissions.remove(self.view_permission)
@@ -642,39 +799,56 @@ class ReportViewViewTest(TestCase):
         response = self.client.get(reverse("report:list_reports"))
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('report:list_reports')}")
+        self.assertEqual(
+            response.url,
+            f"{reverse('users:login')}?next={reverse('report:list_reports')}",
+        )
 
     def test_list_reports_show_list_of_reports(self):
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse("report:list_reports"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'report/list_reports.html')
-        self.assertQuerySetEqual(response.context['dataset'], Report.objects.order_by('-created_at'))
+        self.assertTemplateUsed(response, "report/list_reports.html")
+        self.assertQuerySetEqual(
+            response.context["dataset"], Report.objects.order_by("-created_at")
+        )
 
     def test_detail_report_is_only_possible_for_users_with_permissions(self):
         self.user.user_permissions.remove(self.view_permission)
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("report:detail_report", kwargs={"report_id": self.report_1.id}))
+        response = self.client.get(
+            reverse("report:detail_report", kwargs={"report_id": self.report_1.id})
+        )
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('report:detail_report', kwargs={'report_id': self.report_1.id})}")
+        self.assertEqual(
+            response.url,
+            f"{reverse('users:login')}?next={reverse('report:detail_report', kwargs={'report_id': self.report_1.id})}",
+        )
 
     def test_detail_report_show_report(self):
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("report:detail_report", kwargs={"report_id": self.report_1.id}))
+        response = self.client.get(
+            reverse("report:detail_report", kwargs={"report_id": self.report_1.id})
+        )
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'report/detail_report.html')
-        self.assertEqual(response.context['data'], self.report_1)
+        self.assertTemplateUsed(response, "report/detail_report.html")
+        self.assertEqual(response.context["data"], self.report_1)
 
     def test_update_report_is_only_possible_for_users_with_permissions(self):
         self.user.user_permissions.remove(self.change_permission)
         self.client.login(username=self.username, password=self.password)
-        response = self.client.post(reverse('report:update_report', kwargs={'report_id': self.report_1.id}))
+        response = self.client.post(
+            reverse("report:update_report", kwargs={"report_id": self.report_1.id})
+        )
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('report:update_report', kwargs={'report_id': self.report_1.id})}")
+        self.assertEqual(
+            response.url,
+            f"{reverse('users:login')}?next={reverse('report:update_report', kwargs={'report_id': self.report_1.id})}",
+        )
 
     def test_update_locked_report_is_possible_for_users_with_permissions(self):
         change_locked_report = Permission.objects.get(codename="can_edit_locked_report")
@@ -683,7 +857,9 @@ class ReportViewViewTest(TestCase):
         self.report_1.save()
 
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('report:update_report', kwargs={'report_id': self.report_1.id}))
+        response = self.client.get(
+            reverse("report:update_report", kwargs={"report_id": self.report_1.id})
+        )
 
         self.assertEqual(response.status_code, 200)
 
@@ -692,38 +868,56 @@ class ReportViewViewTest(TestCase):
         self.report_1.save()
 
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('report:update_report', kwargs={'report_id': self.report_1.id}))
+        response = self.client.get(
+            reverse("report:update_report", kwargs={"report_id": self.report_1.id})
+        )
 
         self.assertEqual(response.status_code, 302)
 
-
     def test_update_report_get_view(self):
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("report:update_report", kwargs={"report_id": self.report_1.id}))
+        response = self.client.get(
+            reverse("report:update_report", kwargs={"report_id": self.report_1.id})
+        )
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'report/update_report.html')
+        self.assertTemplateUsed(response, "report/update_report.html")
 
     def test_update_report_post_with_valid_parameters(self):
         Project.objects.create(text="Wikimedia Community Fund", main_funding=True)
         self.client.login(username=self.username, password=self.password)
         url = reverse("report:update_report", kwargs={"report_id": self.report_1.id})
         data = {
-            "wikipedia_created": 0, "wikipedia_edited": 5,
-            "commons_created": 0, "commons_edited": 0,
-            "wikidata_created": 0, "wikidata_edited": 0,
-            "wikiversity_created": 0, "wikiversity_edited": 0,
-            "wikibooks_created": 0, "wikibooks_edited": 0,
-            "wikisource_created": 0, "wikisource_edited": 0,
-            "wikinews_created": 0, "wikinews_edited": 0,
-            "wikiquote_created": 0, "wikiquote_edited": 0,
-            "wiktionary_created": 0, "wiktionary_edited": 0,
-            "wikivoyage_created": 0, "wikivoyage_edited": 0,
-            "wikispecies_created": 0, "wikispecies_edited": 0,
-            "metawiki_created": 0, "metawiki_edited": 0,
-            "mediawiki_created": 0, "mediawiki_edited": 0,
-            "wikifunctions_created": 0, "wikifunctions_edited": 0,
-            "incubator_created": 0, "incubator_edited": 0,
+            "wikipedia_created": 0,
+            "wikipedia_edited": 5,
+            "commons_created": 0,
+            "commons_edited": 0,
+            "wikidata_created": 0,
+            "wikidata_edited": 0,
+            "wikiversity_created": 0,
+            "wikiversity_edited": 0,
+            "wikibooks_created": 0,
+            "wikibooks_edited": 0,
+            "wikisource_created": 0,
+            "wikisource_edited": 0,
+            "wikinews_created": 0,
+            "wikinews_edited": 0,
+            "wikiquote_created": 0,
+            "wikiquote_edited": 0,
+            "wiktionary_created": 0,
+            "wiktionary_edited": 0,
+            "wikivoyage_created": 0,
+            "wikivoyage_edited": 0,
+            "wikispecies_created": 0,
+            "wikispecies_edited": 0,
+            "metawiki_created": 0,
+            "metawiki_edited": 0,
+            "mediawiki_created": 0,
+            "mediawiki_edited": 0,
+            "wikifunctions_created": 0,
+            "wikifunctions_edited": 0,
+            "incubator_created": 0,
+            "incubator_edited": 0,
             "number_of_people_reached_through_social_media": 0,
             "activity_associated": self.report_1.activity_associated.id,
             "area_responsible": self.report_1.area_responsible.id,
@@ -733,7 +927,7 @@ class ReportViewViewTest(TestCase):
             "participants": 2,
             "resources": 23,
             "feedbacks": 12,
-            "learning": "Learnings!!"*49,
+            "learning": "Learnings!!" * 49,
             "links": self.report_1.links,
             "editors_string": "new editor 1\r\nnew editor 2",
             "organizers_string": "new organizer 1\r\nnew organizer 2",
@@ -741,7 +935,7 @@ class ReportViewViewTest(TestCase):
             "learning_questions_related": [self.learning_questions_related.id],
             "metrics_related": [self.metrics_related.id],
             "donors": 0,
-            "submissions": 0
+            "submissions": 0,
         }
         operation_data = {
             "Operation-TOTAL_FORMS": 1,
@@ -756,13 +950,16 @@ class ReportViewViewTest(TestCase):
             "Operation-0-number_of_events": 4,
             "Operation-0-number_of_resources": 5,
             "Operation-0-number_of_partnerships_activated": 6,
-            "Operation-0-number_of_new_partnerships": 0
+            "Operation-0-number_of_new_partnerships": 0,
         }
         data.update(operation_data)
 
         response = self.client.post(url, data=data)
         self.report_1.refresh_from_db()
-        self.assertRedirects(response, reverse("report:detail_report", kwargs={"report_id": self.report_1.id}))
+        self.assertRedirects(
+            response,
+            reverse("report:detail_report", kwargs={"report_id": self.report_1.id}),
+        )
         self.assertEqual(self.report_1.description, "Updated Test Report")
         self.assertEqual(self.report_1.editors.count(), 2)
         self.assertEqual(self.report_1.organizers.count(), 2)
@@ -772,7 +969,9 @@ class ReportExportViewTest(TestCase):
     def setUp(self):
         self.username = "testuser"
         self.password = "testpass"
-        self.user = User.objects.create_user(username=self.username, password=self.password)
+        self.user = User.objects.create_user(
+            username=self.username, password=self.password
+        )
         self.user_profile = UserProfile.objects.filter(user=self.user).first()
         self.view_permission = Permission.objects.get(codename="view_report")
         self.user.user_permissions.add(self.view_permission)
@@ -780,175 +979,266 @@ class ReportExportViewTest(TestCase):
         self.activity_associated = Activity.objects.create(text="Activity")
         self.area_responsible = TeamArea.objects.create(text="Area", code="area")
 
-        self.report_1 = Report.objects.create(description="Report 1",
-                                              created_by=self.user_profile,
-                                              modified_by=self.user_profile,
-                                              initial_date=datetime.now().date(),
-                                              learning="Learnings!" * 51,
-                                              activity_associated=self.activity_associated,
-                                              area_responsible=self.area_responsible,
-                                              links="Links")
-        self.report_2 = Report.objects.create(description="Report 2",
-                                              created_by=self.user_profile,
-                                              modified_by=self.user_profile,
-                                              initial_date=datetime.now().date(),
-                                              learning="Learnings!" * 51,
-                                              activity_associated=self.activity_associated,
-                                              area_responsible=self.area_responsible,
-                                              links="Links")
+        self.report_1 = Report.objects.create(
+            description="Report 1",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=datetime.now().date(),
+            learning="Learnings!" * 51,
+            activity_associated=self.activity_associated,
+            area_responsible=self.area_responsible,
+            links="Links",
+        )
+        self.report_2 = Report.objects.create(
+            description="Report 2",
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            initial_date=datetime.now().date(),
+            learning="Learnings!" * 51,
+            activity_associated=self.activity_associated,
+            area_responsible=self.area_responsible,
+            links="Links",
+        )
         self.report_1.save()
         self.report_2.save()
 
         self.project = Project.objects.create(text="Project")
-        self.funding_associated = Funding.objects.create(name="Funding", project=self.project, value=12)
+        self.funding_associated = Funding.objects.create(
+            name="Funding", project=self.project, value=12
+        )
         self.editors = Editor.objects.create(username="Editor")
         self.organizers = Organizer.objects.create(name="Organizer")
         self.partners_activated = Partner.objects.create(name="Partner")
         self.technologies_used = Technology.objects.create(name="Technology")
         self.strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        self.directions_related = Direction.objects.create(text="Direction", strategic_axis=self.strategic_axis)
+        self.directions_related = Direction.objects.create(
+            text="Direction", strategic_axis=self.strategic_axis
+        )
         self.learning_area = LearningArea.objects.create(text="Learning area")
-        self.learning_questions_related = StrategicLearningQuestion.objects.create(text="Strategic Learning Question",
-                                                                                   learning_area=self.learning_area)
-        self.metrics_related = Metric.objects.create(text="Metric", activity=self.activity_associated)
+        self.learning_questions_related = StrategicLearningQuestion.objects.create(
+            text="Strategic Learning Question", learning_area=self.learning_area
+        )
+        self.metrics_related = Metric.objects.create(
+            text="Metric", activity=self.activity_associated
+        )
 
     def test_export_report_is_only_possible_for_users_with_permissions(self):
         self.user.user_permissions.remove(self.view_permission)
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse("report:export_report", kwargs={"report_id": self.report_1.id}))
+        response = self.client.get(
+            reverse("report:export_report", kwargs={"report_id": self.report_1.id})
+        )
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('report:export_report', kwargs={'report_id': self.report_1.id})}")
+        self.assertEqual(
+            response.url,
+            f"{reverse('users:login')}?next={reverse('report:export_report', kwargs={'report_id': self.report_1.id})}",
+        )
 
     def test_export_report_generates_a_zip_file(self):
         self.client.login(username=self.username, password=self.password)
 
-        response = self.client.get(reverse("report:export_report", kwargs={"report_id": self.report_1.id}))
+        response = self.client.get(
+            reverse("report:export_report", kwargs={"report_id": self.report_1.id})
+        )
         self.assertEqual(response.status_code, 200)
-        content_type = response.headers['Content-Type']
-        self.assertEqual(content_type, 'application/x-zip-compressed')
+        content_type = response.headers["Content-Type"]
+        self.assertEqual(content_type, "application/x-zip-compressed")
 
-    @patch('report.views.add_csv_file')
-    @patch('report.views.add_excel_file')
-    def test_export_report_generates_a_zip_file_with_a_specific_structure(self, mock_add_excel_file, mock_add_csv_file):
+    @patch("report.views.add_csv_file")
+    @patch("report.views.add_excel_file")
+    def test_export_report_generates_a_zip_file_with_a_specific_structure(
+        self, mock_add_excel_file, mock_add_csv_file
+    ):
         self.client.login(username=self.username, password=self.password)
-        mock_add_csv_file.return_value = BytesIO(b'test csv data')
-        mock_add_excel_file.return_value = BytesIO(b'test excel data')
-        response = self.client.get(reverse("report:export_report", kwargs={"report_id": self.report_1.id}))
+        mock_add_csv_file.return_value = BytesIO(b"test csv data")
+        mock_add_excel_file.return_value = BytesIO(b"test excel data")
+        response = self.client.get(
+            reverse("report:export_report", kwargs={"report_id": self.report_1.id})
+        )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'application/x-zip-compressed')
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename=Report 1 - {}.zip'.format(datetime.today().strftime('%Y-%m-%d')))
+        self.assertEqual(response["Content-Type"], "application/x-zip-compressed")
+        self.assertEqual(
+            response["Content-Disposition"],
+            "attachment; filename=Report 1 - {}.zip".format(
+                datetime.today().strftime("%Y-%m-%d")
+            ),
+        )
         buffer = BytesIO(response.content)
         with zipfile.ZipFile(buffer) as zip_file:
             expected_files = [
-                'csv/Report 1 - {}.csv'.format(datetime.today().strftime('%Y-%m-%d')),
-                'csv/Operation report 1 - {}.csv'.format(datetime.today().strftime('%Y-%m-%d')),
-                'csv/Metrics 1 - {}.csv'.format(datetime.today().strftime('%Y-%m-%d')),
-                'csv/Users 1 - {}.csv'.format(datetime.today().strftime('%Y-%m-%d')),
-                'csv/Areas 1 - {}.csv'.format(datetime.today().strftime('%Y-%m-%d')),
-                'csv/Directions 1 - {}.csv'.format(datetime.today().strftime('%Y-%m-%d')),
-                'csv/Editors 1 - {}.csv'.format(datetime.today().strftime('%Y-%m-%d')),
-                'csv/Fundings 1 - {}.csv'.format(datetime.today().strftime('%Y-%m-%d')),
-                'csv/Learning questions 1 - {}.csv'.format(datetime.today().strftime('%Y-%m-%d')),
-                'csv/Organizers 1 - {}.csv'.format(datetime.today().strftime('%Y-%m-%d')),
-                'csv/Partners 1 - {}.csv'.format(datetime.today().strftime('%Y-%m-%d')),
-                'csv/Technologies 1 - {}.csv'.format(datetime.today().strftime('%Y-%m-%d')),
-                'Export 1 - {}.xlsx'.format(datetime.today().strftime('%Y-%m-%d')),
+                "csv/Report 1 - {}.csv".format(datetime.today().strftime("%Y-%m-%d")),
+                "csv/Operation report 1 - {}.csv".format(
+                    datetime.today().strftime("%Y-%m-%d")
+                ),
+                "csv/Metrics 1 - {}.csv".format(datetime.today().strftime("%Y-%m-%d")),
+                "csv/Users 1 - {}.csv".format(datetime.today().strftime("%Y-%m-%d")),
+                "csv/Areas 1 - {}.csv".format(datetime.today().strftime("%Y-%m-%d")),
+                "csv/Directions 1 - {}.csv".format(
+                    datetime.today().strftime("%Y-%m-%d")
+                ),
+                "csv/Editors 1 - {}.csv".format(datetime.today().strftime("%Y-%m-%d")),
+                "csv/Fundings 1 - {}.csv".format(datetime.today().strftime("%Y-%m-%d")),
+                "csv/Learning questions 1 - {}.csv".format(
+                    datetime.today().strftime("%Y-%m-%d")
+                ),
+                "csv/Organizers 1 - {}.csv".format(
+                    datetime.today().strftime("%Y-%m-%d")
+                ),
+                "csv/Partners 1 - {}.csv".format(datetime.today().strftime("%Y-%m-%d")),
+                "csv/Technologies 1 - {}.csv".format(
+                    datetime.today().strftime("%Y-%m-%d")
+                ),
+                "Export 1 - {}.xlsx".format(datetime.today().strftime("%Y-%m-%d")),
             ]
             self.assertEqual(sorted(zip_file.namelist()), sorted(expected_files))
-            self.assertEqual(zip_file.read(expected_files[0]), b'test csv data')
-            self.assertEqual(zip_file.read(expected_files[-1]), b'test excel data')
+            self.assertEqual(zip_file.read(expected_files[0]), b"test csv data")
+            self.assertEqual(zip_file.read(expected_files[-1]), b"test excel data")
 
-    @patch('report.views.add_csv_file')
-    @patch('report.views.add_excel_file')
-    def test_export_report_generates_a_zip_file_with_a_specific_structure_without_report_id(self, mock_add_excel_file, mock_add_csv_file):
+    @patch("report.views.add_csv_file")
+    @patch("report.views.add_excel_file")
+    def test_export_report_generates_a_zip_file_with_a_specific_structure_without_report_id(
+        self, mock_add_excel_file, mock_add_csv_file
+    ):
         self.client.login(username=self.username, password=self.password)
-        mock_add_csv_file.return_value = BytesIO(b'test csv data')
-        mock_add_excel_file.return_value = BytesIO(b'test excel data')
+        mock_add_csv_file.return_value = BytesIO(b"test csv data")
+        mock_add_excel_file.return_value = BytesIO(b"test excel data")
         response = self.client.get(reverse("report:export_all_reports"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'application/x-zip-compressed')
-        postfix = datetime.today().strftime('%Y-%m-%d')
-        self.assertEqual(response['Content-Disposition'], 'attachment; filename=SARA - Reports - {}.zip'.format(postfix))
+        self.assertEqual(response["Content-Type"], "application/x-zip-compressed")
+        postfix = datetime.today().strftime("%Y-%m-%d")
+        self.assertEqual(
+            response["Content-Disposition"],
+            "attachment; filename=SARA - Reports - {}.zip".format(postfix),
+        )
         buffer = BytesIO(response.content)
         with zipfile.ZipFile(buffer) as zip_file:
             expected_files = [
-                'csv/Report - {}.csv'.format(postfix),
-                'csv/Operation report - {}.csv'.format(postfix),
-                'csv/Metrics - {}.csv'.format(postfix),
-                'csv/Users - {}.csv'.format(postfix),
-                'csv/Areas - {}.csv'.format(postfix),
-                'csv/Directions - {}.csv'.format(postfix),
-                'csv/Editors - {}.csv'.format(postfix),
-                'csv/Fundings - {}.csv'.format(postfix),
-                'csv/Learning questions - {}.csv'.format(postfix),
-                'csv/Organizers - {}.csv'.format(postfix),
-                'csv/Partners - {}.csv'.format(postfix),
-                'csv/Technologies - {}.csv'.format(postfix),
-                'Export - {}.xlsx'.format(postfix),
+                "csv/Report - {}.csv".format(postfix),
+                "csv/Operation report - {}.csv".format(postfix),
+                "csv/Metrics - {}.csv".format(postfix),
+                "csv/Users - {}.csv".format(postfix),
+                "csv/Areas - {}.csv".format(postfix),
+                "csv/Directions - {}.csv".format(postfix),
+                "csv/Editors - {}.csv".format(postfix),
+                "csv/Fundings - {}.csv".format(postfix),
+                "csv/Learning questions - {}.csv".format(postfix),
+                "csv/Organizers - {}.csv".format(postfix),
+                "csv/Partners - {}.csv".format(postfix),
+                "csv/Technologies - {}.csv".format(postfix),
+                "Export - {}.xlsx".format(postfix),
             ]
             self.assertEqual(sorted(zip_file.namelist()), sorted(expected_files))
-            self.assertEqual(zip_file.read(expected_files[0]), b'test csv data')
-            self.assertEqual(zip_file.read(expected_files[-1]), b'test excel data')
+            self.assertEqual(zip_file.read(expected_files[0]), b"test csv data")
+            self.assertEqual(zip_file.read(expected_files[-1]), b"test excel data")
 
-    @patch('report.views.add_csv_file')
-    @patch('report.views.add_excel_file')
-    def test_export_report_generates_a_zip_file_with_a_specific_structure_with_year(self, mock_add_excel_file,
-                                                                                    mock_add_csv_file):
+    @patch("report.views.add_csv_file")
+    @patch("report.views.add_excel_file")
+    def test_export_report_generates_a_zip_file_with_a_specific_structure_with_year(
+        self, mock_add_excel_file, mock_add_csv_file
+    ):
         self.client.login(username=self.username, password=self.password)
-        mock_add_csv_file.return_value = BytesIO(b'test csv data')
-        mock_add_excel_file.return_value = BytesIO(b'test excel data')
-        response = self.client.get(reverse("report:export_year_reports", kwargs={"year": datetime.now().year}))
+        mock_add_csv_file.return_value = BytesIO(b"test csv data")
+        mock_add_excel_file.return_value = BytesIO(b"test excel data")
+        response = self.client.get(
+            reverse("report:export_year_reports", kwargs={"year": datetime.now().year})
+        )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'application/x-zip-compressed')
-        postfix = datetime.today().strftime('%Y-%m-%d')
-        self.assertEqual(response['Content-Disposition'],
-                         'attachment; filename=SARA - Reports - {}.zip'.format(postfix))
+        self.assertEqual(response["Content-Type"], "application/x-zip-compressed")
+        postfix = datetime.today().strftime("%Y-%m-%d")
+        self.assertEqual(
+            response["Content-Disposition"],
+            "attachment; filename=SARA - Reports - {}.zip".format(postfix),
+        )
         buffer = BytesIO(response.content)
         with zipfile.ZipFile(buffer) as zip_file:
             expected_files = [
-                'csv/Report - {}.csv'.format(postfix),
-                'csv/Operation report - {}.csv'.format(postfix),
-                'csv/Metrics - {}.csv'.format(postfix),
-                'csv/Users - {}.csv'.format(postfix),
-                'csv/Areas - {}.csv'.format(postfix),
-                'csv/Directions - {}.csv'.format(postfix),
-                'csv/Editors - {}.csv'.format(postfix),
-                'csv/Fundings - {}.csv'.format(postfix),
-                'csv/Learning questions - {}.csv'.format(postfix),
-                'csv/Organizers - {}.csv'.format(postfix),
-                'csv/Partners - {}.csv'.format(postfix),
-                'csv/Technologies - {}.csv'.format(postfix),
-                'Export - {}.xlsx'.format(postfix),
+                "csv/Report - {}.csv".format(postfix),
+                "csv/Operation report - {}.csv".format(postfix),
+                "csv/Metrics - {}.csv".format(postfix),
+                "csv/Users - {}.csv".format(postfix),
+                "csv/Areas - {}.csv".format(postfix),
+                "csv/Directions - {}.csv".format(postfix),
+                "csv/Editors - {}.csv".format(postfix),
+                "csv/Fundings - {}.csv".format(postfix),
+                "csv/Learning questions - {}.csv".format(postfix),
+                "csv/Organizers - {}.csv".format(postfix),
+                "csv/Partners - {}.csv".format(postfix),
+                "csv/Technologies - {}.csv".format(postfix),
+                "Export - {}.xlsx".format(postfix),
             ]
             self.assertEqual(sorted(zip_file.namelist()), sorted(expected_files))
-            self.assertEqual(zip_file.read(expected_files[0]), b'test csv data')
-            self.assertEqual(zip_file.read(expected_files[-1]), b'test excel data')
+            self.assertEqual(zip_file.read(expected_files[0]), b"test csv data")
+            self.assertEqual(zip_file.read(expected_files[-1]), b"test excel data")
 
     def test_export_report_instance(self):
-        expected_header = [_('ID'), _('Created by'), _('Created at'), _('Modified by'), _('Modified at'),
-                           _('Activity associated'), _('Partial report?'), _('Name of the activity'),
-                           _('Reference Text'), _('Area responsible'), _('Area activated'), _('Initial date'),
-                           _('End date'), _('Description'), _('Funding associated'), _('Links'),
-                           _('Are there private links?'), _('Number of participants'),
-                           _('Number of feedbacks'), _('Editors'), _('# Editors'), _('Organizers'), _('# Organizers'),
-                           _('Partnerships activated'), _('# Partnerships activated'), _('Technologies used'),
-                           _('# Donors'), _('# Submissions'), _('# Wikipedia created'), _('# Wikipedia edited'),
-                           _('# Commons created'), _('# Commons edited'), _('# Wikidata created'),
-                           _('# Wikidata edited'), _('# Wikiversity created'), _('# Wikiversity edited'),
-                           _('# Wikibooks created'), _('# Wikibooks edited'), _('# Wikisource created'),
-                           _('# Wikisource edited'), _('# Wikinews created'), _('# Wikinews edited'),
-                           _('# Wikiquote created'), _('# Wikiquote edited'), _('# Wiktionary created'),
-                           _('# Wiktionary edited'), _('# Wikivoyage created'), _('# Wikivoyage edited'),
-                           _('# Wikispecies created'), _('# Wikispecies edited'), _('# Metawiki created'),
-                           _('# Metawiki edited'), _('# MediaWiki created'), _('# MediaWiki edited'),
-                           _('# Wikifunctions created'), _('# Wikifunctions edited'),
-                           _('# Incubator created'), _('# Incubator edited'),
-                           _('Directions related'), _('Learning'), _('Learning questions related'),
-                           _('Metrics related')]
+        expected_header = [
+            _("ID"),
+            _("Created by"),
+            _("Created at"),
+            _("Modified by"),
+            _("Modified at"),
+            _("Activity associated"),
+            _("Partial report?"),
+            _("Name of the activity"),
+            _("Reference Text"),
+            _("Area responsible"),
+            _("Area activated"),
+            _("Initial date"),
+            _("End date"),
+            _("Description"),
+            _("Funding associated"),
+            _("Links"),
+            _("Are there private links?"),
+            _("Number of participants"),
+            _("Number of feedbacks"),
+            _("Editors"),
+            _("# Editors"),
+            _("Organizers"),
+            _("# Organizers"),
+            _("Partnerships activated"),
+            _("# Partnerships activated"),
+            _("Technologies used"),
+            _("# Donors"),
+            _("# Submissions"),
+            _("# Wikipedia created"),
+            _("# Wikipedia edited"),
+            _("# Commons created"),
+            _("# Commons edited"),
+            _("# Wikidata created"),
+            _("# Wikidata edited"),
+            _("# Wikiversity created"),
+            _("# Wikiversity edited"),
+            _("# Wikibooks created"),
+            _("# Wikibooks edited"),
+            _("# Wikisource created"),
+            _("# Wikisource edited"),
+            _("# Wikinews created"),
+            _("# Wikinews edited"),
+            _("# Wikiquote created"),
+            _("# Wikiquote edited"),
+            _("# Wiktionary created"),
+            _("# Wiktionary edited"),
+            _("# Wikivoyage created"),
+            _("# Wikivoyage edited"),
+            _("# Wikispecies created"),
+            _("# Wikispecies edited"),
+            _("# Metawiki created"),
+            _("# Metawiki edited"),
+            _("# MediaWiki created"),
+            _("# MediaWiki edited"),
+            _("# Wikifunctions created"),
+            _("# Wikifunctions edited"),
+            _("# Incubator created"),
+            _("# Incubator edited"),
+            _("Directions related"),
+            _("Learning"),
+            _("Learning questions related"),
+            _("Metrics related"),
+        ]
 
         area_activated = TeamArea.objects.create(text="Area activated")
         self.report_1.area_activated.add(area_activated)
@@ -962,94 +1252,170 @@ class ReportExportViewTest(TestCase):
         self.report_1.metrics_related.add(self.metrics_related)
         self.report_1.save()
 
-        expected_row = [self.report_1.id,
-                        self.report_1.created_by.id,
-                        pd.to_datetime(self.report_1.created_at).tz_localize(None),
-                        self.report_1.modified_by.id,
-                        pd.to_datetime(self.report_1.modified_at).tz_localize(None),
-                        self.report_1.activity_associated.id,
-                        self.report_1.partial_report,
-                        self.report_1.activity_associated.text,
-                        self.report_1.reference_text,
-                        self.report_1.area_responsible.id,
-                        "; ".join(map(str, self.report_1.area_activated.values_list("id", flat=True))),
-                        self.report_1.initial_date,
-                        self.report_1.end_date,
-                        self.report_1.description,
-                        "; ".join(map(str, self.report_1.funding_associated.values_list("id", flat=True))),
-                        self.report_1.links,
-                        self.report_1.private_links,
-                        self.report_1.participants,
-                        self.report_1.feedbacks,
-                        "; ".join(map(str, self.report_1.editors.values_list("id", flat=True))),
-                        len(list(map(str, self.report_1.editors.values_list("id", flat=True)))),
-                        "; ".join(map(str, self.report_1.organizers.values_list("id", flat=True))),
-                        len(list(map(str, self.report_1.organizers.values_list("id", flat=True)))),
-                        "; ".join(map(str, self.report_1.partners_activated.values_list("id", flat=True))),
-                        len(list(map(str, self.report_1.partners_activated.values_list("id", flat=True)))),
-                        "; ".join(map(str, self.report_1.technologies_used.values_list("id", flat=True))),
-                        self.report_1.donors,
-                        self.report_1.submissions,
-                        self.report_1.wikipedia_created,
-                        self.report_1.wikipedia_edited,
-                        self.report_1.commons_created,
-                        self.report_1.commons_edited,
-                        self.report_1.wikidata_created,
-                        self.report_1.wikidata_edited,
-                        self.report_1.wikiversity_created,
-                        self.report_1.wikiversity_edited,
-                        self.report_1.wikibooks_created,
-                        self.report_1.wikibooks_edited,
-                        self.report_1.wikisource_created,
-                        self.report_1.wikisource_edited,
-                        self.report_1.wikinews_created,
-                        self.report_1.wikinews_edited,
-                        self.report_1.wikiquote_created,
-                        self.report_1.wikiquote_edited,
-                        self.report_1.wiktionary_created,
-                        self.report_1.wiktionary_edited,
-                        self.report_1.wikivoyage_created,
-                        self.report_1.wikivoyage_edited,
-                        self.report_1.wikispecies_created,
-                        self.report_1.wikispecies_edited,
-                        self.report_1.metawiki_created,
-                        self.report_1.metawiki_edited,
-                        self.report_1.mediawiki_created,
-                        self.report_1.mediawiki_edited,
-                        self.report_1.wikifunctions_created,
-                        self.report_1.wikifunctions_edited,
-                        self.report_1.incubator_created,
-                        self.report_1.incubator_edited,
-                        "; ".join(map(str, self.report_1.directions_related.values_list("id", flat=True))),
-                        self.report_1.learning,
-                        "; ".join(map(str, self.report_1.learning_questions_related.values_list("id", flat=True))),
-                        "; ".join(map(str, self.report_1.metrics_related.values_list("id", flat=True)))]
+        expected_row = [
+            self.report_1.id,
+            self.report_1.created_by.id,
+            pd.to_datetime(self.report_1.created_at).tz_localize(None),
+            self.report_1.modified_by.id,
+            pd.to_datetime(self.report_1.modified_at).tz_localize(None),
+            self.report_1.activity_associated.id,
+            self.report_1.partial_report,
+            self.report_1.activity_associated.text,
+            self.report_1.reference_text,
+            self.report_1.area_responsible.id,
+            "; ".join(
+                map(str, self.report_1.area_activated.values_list("id", flat=True))
+            ),
+            self.report_1.initial_date,
+            self.report_1.end_date,
+            self.report_1.description,
+            "; ".join(
+                map(str, self.report_1.funding_associated.values_list("id", flat=True))
+            ),
+            self.report_1.links,
+            self.report_1.private_links,
+            self.report_1.participants,
+            self.report_1.feedbacks,
+            "; ".join(map(str, self.report_1.editors.values_list("id", flat=True))),
+            len(list(map(str, self.report_1.editors.values_list("id", flat=True)))),
+            "; ".join(map(str, self.report_1.organizers.values_list("id", flat=True))),
+            len(list(map(str, self.report_1.organizers.values_list("id", flat=True)))),
+            "; ".join(
+                map(str, self.report_1.partners_activated.values_list("id", flat=True))
+            ),
+            len(
+                list(
+                    map(
+                        str,
+                        self.report_1.partners_activated.values_list("id", flat=True),
+                    )
+                )
+            ),
+            "; ".join(
+                map(str, self.report_1.technologies_used.values_list("id", flat=True))
+            ),
+            self.report_1.donors,
+            self.report_1.submissions,
+            self.report_1.wikipedia_created,
+            self.report_1.wikipedia_edited,
+            self.report_1.commons_created,
+            self.report_1.commons_edited,
+            self.report_1.wikidata_created,
+            self.report_1.wikidata_edited,
+            self.report_1.wikiversity_created,
+            self.report_1.wikiversity_edited,
+            self.report_1.wikibooks_created,
+            self.report_1.wikibooks_edited,
+            self.report_1.wikisource_created,
+            self.report_1.wikisource_edited,
+            self.report_1.wikinews_created,
+            self.report_1.wikinews_edited,
+            self.report_1.wikiquote_created,
+            self.report_1.wikiquote_edited,
+            self.report_1.wiktionary_created,
+            self.report_1.wiktionary_edited,
+            self.report_1.wikivoyage_created,
+            self.report_1.wikivoyage_edited,
+            self.report_1.wikispecies_created,
+            self.report_1.wikispecies_edited,
+            self.report_1.metawiki_created,
+            self.report_1.metawiki_edited,
+            self.report_1.mediawiki_created,
+            self.report_1.mediawiki_edited,
+            self.report_1.wikifunctions_created,
+            self.report_1.wikifunctions_edited,
+            self.report_1.incubator_created,
+            self.report_1.incubator_edited,
+            "; ".join(
+                map(str, self.report_1.directions_related.values_list("id", flat=True))
+            ),
+            self.report_1.learning,
+            "; ".join(
+                map(
+                    str,
+                    self.report_1.learning_questions_related.values_list(
+                        "id", flat=True
+                    ),
+                )
+            ),
+            "; ".join(
+                map(str, self.report_1.metrics_related.values_list("id", flat=True))
+            ),
+        ]
 
         result = export_report_instance(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
     def test_export_report_instance_without_report_id_returns_all_reports(self):
-        expected_header = [_('ID'), _('Created by'), _('Created at'), _('Modified by'), _('Modified at'),
-                           _('Activity associated'), _('Partial report?'), _('Name of the activity'),
-                           _('Reference Text'), _('Area responsible'), _('Area activated'), _('Initial date'),
-                           _('End date'), _('Description'), _('Funding associated'), _('Links'),
-                           _('Are there private links?'), _('Number of participants'),
-                           _('Number of feedbacks'), _('Editors'), _('# Editors'), _('Organizers'), _('# Organizers'),
-                           _('Partnerships activated'), _('# Partnerships activated'), _('Technologies used'),
-                           _('# Donors'), _('# Submissions'), _('# Wikipedia created'), _('# Wikipedia edited'),
-                           _('# Commons created'), _('# Commons edited'), _('# Wikidata created'),
-                           _('# Wikidata edited'), _('# Wikiversity created'), _('# Wikiversity edited'),
-                           _('# Wikibooks created'), _('# Wikibooks edited'), _('# Wikisource created'),
-                           _('# Wikisource edited'), _('# Wikinews created'), _('# Wikinews edited'),
-                           _('# Wikiquote created'), _('# Wikiquote edited'), _('# Wiktionary created'),
-                           _('# Wiktionary edited'), _('# Wikivoyage created'), _('# Wikivoyage edited'),
-                           _('# Wikispecies created'), _('# Wikispecies edited'), _('# Metawiki created'),
-                           _('# Metawiki edited'), _('# MediaWiki created'), _('# MediaWiki edited'),
-                           _('# Wikifunctions created'), _('# Wikifunctions edited'),
-                           _('# Incubator created'), _('# Incubator edited'),
-                           _('Directions related'), _('Learning'), _('Learning questions related'),
-                           _('Metrics related')]
+        expected_header = [
+            _("ID"),
+            _("Created by"),
+            _("Created at"),
+            _("Modified by"),
+            _("Modified at"),
+            _("Activity associated"),
+            _("Partial report?"),
+            _("Name of the activity"),
+            _("Reference Text"),
+            _("Area responsible"),
+            _("Area activated"),
+            _("Initial date"),
+            _("End date"),
+            _("Description"),
+            _("Funding associated"),
+            _("Links"),
+            _("Are there private links?"),
+            _("Number of participants"),
+            _("Number of feedbacks"),
+            _("Editors"),
+            _("# Editors"),
+            _("Organizers"),
+            _("# Organizers"),
+            _("Partnerships activated"),
+            _("# Partnerships activated"),
+            _("Technologies used"),
+            _("# Donors"),
+            _("# Submissions"),
+            _("# Wikipedia created"),
+            _("# Wikipedia edited"),
+            _("# Commons created"),
+            _("# Commons edited"),
+            _("# Wikidata created"),
+            _("# Wikidata edited"),
+            _("# Wikiversity created"),
+            _("# Wikiversity edited"),
+            _("# Wikibooks created"),
+            _("# Wikibooks edited"),
+            _("# Wikisource created"),
+            _("# Wikisource edited"),
+            _("# Wikinews created"),
+            _("# Wikinews edited"),
+            _("# Wikiquote created"),
+            _("# Wikiquote edited"),
+            _("# Wiktionary created"),
+            _("# Wiktionary edited"),
+            _("# Wikivoyage created"),
+            _("# Wikivoyage edited"),
+            _("# Wikispecies created"),
+            _("# Wikispecies edited"),
+            _("# Metawiki created"),
+            _("# Metawiki edited"),
+            _("# MediaWiki created"),
+            _("# MediaWiki edited"),
+            _("# Wikifunctions created"),
+            _("# Wikifunctions edited"),
+            _("# Incubator created"),
+            _("# Incubator edited"),
+            _("Directions related"),
+            _("Learning"),
+            _("Learning questions related"),
+            _("Metrics related"),
+        ]
 
         area_activated = [""]
         funding_associated = [""]
@@ -1064,163 +1430,187 @@ class ReportExportViewTest(TestCase):
         if self.report_1.area_activated:
             area_activated = self.report_1.area_activated.values_list("id", flat=True)
         if self.report_1.funding_associated:
-            funding_associated = self.report_1.funding_associated.values_list("id", flat=True)
+            funding_associated = self.report_1.funding_associated.values_list(
+                "id", flat=True
+            )
         if self.report_1.editors:
             editors = self.report_1.editors.values_list("username", flat=True)
         if self.report_1.organizers:
             organizers = self.report_1.organizers.values_list("name", flat=True)
         if self.report_1.partners_activated:
-            partners_activated = self.report_1.partners_activated.values_list("name", flat=True)
+            partners_activated = self.report_1.partners_activated.values_list(
+                "name", flat=True
+            )
         if self.report_1.technologies_used:
-            technologies_used = self.report_1.technologies_used.values_list("name", flat=True)
+            technologies_used = self.report_1.technologies_used.values_list(
+                "name", flat=True
+            )
         if self.report_1.directions_related:
-            directions_related = self.report_1.directions_related.values_list("id", flat=True)
+            directions_related = self.report_1.directions_related.values_list(
+                "id", flat=True
+            )
         if self.report_1.learning_questions_related:
-            learning_questions_related = self.report_1.learning_questions_related.values_list("id", flat=True)
+            learning_questions_related = (
+                self.report_1.learning_questions_related.values_list("id", flat=True)
+            )
         if self.report_1.metrics_related:
             metrics_related = self.report_1.metrics_related.values_list("id", flat=True)
 
-        expected_row_1 = [self.report_1.id,
-                          self.report_1.created_by.id,
-                          pd.to_datetime(self.report_1.created_at).tz_localize(None),
-                          self.report_1.modified_by.id,
-                          pd.to_datetime(self.report_1.modified_at).tz_localize(None),
-                          self.report_1.activity_associated.id,
-                          self.report_1.partial_report,
-                          self.report_1.activity_associated.text,
-                          self.report_1.reference_text,
-                          self.report_1.area_responsible.id,
-                          "; ".join(map(str, area_activated)),
-                          self.report_1.initial_date,
-                          self.report_1.end_date,
-                          self.report_1.description,
-                          "; ".join(map(str, funding_associated)),
-                          self.report_1.links,
-                          self.report_1.private_links,
-                          self.report_1.participants,
-                          self.report_1.feedbacks,
-                          "; ".join(editors),
-                          len(editors),
-                          "; ".join(organizers),
-                          len(organizers),
-                          "; ".join(partners_activated),
-                          len(partners_activated),
-                          "; ".join(technologies_used),
-                          self.report_1.donors,
-                          self.report_1.submissions,
-                          self.report_1.wikipedia_created,
-                          self.report_1.wikipedia_edited,
-                          self.report_1.commons_created,
-                          self.report_1.commons_edited,
-                          self.report_1.wikidata_created,
-                          self.report_1.wikidata_edited,
-                          self.report_1.wikiversity_created,
-                          self.report_1.wikiversity_edited,
-                          self.report_1.wikibooks_created,
-                          self.report_1.wikibooks_edited,
-                          self.report_1.wikisource_created,
-                          self.report_1.wikisource_edited,
-                          self.report_1.wikinews_created,
-                          self.report_1.wikinews_edited,
-                          self.report_1.wikiquote_created,
-                          self.report_1.wikiquote_edited,
-                          self.report_1.wiktionary_created,
-                          self.report_1.wiktionary_edited,
-                          self.report_1.wikivoyage_created,
-                          self.report_1.wikivoyage_edited,
-                          self.report_1.wikispecies_created,
-                          self.report_1.wikispecies_edited,
-                          self.report_1.metawiki_created,
-                          self.report_1.metawiki_edited,
-                          self.report_1.mediawiki_created,
-                          self.report_1.mediawiki_edited,
-                          self.report_1.wikifunctions_created,
-                          self.report_1.wikifunctions_edited,
-                          self.report_1.incubator_created,
-                          self.report_1.incubator_edited,
-                          "; ".join(map(str, directions_related)),
-                          self.report_1.learning,
-                          "; ".join(map(str, learning_questions_related)),
-                          "; ".join(map(str, metrics_related))]
+        expected_row_1 = [
+            self.report_1.id,
+            self.report_1.created_by.id,
+            pd.to_datetime(self.report_1.created_at).tz_localize(None),
+            self.report_1.modified_by.id,
+            pd.to_datetime(self.report_1.modified_at).tz_localize(None),
+            self.report_1.activity_associated.id,
+            self.report_1.partial_report,
+            self.report_1.activity_associated.text,
+            self.report_1.reference_text,
+            self.report_1.area_responsible.id,
+            "; ".join(map(str, area_activated)),
+            self.report_1.initial_date,
+            self.report_1.end_date,
+            self.report_1.description,
+            "; ".join(map(str, funding_associated)),
+            self.report_1.links,
+            self.report_1.private_links,
+            self.report_1.participants,
+            self.report_1.feedbacks,
+            "; ".join(editors),
+            len(editors),
+            "; ".join(organizers),
+            len(organizers),
+            "; ".join(partners_activated),
+            len(partners_activated),
+            "; ".join(technologies_used),
+            self.report_1.donors,
+            self.report_1.submissions,
+            self.report_1.wikipedia_created,
+            self.report_1.wikipedia_edited,
+            self.report_1.commons_created,
+            self.report_1.commons_edited,
+            self.report_1.wikidata_created,
+            self.report_1.wikidata_edited,
+            self.report_1.wikiversity_created,
+            self.report_1.wikiversity_edited,
+            self.report_1.wikibooks_created,
+            self.report_1.wikibooks_edited,
+            self.report_1.wikisource_created,
+            self.report_1.wikisource_edited,
+            self.report_1.wikinews_created,
+            self.report_1.wikinews_edited,
+            self.report_1.wikiquote_created,
+            self.report_1.wikiquote_edited,
+            self.report_1.wiktionary_created,
+            self.report_1.wiktionary_edited,
+            self.report_1.wikivoyage_created,
+            self.report_1.wikivoyage_edited,
+            self.report_1.wikispecies_created,
+            self.report_1.wikispecies_edited,
+            self.report_1.metawiki_created,
+            self.report_1.metawiki_edited,
+            self.report_1.mediawiki_created,
+            self.report_1.mediawiki_edited,
+            self.report_1.wikifunctions_created,
+            self.report_1.wikifunctions_edited,
+            self.report_1.incubator_created,
+            self.report_1.incubator_edited,
+            "; ".join(map(str, directions_related)),
+            self.report_1.learning,
+            "; ".join(map(str, learning_questions_related)),
+            "; ".join(map(str, metrics_related)),
+        ]
 
         if self.report_2.area_activated:
             area_activated = self.report_2.area_activated.values_list("id", flat=True)
         if self.report_2.funding_associated:
-            funding_associated = self.report_2.funding_associated.values_list("id", flat=True)
+            funding_associated = self.report_2.funding_associated.values_list(
+                "id", flat=True
+            )
         if self.report_2.editors:
             editors = self.report_2.editors.values_list("username", flat=True)
         if self.report_2.organizers:
             organizers = self.report_2.organizers.values_list("name", flat=True)
         if self.report_2.partners_activated:
-            partners_activated = self.report_2.partners_activated.values_list("name", flat=True)
+            partners_activated = self.report_2.partners_activated.values_list(
+                "name", flat=True
+            )
         if self.report_2.technologies_used:
-            technologies_used = self.report_2.technologies_used.values_list("name", flat=True)
+            technologies_used = self.report_2.technologies_used.values_list(
+                "name", flat=True
+            )
         if self.report_2.directions_related:
-            directions_related = self.report_2.directions_related.values_list("id", flat=True)
+            directions_related = self.report_2.directions_related.values_list(
+                "id", flat=True
+            )
         if self.report_2.learning_questions_related:
-            learning_questions_related = self.report_2.learning_questions_related.values_list("id", flat=True)
+            learning_questions_related = (
+                self.report_2.learning_questions_related.values_list("id", flat=True)
+            )
 
-        expected_row_2 = [self.report_2.id,
-                          self.report_2.created_by.id,
-                          pd.to_datetime(self.report_2.created_at).tz_localize(None),
-                          self.report_2.modified_by.id,
-                          pd.to_datetime(self.report_2.modified_at).tz_localize(None),
-                          self.report_2.activity_associated.id,
-                          self.report_2.partial_report,
-                          self.report_2.activity_associated.text,
-                          self.report_2.reference_text,
-                          self.report_2.area_responsible.id,
-                          "; ".join(map(str, area_activated)),
-                          self.report_2.initial_date,
-                          self.report_2.end_date,
-                          self.report_2.description,
-                          "; ".join(map(str, funding_associated)),
-                          self.report_2.links,
-                          self.report_2.private_links,
-                          self.report_2.participants,
-                          self.report_2.feedbacks,
-                          "; ".join(editors),
-                          len(editors),
-                          "; ".join(organizers),
-                          len(organizers),
-                          "; ".join(partners_activated),
-                          len(partners_activated),
-                          "; ".join(technologies_used),
-                          self.report_2.donors,
-                          self.report_2.submissions,
-                          self.report_2.wikipedia_created,
-                          self.report_2.wikipedia_edited,
-                          self.report_2.commons_created,
-                          self.report_2.commons_edited,
-                          self.report_2.wikidata_created,
-                          self.report_2.wikidata_edited,
-                          self.report_2.wikiversity_created,
-                          self.report_2.wikiversity_edited,
-                          self.report_2.wikibooks_created,
-                          self.report_2.wikibooks_edited,
-                          self.report_2.wikisource_created,
-                          self.report_2.wikisource_edited,
-                          self.report_2.wikinews_created,
-                          self.report_2.wikinews_edited,
-                          self.report_2.wikiquote_created,
-                          self.report_2.wikiquote_edited,
-                          self.report_2.wiktionary_created,
-                          self.report_2.wiktionary_edited,
-                          self.report_2.wikivoyage_created,
-                          self.report_2.wikivoyage_edited,
-                          self.report_2.wikispecies_created,
-                          self.report_2.wikispecies_edited,
-                          self.report_2.metawiki_created,
-                          self.report_2.metawiki_edited,
-                          self.report_2.mediawiki_created,
-                          self.report_2.mediawiki_edited,
-                          self.report_1.wikifunctions_created,
-                          self.report_1.wikifunctions_edited,
-                          self.report_1.incubator_created,
-                          self.report_1.incubator_edited,
-                          "; ".join(map(str, directions_related)),
-                          self.report_2.learning,
-                          "; ".join(map(str, learning_questions_related))]
+        expected_row_2 = [
+            self.report_2.id,
+            self.report_2.created_by.id,
+            pd.to_datetime(self.report_2.created_at).tz_localize(None),
+            self.report_2.modified_by.id,
+            pd.to_datetime(self.report_2.modified_at).tz_localize(None),
+            self.report_2.activity_associated.id,
+            self.report_2.partial_report,
+            self.report_2.activity_associated.text,
+            self.report_2.reference_text,
+            self.report_2.area_responsible.id,
+            "; ".join(map(str, area_activated)),
+            self.report_2.initial_date,
+            self.report_2.end_date,
+            self.report_2.description,
+            "; ".join(map(str, funding_associated)),
+            self.report_2.links,
+            self.report_2.private_links,
+            self.report_2.participants,
+            self.report_2.feedbacks,
+            "; ".join(editors),
+            len(editors),
+            "; ".join(organizers),
+            len(organizers),
+            "; ".join(partners_activated),
+            len(partners_activated),
+            "; ".join(technologies_used),
+            self.report_2.donors,
+            self.report_2.submissions,
+            self.report_2.wikipedia_created,
+            self.report_2.wikipedia_edited,
+            self.report_2.commons_created,
+            self.report_2.commons_edited,
+            self.report_2.wikidata_created,
+            self.report_2.wikidata_edited,
+            self.report_2.wikiversity_created,
+            self.report_2.wikiversity_edited,
+            self.report_2.wikibooks_created,
+            self.report_2.wikibooks_edited,
+            self.report_2.wikisource_created,
+            self.report_2.wikisource_edited,
+            self.report_2.wikinews_created,
+            self.report_2.wikinews_edited,
+            self.report_2.wikiquote_created,
+            self.report_2.wikiquote_edited,
+            self.report_2.wiktionary_created,
+            self.report_2.wiktionary_edited,
+            self.report_2.wikivoyage_created,
+            self.report_2.wikivoyage_edited,
+            self.report_2.wikispecies_created,
+            self.report_2.wikispecies_edited,
+            self.report_2.metawiki_created,
+            self.report_2.metawiki_edited,
+            self.report_2.mediawiki_created,
+            self.report_2.mediawiki_edited,
+            self.report_1.wikifunctions_created,
+            self.report_1.wikifunctions_edited,
+            self.report_1.incubator_created,
+            self.report_1.incubator_edited,
+            "; ".join(map(str, directions_related)),
+            self.report_2.learning,
+            "; ".join(map(str, learning_questions_related)),
+        ]
 
         expected_rows = [expected_row_1, expected_row_2]
         expected_df = pd.DataFrame(expected_rows, columns=expected_header)
@@ -1228,184 +1618,370 @@ class ReportExportViewTest(TestCase):
         self.assertTrue(result[result.isin(expected_df)].equals(expected_df))
 
     def test_export_report_instance_without_many_to_many_relations(self):
-        expected_header = [_('ID'), _('Created by'), _('Created at'), _('Modified by'), _('Modified at'),
-                           _('Activity associated'), _('Partial report?'), _('Name of the activity'),
-                           _('Reference Text'), _('Area responsible'), _('Area activated'), _('Initial date'),
-                           _('End date'), _('Description'), _('Funding associated'), _('Links'),
-                           _('Are there private links?'), _('Number of participants'),
-                           _('Number of feedbacks'), _('Editors'), _('# Editors'), _('Organizers'), _('# Organizers'),
-                           _('Partnerships activated'), _('# Partnerships activated'), _('Technologies used'),
-                           _('# Donors'), _('# Submissions'), _('# Wikipedia created'), _('# Wikipedia edited'),
-                           _('# Commons created'), _('# Commons edited'), _('# Wikidata created'),
-                           _('# Wikidata edited'), _('# Wikiversity created'), _('# Wikiversity edited'),
-                           _('# Wikibooks created'), _('# Wikibooks edited'), _('# Wikisource created'),
-                           _('# Wikisource edited'), _('# Wikinews created'), _('# Wikinews edited'),
-                           _('# Wikiquote created'), _('# Wikiquote edited'), _('# Wiktionary created'),
-                           _('# Wiktionary edited'), _('# Wikivoyage created'), _('# Wikivoyage edited'),
-                           _('# Wikispecies created'), _('# Wikispecies edited'), _('# Metawiki created'),
-                           _('# Metawiki edited'), _('# MediaWiki created'), _('# MediaWiki edited'),
-                           _('# Wikifunctions created'), _('# Wikifunctions edited'),
-                           _('# Incubator created'), _('# Incubator edited'),
-                           _('Directions related'), _('Learning'), _('Learning questions related'),
-                           _('Metrics related')]
+        expected_header = [
+            _("ID"),
+            _("Created by"),
+            _("Created at"),
+            _("Modified by"),
+            _("Modified at"),
+            _("Activity associated"),
+            _("Partial report?"),
+            _("Name of the activity"),
+            _("Reference Text"),
+            _("Area responsible"),
+            _("Area activated"),
+            _("Initial date"),
+            _("End date"),
+            _("Description"),
+            _("Funding associated"),
+            _("Links"),
+            _("Are there private links?"),
+            _("Number of participants"),
+            _("Number of feedbacks"),
+            _("Editors"),
+            _("# Editors"),
+            _("Organizers"),
+            _("# Organizers"),
+            _("Partnerships activated"),
+            _("# Partnerships activated"),
+            _("Technologies used"),
+            _("# Donors"),
+            _("# Submissions"),
+            _("# Wikipedia created"),
+            _("# Wikipedia edited"),
+            _("# Commons created"),
+            _("# Commons edited"),
+            _("# Wikidata created"),
+            _("# Wikidata edited"),
+            _("# Wikiversity created"),
+            _("# Wikiversity edited"),
+            _("# Wikibooks created"),
+            _("# Wikibooks edited"),
+            _("# Wikisource created"),
+            _("# Wikisource edited"),
+            _("# Wikinews created"),
+            _("# Wikinews edited"),
+            _("# Wikiquote created"),
+            _("# Wikiquote edited"),
+            _("# Wiktionary created"),
+            _("# Wiktionary edited"),
+            _("# Wikivoyage created"),
+            _("# Wikivoyage edited"),
+            _("# Wikispecies created"),
+            _("# Wikispecies edited"),
+            _("# Metawiki created"),
+            _("# Metawiki edited"),
+            _("# MediaWiki created"),
+            _("# MediaWiki edited"),
+            _("# Wikifunctions created"),
+            _("# Wikifunctions edited"),
+            _("# Incubator created"),
+            _("# Incubator edited"),
+            _("Directions related"),
+            _("Learning"),
+            _("Learning questions related"),
+            _("Metrics related"),
+        ]
 
-        expected_row = [self.report_1.id,
-                        self.report_1.created_by.id,
-                        pd.to_datetime(self.report_1.created_at).tz_localize(None),
-                        self.report_1.modified_by.id,
-                        pd.to_datetime(self.report_1.modified_at).tz_localize(None),
-                        self.report_1.activity_associated.id,
-                        self.report_1.partial_report,
-                        self.report_1.activity_associated.text,
-                        self.report_1.reference_text,
-                        self.report_1.area_responsible.id,
-                        "",
-                        self.report_1.initial_date,
-                        self.report_1.end_date,
-                        self.report_1.description,
-                        "",
-                        self.report_1.links,
-                        self.report_1.private_links,
-                        self.report_1.participants,
-                        self.report_1.feedbacks,
-                        "",
-                        0,
-                        "",
-                        0,
-                        "",
-                        0,
-                        "",
-                        self.report_1.donors,
-                        self.report_1.submissions,
-                        self.report_1.wikipedia_created,
-                        self.report_1.wikipedia_edited,
-                        self.report_1.commons_created,
-                        self.report_1.commons_edited,
-                        self.report_1.wikidata_created,
-                        self.report_1.wikidata_edited,
-                        self.report_1.wikiversity_created,
-                        self.report_1.wikiversity_edited,
-                        self.report_1.wikibooks_created,
-                        self.report_1.wikibooks_edited,
-                        self.report_1.wikisource_created,
-                        self.report_1.wikisource_edited,
-                        self.report_1.wikinews_created,
-                        self.report_1.wikinews_edited,
-                        self.report_1.wikiquote_created,
-                        self.report_1.wikiquote_edited,
-                        self.report_1.wiktionary_created,
-                        self.report_1.wiktionary_edited,
-                        self.report_1.wikivoyage_created,
-                        self.report_1.wikivoyage_edited,
-                        self.report_1.wikispecies_created,
-                        self.report_1.wikispecies_edited,
-                        self.report_1.metawiki_created,
-                        self.report_1.metawiki_edited,
-                        self.report_1.mediawiki_created,
-                        self.report_1.mediawiki_edited,
-                        self.report_1.wikifunctions_created,
-                        self.report_1.wikifunctions_edited,
-                        self.report_1.incubator_created,
-                        self.report_1.incubator_edited,
-                        "",
-                        self.report_1.learning,
-                        "",
-                        ""]
+        expected_row = [
+            self.report_1.id,
+            self.report_1.created_by.id,
+            pd.to_datetime(self.report_1.created_at).tz_localize(None),
+            self.report_1.modified_by.id,
+            pd.to_datetime(self.report_1.modified_at).tz_localize(None),
+            self.report_1.activity_associated.id,
+            self.report_1.partial_report,
+            self.report_1.activity_associated.text,
+            self.report_1.reference_text,
+            self.report_1.area_responsible.id,
+            "",
+            self.report_1.initial_date,
+            self.report_1.end_date,
+            self.report_1.description,
+            "",
+            self.report_1.links,
+            self.report_1.private_links,
+            self.report_1.participants,
+            self.report_1.feedbacks,
+            "",
+            0,
+            "",
+            0,
+            "",
+            0,
+            "",
+            self.report_1.donors,
+            self.report_1.submissions,
+            self.report_1.wikipedia_created,
+            self.report_1.wikipedia_edited,
+            self.report_1.commons_created,
+            self.report_1.commons_edited,
+            self.report_1.wikidata_created,
+            self.report_1.wikidata_edited,
+            self.report_1.wikiversity_created,
+            self.report_1.wikiversity_edited,
+            self.report_1.wikibooks_created,
+            self.report_1.wikibooks_edited,
+            self.report_1.wikisource_created,
+            self.report_1.wikisource_edited,
+            self.report_1.wikinews_created,
+            self.report_1.wikinews_edited,
+            self.report_1.wikiquote_created,
+            self.report_1.wikiquote_edited,
+            self.report_1.wiktionary_created,
+            self.report_1.wiktionary_edited,
+            self.report_1.wikivoyage_created,
+            self.report_1.wikivoyage_edited,
+            self.report_1.wikispecies_created,
+            self.report_1.wikispecies_edited,
+            self.report_1.metawiki_created,
+            self.report_1.metawiki_edited,
+            self.report_1.mediawiki_created,
+            self.report_1.mediawiki_edited,
+            self.report_1.wikifunctions_created,
+            self.report_1.wikifunctions_edited,
+            self.report_1.incubator_created,
+            self.report_1.incubator_edited,
+            "",
+            self.report_1.learning,
+            "",
+            "",
+        ]
 
         result = export_report_instance(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
     def test_export_metrics(self):
-        expected_header = [_('ID'), _('Metric'), _('Activity ID'), _('Activity'), _('Activity code'),
-                           _('Number of editors'), _('Number of participants'), _('Number of partnerships activated'),
-                           _('Number of feedbacks'), _('Number of events'),
-                           _('# Wikipedia created'), _('# Wikipedia edited'),
-                           _('# Commons created'), _('# Commons edited'),
-                           _('# Wikidata created'), _('# Wikidata edited'),
-                           _('# Wikiversity created'), _('# Wikiversity edited'),
-                           _('# Wikibooks created'), _('# Wikibooks edited'),
-                           _('# Wikisource created'), _('# Wikisource edited'),
-                           _('# Wikinews created'), _('# Wikinews edited'),
-                           _('# Wikiquote created'), _('# Wikiquote edited'),
-                           _('# Wiktionary created'), _('# Wiktionary edited'),
-                           _('# Wikivoyage created'), _('# Wikivoyage edited'),
-                           _('# Wikispecies created'), _('# Wikispecies edited'),
-                           _('# Metawiki created'), _('# Metawiki edited'),
-                           _('# MediaWiki created'), _('# MediaWiki edited'),
-                           _('# Wikifunctions created'), _('# Wikifunctions edited'),
-                           _('# Incubator created'), _('# Incubator edited'),
-                           ]
+        expected_header = [
+            _("ID"),
+            _("Metric"),
+            _("Activity ID"),
+            _("Activity"),
+            _("Activity code"),
+            _("Number of editors"),
+            _("Number of participants"),
+            _("Number of partnerships activated"),
+            _("Number of feedbacks"),
+            _("Number of events"),
+            _("# Wikipedia created"),
+            _("# Wikipedia edited"),
+            _("# Commons created"),
+            _("# Commons edited"),
+            _("# Wikidata created"),
+            _("# Wikidata edited"),
+            _("# Wikiversity created"),
+            _("# Wikiversity edited"),
+            _("# Wikibooks created"),
+            _("# Wikibooks edited"),
+            _("# Wikisource created"),
+            _("# Wikisource edited"),
+            _("# Wikinews created"),
+            _("# Wikinews edited"),
+            _("# Wikiquote created"),
+            _("# Wikiquote edited"),
+            _("# Wiktionary created"),
+            _("# Wiktionary edited"),
+            _("# Wikivoyage created"),
+            _("# Wikivoyage edited"),
+            _("# Wikispecies created"),
+            _("# Wikispecies edited"),
+            _("# Metawiki created"),
+            _("# Metawiki edited"),
+            _("# MediaWiki created"),
+            _("# MediaWiki edited"),
+            _("# Wikifunctions created"),
+            _("# Wikifunctions edited"),
+            _("# Incubator created"),
+            _("# Incubator edited"),
+        ]
 
-        expected_row = [self.metrics_related.id,
-                        self.metrics_related.text,
-                        self.metrics_related.activity_id,
-                        self.metrics_related.activity.text,
-                        self.metrics_related.activity.code,
-                        self.metrics_related.number_of_editors,
-                        self.metrics_related.number_of_participants,
-                        self.metrics_related.number_of_partnerships_activated,
-                        self.metrics_related.number_of_feedbacks,
-                        self.metrics_related.number_of_events,
-                        self.metrics_related.wikipedia_created,
-                        self.metrics_related.wikipedia_edited,
-                        self.metrics_related.commons_created,
-                        self.metrics_related.commons_edited,
-                        self.metrics_related.wikidata_created,
-                        self.metrics_related.wikidata_edited,
-                        self.metrics_related.wikiversity_created,
-                        self.metrics_related.wikiversity_edited,
-                        self.metrics_related.wikibooks_created,
-                        self.metrics_related.wikibooks_edited,
-                        self.metrics_related.wikisource_created,
-                        self.metrics_related.wikisource_edited,
-                        self.metrics_related.wikinews_created,
-                        self.metrics_related.wikinews_edited,
-                        self.metrics_related.wikiquote_created,
-                        self.metrics_related.wikiquote_edited,
-                        self.metrics_related.wiktionary_created,
-                        self.metrics_related.wiktionary_edited,
-                        self.metrics_related.wikivoyage_created,
-                        self.metrics_related.wikivoyage_edited,
-                        self.metrics_related.wikispecies_created,
-                        self.metrics_related.wikispecies_edited,
-                        self.metrics_related.metawiki_created,
-                        self.metrics_related.metawiki_edited,
-                        self.metrics_related.mediawiki_created,
-                        self.metrics_related.mediawiki_edited,
-                        self.metrics_related.wikifunctions_created,
-                        self.metrics_related.wikifunctions_edited,
-                        self.metrics_related.incubator_created,
-                        self.metrics_related.incubator_edited
-                        ]
+        expected_row = [
+            self.metrics_related.id,
+            self.metrics_related.text,
+            self.metrics_related.activity_id,
+            self.metrics_related.activity.text,
+            self.metrics_related.activity.code,
+            self.metrics_related.number_of_editors,
+            self.metrics_related.number_of_participants,
+            self.metrics_related.number_of_partnerships_activated,
+            self.metrics_related.number_of_feedbacks,
+            self.metrics_related.number_of_events,
+            self.metrics_related.wikipedia_created,
+            self.metrics_related.wikipedia_edited,
+            self.metrics_related.commons_created,
+            self.metrics_related.commons_edited,
+            self.metrics_related.wikidata_created,
+            self.metrics_related.wikidata_edited,
+            self.metrics_related.wikiversity_created,
+            self.metrics_related.wikiversity_edited,
+            self.metrics_related.wikibooks_created,
+            self.metrics_related.wikibooks_edited,
+            self.metrics_related.wikisource_created,
+            self.metrics_related.wikisource_edited,
+            self.metrics_related.wikinews_created,
+            self.metrics_related.wikinews_edited,
+            self.metrics_related.wikiquote_created,
+            self.metrics_related.wikiquote_edited,
+            self.metrics_related.wiktionary_created,
+            self.metrics_related.wiktionary_edited,
+            self.metrics_related.wikivoyage_created,
+            self.metrics_related.wikivoyage_edited,
+            self.metrics_related.wikispecies_created,
+            self.metrics_related.wikispecies_edited,
+            self.metrics_related.metawiki_created,
+            self.metrics_related.metawiki_edited,
+            self.metrics_related.mediawiki_created,
+            self.metrics_related.mediawiki_edited,
+            self.metrics_related.wikifunctions_created,
+            self.metrics_related.wikifunctions_edited,
+            self.metrics_related.incubator_created,
+            self.metrics_related.incubator_edited,
+        ]
 
         result = export_metrics(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
     def test_export_metrics_without_report_id_returns_metrics_from_all_reports(self):
-        expected_header = [_('ID'), _('Metric'), _('Activity ID'), _('Activity'), _('Activity code'),
-                           _('Number of editors'), _('Number of participants'), _('Number of partnerships activated'),
-                           _('Number of feedbacks'), _('Number of events'),
-                           _('# Wikipedia created'), _('# Wikipedia edited'),
-                           _('# Commons created'), _('# Commons edited'),
-                           _('# Wikidata created'), _('# Wikidata edited'),
-                           _('# Wikiversity created'), _('# Wikiversity edited'),
-                           _('# Wikibooks created'), _('# Wikibooks edited'),
-                           _('# Wikisource created'), _('# Wikisource edited'),
-                           _('# Wikinews created'), _('# Wikinews edited'),
-                           _('# Wikiquote created'), _('# Wikiquote edited'),
-                           _('# Wiktionary created'), _('# Wiktionary edited'),
-                           _('# Wikivoyage created'), _('# Wikivoyage edited'),
-                           _('# Wikispecies created'), _('# Wikispecies edited'),
-                           _('# Metawiki created'), _('# Metawiki edited'),
-                           _('# MediaWiki created'), _('# MediaWiki edited'),
-                           _('# Wikifunctions created'), _('# Wikifunctions edited'),
-                           _('# Incubator created'), _('# Incubator edited'),]
+        expected_header = [
+            _("ID"),
+            _("Metric"),
+            _("Activity ID"),
+            _("Activity"),
+            _("Activity code"),
+            _("Number of editors"),
+            _("Number of participants"),
+            _("Number of partnerships activated"),
+            _("Number of feedbacks"),
+            _("Number of events"),
+            _("# Wikipedia created"),
+            _("# Wikipedia edited"),
+            _("# Commons created"),
+            _("# Commons edited"),
+            _("# Wikidata created"),
+            _("# Wikidata edited"),
+            _("# Wikiversity created"),
+            _("# Wikiversity edited"),
+            _("# Wikibooks created"),
+            _("# Wikibooks edited"),
+            _("# Wikisource created"),
+            _("# Wikisource edited"),
+            _("# Wikinews created"),
+            _("# Wikinews edited"),
+            _("# Wikiquote created"),
+            _("# Wikiquote edited"),
+            _("# Wiktionary created"),
+            _("# Wiktionary edited"),
+            _("# Wikivoyage created"),
+            _("# Wikivoyage edited"),
+            _("# Wikispecies created"),
+            _("# Wikispecies edited"),
+            _("# Metawiki created"),
+            _("# Metawiki edited"),
+            _("# MediaWiki created"),
+            _("# MediaWiki edited"),
+            _("# Wikifunctions created"),
+            _("# Wikifunctions edited"),
+            _("# Incubator created"),
+            _("# Incubator edited"),
+        ]
 
-        metric_2 = Metric.objects.create(text="Metric 2", activity=self.activity_associated)
-        expected_row_1 = [self.metrics_related.id, self.metrics_related.text, self.metrics_related.activity_id, self.metrics_related.activity.text, self.metrics_related.activity.code, self.metrics_related.number_of_editors, self.metrics_related.number_of_participants, self.metrics_related.number_of_partnerships_activated, self.metrics_related.number_of_feedbacks, self.metrics_related.number_of_events, self.metrics_related.wikipedia_created, self.metrics_related.wikipedia_edited, self.metrics_related.commons_created, self.metrics_related.commons_edited, self.metrics_related.wikidata_created, self.metrics_related.wikidata_edited, self.metrics_related.wikiversity_created, self.metrics_related.wikiversity_edited, self.metrics_related.wikibooks_created, self.metrics_related.wikibooks_edited, self.metrics_related.wikisource_created, self.metrics_related.wikisource_edited, self.metrics_related.wikinews_created, self.metrics_related.wikinews_edited, self.metrics_related.wikiquote_created, self.metrics_related.wikiquote_edited, self.metrics_related.wiktionary_created, self.metrics_related.wiktionary_edited, self.metrics_related.wikivoyage_created, self.metrics_related.wikivoyage_edited, self.metrics_related.wikispecies_created, self.metrics_related.wikispecies_edited, self.metrics_related.metawiki_created, self.metrics_related.metawiki_edited, self.metrics_related.mediawiki_created, self.metrics_related.mediawiki_edited, self.metrics_related.wikifunctions_created, self.metrics_related.wikifunctions_edited, self.metrics_related.incubator_created, self.metrics_related.incubator_edited]
-        expected_row_2 = [metric_2.id, metric_2.text, metric_2.activity_id, metric_2.activity.text, metric_2.activity.code, metric_2.number_of_editors, metric_2.number_of_participants, metric_2.number_of_partnerships_activated, metric_2.number_of_feedbacks, metric_2.number_of_events, metric_2.wikipedia_created, metric_2.wikipedia_edited, metric_2.commons_created, metric_2.commons_edited, metric_2.wikidata_created, metric_2.wikidata_edited, metric_2.wikiversity_created, metric_2.wikiversity_edited, metric_2.wikibooks_created, metric_2.wikibooks_edited, metric_2.wikisource_created, metric_2.wikisource_edited, metric_2.wikinews_created, metric_2.wikinews_edited, metric_2.wikiquote_created, metric_2.wikiquote_edited, metric_2.wiktionary_created, metric_2.wiktionary_edited, metric_2.wikivoyage_created, metric_2.wikivoyage_edited, metric_2.wikispecies_created, metric_2.wikispecies_edited, metric_2.metawiki_created, metric_2.metawiki_edited, metric_2.mediawiki_created, metric_2.mediawiki_edited, metric_2.wikifunctions_created, metric_2.wikifunctions_edited, metric_2.incubator_created, metric_2.incubator_edited]
+        metric_2 = Metric.objects.create(
+            text="Metric 2", activity=self.activity_associated
+        )
+        expected_row_1 = [
+            self.metrics_related.id,
+            self.metrics_related.text,
+            self.metrics_related.activity_id,
+            self.metrics_related.activity.text,
+            self.metrics_related.activity.code,
+            self.metrics_related.number_of_editors,
+            self.metrics_related.number_of_participants,
+            self.metrics_related.number_of_partnerships_activated,
+            self.metrics_related.number_of_feedbacks,
+            self.metrics_related.number_of_events,
+            self.metrics_related.wikipedia_created,
+            self.metrics_related.wikipedia_edited,
+            self.metrics_related.commons_created,
+            self.metrics_related.commons_edited,
+            self.metrics_related.wikidata_created,
+            self.metrics_related.wikidata_edited,
+            self.metrics_related.wikiversity_created,
+            self.metrics_related.wikiversity_edited,
+            self.metrics_related.wikibooks_created,
+            self.metrics_related.wikibooks_edited,
+            self.metrics_related.wikisource_created,
+            self.metrics_related.wikisource_edited,
+            self.metrics_related.wikinews_created,
+            self.metrics_related.wikinews_edited,
+            self.metrics_related.wikiquote_created,
+            self.metrics_related.wikiquote_edited,
+            self.metrics_related.wiktionary_created,
+            self.metrics_related.wiktionary_edited,
+            self.metrics_related.wikivoyage_created,
+            self.metrics_related.wikivoyage_edited,
+            self.metrics_related.wikispecies_created,
+            self.metrics_related.wikispecies_edited,
+            self.metrics_related.metawiki_created,
+            self.metrics_related.metawiki_edited,
+            self.metrics_related.mediawiki_created,
+            self.metrics_related.mediawiki_edited,
+            self.metrics_related.wikifunctions_created,
+            self.metrics_related.wikifunctions_edited,
+            self.metrics_related.incubator_created,
+            self.metrics_related.incubator_edited,
+        ]
+        expected_row_2 = [
+            metric_2.id,
+            metric_2.text,
+            metric_2.activity_id,
+            metric_2.activity.text,
+            metric_2.activity.code,
+            metric_2.number_of_editors,
+            metric_2.number_of_participants,
+            metric_2.number_of_partnerships_activated,
+            metric_2.number_of_feedbacks,
+            metric_2.number_of_events,
+            metric_2.wikipedia_created,
+            metric_2.wikipedia_edited,
+            metric_2.commons_created,
+            metric_2.commons_edited,
+            metric_2.wikidata_created,
+            metric_2.wikidata_edited,
+            metric_2.wikiversity_created,
+            metric_2.wikiversity_edited,
+            metric_2.wikibooks_created,
+            metric_2.wikibooks_edited,
+            metric_2.wikisource_created,
+            metric_2.wikisource_edited,
+            metric_2.wikinews_created,
+            metric_2.wikinews_edited,
+            metric_2.wikiquote_created,
+            metric_2.wikiquote_edited,
+            metric_2.wiktionary_created,
+            metric_2.wiktionary_edited,
+            metric_2.wikivoyage_created,
+            metric_2.wikivoyage_edited,
+            metric_2.wikispecies_created,
+            metric_2.wikispecies_edited,
+            metric_2.metawiki_created,
+            metric_2.metawiki_edited,
+            metric_2.mediawiki_created,
+            metric_2.mediawiki_edited,
+            metric_2.wikifunctions_created,
+            metric_2.wikifunctions_edited,
+            metric_2.incubator_created,
+            metric_2.incubator_edited,
+        ]
 
         expected_rows = [expected_row_1, expected_row_2]
         expected_df = pd.DataFrame(expected_rows, columns=expected_header)
@@ -1413,36 +1989,72 @@ class ReportExportViewTest(TestCase):
         self.assertTrue(result[result.isin(expected_df)].equals(expected_df))
 
     def test_export_user_profile(self):
-        expected_header = [_('ID'), _('First name'), _('Last Name'), _('Username on Wiki (WMB)'), _('Username on Wiki'),
-                           _('Photograph'), _('Position'), _('Twitter'), _('Facebook'), _('Instagram'), _('Email'),
-                           _('Wikidata item'), _('LinkedIn'), _('Lattes'), _('Orcid'), _('Google_scholar')]
+        expected_header = [
+            _("ID"),
+            _("First name"),
+            _("Last Name"),
+            _("Username on Wiki (WMB)"),
+            _("Username on Wiki"),
+            _("Photograph"),
+            _("Position"),
+            _("Twitter"),
+            _("Facebook"),
+            _("Instagram"),
+            _("Email"),
+            _("Wikidata item"),
+            _("LinkedIn"),
+            _("Lattes"),
+            _("Orcid"),
+            _("Google_scholar"),
+        ]
 
         user_profile = self.report_1.created_by
-        expected_row = [user_profile.id,
-                        user_profile.user.first_name or "",
-                        user_profile.user.last_name or "",
-                        user_profile.professional_wiki_handle or "",
-                        user_profile.personal_wiki_handle or "",
-                        user_profile.photograph or "",
-                        user_profile.current_position if user_profile.current_position else "",
-                        user_profile.twitter or "",
-                        user_profile.facebook or "",
-                        user_profile.instagram or "",
-                        user_profile.user.email or "",
-                        user_profile.wikidata_item or "",
-                        user_profile.linkedin or "",
-                        user_profile.lattes or "",
-                        user_profile.orcid or "",
-                        user_profile.google_scholar or ""]
+        expected_row = [
+            user_profile.id,
+            user_profile.user.first_name or "",
+            user_profile.user.last_name or "",
+            user_profile.professional_wiki_handle or "",
+            user_profile.personal_wiki_handle or "",
+            user_profile.photograph or "",
+            user_profile.current_position if user_profile.current_position else "",
+            user_profile.twitter or "",
+            user_profile.facebook or "",
+            user_profile.instagram or "",
+            user_profile.user.email or "",
+            user_profile.wikidata_item or "",
+            user_profile.linkedin or "",
+            user_profile.lattes or "",
+            user_profile.orcid or "",
+            user_profile.google_scholar or "",
+        ]
 
         result = export_user_profile(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
     def test_export_user_profile_without_report_id_returns_all_user_profiles(self):
-        expected_header = [_('ID'), _('First name'), _('Last Name'), _('Username on Wiki (WMB)'), _('Username on Wiki'),
-                           _('Photograph'), _('Position'), _('Twitter'), _('Facebook'), _('Instagram'), _('Email'),
-                           _('Wikidata item'), _('LinkedIn'), _('Lattes'), _('Orcid'), _('Google_scholar')]
+        expected_header = [
+            _("ID"),
+            _("First name"),
+            _("Last Name"),
+            _("Username on Wiki (WMB)"),
+            _("Username on Wiki"),
+            _("Photograph"),
+            _("Position"),
+            _("Twitter"),
+            _("Facebook"),
+            _("Instagram"),
+            _("Email"),
+            _("Wikidata item"),
+            _("LinkedIn"),
+            _("Lattes"),
+            _("Orcid"),
+            _("Google_scholar"),
+        ]
 
         user_profile_1 = self.report_1.created_by
 
@@ -1453,17 +2065,55 @@ class ReportExportViewTest(TestCase):
         self.report_2.created_by = user_profile_2
         self.report_2.save()
 
-        expected_row_1 = [user_profile_1.id, user_profile_1.user.first_name or "", user_profile_1.user.last_name or "", user_profile_1.professional_wiki_handle or "", user_profile_1.personal_wiki_handle or "", user_profile_1.photograph or "", user_profile_1.current_position or "", user_profile_1.twitter or "", user_profile_1.facebook or "", user_profile_1.instagram or "", user_profile_1.user.email or "", user_profile_1.wikidata_item or "", user_profile_1.linkedin or "", user_profile_1.lattes or "", user_profile_1.orcid or "", user_profile_1.google_scholar or ""]
-        expected_row_2 = [user_profile_2.id, user_profile_2.user.first_name or "", user_profile_2.user.last_name or "", user_profile_2.professional_wiki_handle or "", user_profile_2.personal_wiki_handle or "", user_profile_2.photograph or "", user_profile_2.current_position or "", user_profile_2.twitter or "", user_profile_2.facebook or "", user_profile_2.instagram or "", user_profile_2.user.email or "", user_profile_2.wikidata_item or "", user_profile_2.linkedin or "", user_profile_2.lattes or "", user_profile_2.orcid or "", user_profile_2.google_scholar or ""]
+        expected_row_1 = [
+            user_profile_1.id,
+            user_profile_1.user.first_name or "",
+            user_profile_1.user.last_name or "",
+            user_profile_1.professional_wiki_handle or "",
+            user_profile_1.personal_wiki_handle or "",
+            user_profile_1.photograph or "",
+            user_profile_1.current_position or "",
+            user_profile_1.twitter or "",
+            user_profile_1.facebook or "",
+            user_profile_1.instagram or "",
+            user_profile_1.user.email or "",
+            user_profile_1.wikidata_item or "",
+            user_profile_1.linkedin or "",
+            user_profile_1.lattes or "",
+            user_profile_1.orcid or "",
+            user_profile_1.google_scholar or "",
+        ]
+        expected_row_2 = [
+            user_profile_2.id,
+            user_profile_2.user.first_name or "",
+            user_profile_2.user.last_name or "",
+            user_profile_2.professional_wiki_handle or "",
+            user_profile_2.personal_wiki_handle or "",
+            user_profile_2.photograph or "",
+            user_profile_2.current_position or "",
+            user_profile_2.twitter or "",
+            user_profile_2.facebook or "",
+            user_profile_2.instagram or "",
+            user_profile_2.user.email or "",
+            user_profile_2.wikidata_item or "",
+            user_profile_2.linkedin or "",
+            user_profile_2.lattes or "",
+            user_profile_2.orcid or "",
+            user_profile_2.google_scholar or "",
+        ]
         expected_rows = [expected_row_1, expected_row_2]
-        expected_df = pd.DataFrame(expected_rows, columns=expected_header).reset_index(drop=True)
+        expected_df = pd.DataFrame(expected_rows, columns=expected_header).reset_index(
+            drop=True
+        )
         result = export_user_profile().reset_index(drop=True)
         self.assertTrue(result[result.isin(expected_df)].equals(expected_df))
 
     def test_export_area_activated(self):
-        expected_header = [_('ID'), _('Area activated')]
+        expected_header = [_("ID"), _("Area activated")]
 
-        area_activated = TeamArea.objects.create(text="Area activated", code="area_activated")
+        area_activated = TeamArea.objects.create(
+            text="Area activated", code="area_activated"
+        )
         self.report_1.area_activated.add(area_activated)
         expected_row_1 = [self.area_responsible.id, self.area_responsible.text]
         expected_row_2 = [area_activated.id, area_activated.text]
@@ -1474,10 +2124,14 @@ class ReportExportViewTest(TestCase):
 
         self.assertTrue(result[result.isin(expected_df)].equals(expected_df))
 
-    def test_export_area_activated_without_report_id_returns_areas_activated_from_all_reports(self):
-        expected_header = [_('ID'), _('Area activated')]
+    def test_export_area_activated_without_report_id_returns_areas_activated_from_all_reports(
+        self,
+    ):
+        expected_header = [_("ID"), _("Area activated")]
 
-        area_activated_1 = TeamArea.objects.create(text="Area activated", code="area_activated")
+        area_activated_1 = TeamArea.objects.create(
+            text="Area activated", code="area_activated"
+        )
         self.report_1.area_activated.add(area_activated_1)
 
         area_activated_2 = TeamArea.objects.create(text="Area activated")
@@ -1493,32 +2147,66 @@ class ReportExportViewTest(TestCase):
         self.assertTrue(result.equals(expected_df))
 
     def test_export_directions_related(self):
-        expected_header = [_('ID'), _('Direction related'), _('Strategic axis ID'), _('Strategic axis text')]
+        expected_header = [
+            _("ID"),
+            _("Direction related"),
+            _("Strategic axis ID"),
+            _("Strategic axis text"),
+        ]
 
         strategic_axis = StrategicAxis.objects.create(text="Strategic axis")
-        directions_related = Direction.objects.create(text="Area activated", strategic_axis=strategic_axis)
+        directions_related = Direction.objects.create(
+            text="Area activated", strategic_axis=strategic_axis
+        )
 
         self.report_1.directions_related.add(directions_related)
-        expected_row = [directions_related.id,
-                        directions_related.text,
-                        directions_related.strategic_axis_id,
-                        directions_related.strategic_axis.text]
+        expected_row = [
+            directions_related.id,
+            directions_related.text,
+            directions_related.strategic_axis_id,
+            directions_related.strategic_axis.text,
+        ]
 
         result = export_directions_related(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
-    def test_export_directions_related_without_report_id_returns_directions_related_from_all_reports(self):
-        expected_header = [_('ID'), _('Direction related'), _('Strategic axis ID'), _('Strategic axis text')]
+    def test_export_directions_related_without_report_id_returns_directions_related_from_all_reports(
+        self,
+    ):
+        expected_header = [
+            _("ID"),
+            _("Direction related"),
+            _("Strategic axis ID"),
+            _("Strategic axis text"),
+        ]
 
         strategic_axis = StrategicAxis.objects.create(text="Strategic axis")
-        directions_related_1 = Direction.objects.create(text="Area activated", strategic_axis=strategic_axis)
-        directions_related_2 = Direction.objects.create(text="Area activated 2", strategic_axis=strategic_axis)
+        directions_related_1 = Direction.objects.create(
+            text="Area activated", strategic_axis=strategic_axis
+        )
+        directions_related_2 = Direction.objects.create(
+            text="Area activated 2", strategic_axis=strategic_axis
+        )
 
         self.report_1.directions_related.add(directions_related_1)
         self.report_2.directions_related.add(directions_related_2)
-        expected_row_1 = [directions_related_1.id, directions_related_1.text, directions_related_1.strategic_axis_id, directions_related_1.strategic_axis.text]
-        expected_row_2 = [directions_related_2.id, directions_related_2.text, directions_related_2.strategic_axis_id, directions_related_2.strategic_axis.text]
+        expected_row_1 = [
+            directions_related_1.id,
+            directions_related_1.text,
+            directions_related_1.strategic_axis_id,
+            directions_related_1.strategic_axis.text,
+        ]
+        expected_row_2 = [
+            directions_related_2.id,
+            directions_related_2.text,
+            directions_related_2.strategic_axis_id,
+            directions_related_2.strategic_axis.text,
+        ]
 
         expected_rows = [expected_row_1, expected_row_2]
         expected_df = pd.DataFrame(expected_rows, columns=expected_header)
@@ -1526,20 +2214,30 @@ class ReportExportViewTest(TestCase):
         self.assertTrue(result[result.isin(expected_df)].equals(expected_df))
 
     def test_export_editors(self):
-        expected_header = [_('ID'), _('Username'), _('Number of reports including this editor')]
+        expected_header = [
+            _("ID"),
+            _("Username"),
+            _("Number of reports including this editor"),
+        ]
 
         editor, created = Editor.objects.get_or_create(username="Editor")
         self.report_1.editors.add(editor)
-        expected_row = [editor.id,
-                        editor.username,
-                        editor.editors.count()]
+        expected_row = [editor.id, editor.username, editor.editors.count()]
 
         result = export_editors(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
     def test_export_editors_without_report_id_returns_editos_from_all_reports(self):
-        expected_header = [_('ID'), _('Username'), _('Number of reports including this editor')]
+        expected_header = [
+            _("ID"),
+            _("Username"),
+            _("Number of reports including this editor"),
+        ]
 
         editor_1 = Editor.objects.create(username="Editor 1")
         editor_2 = Editor.objects.create(username="Editor 2")
@@ -1554,31 +2252,65 @@ class ReportExportViewTest(TestCase):
         self.assertTrue(result[result.isin(expected_df)].equals(expected_df))
 
     def test_export_learning_questions_related(self):
-        expected_header = [_('ID'), _('Learning question'), _('Learning area ID'), _('Learning area')]
+        expected_header = [
+            _("ID"),
+            _("Learning question"),
+            _("Learning area ID"),
+            _("Learning area"),
+        ]
 
         learning_area = LearningArea.objects.create(text="Learning area")
-        learning_questions_related = StrategicLearningQuestion.objects.create(text="Strategic learning question", learning_area=learning_area)
+        learning_questions_related = StrategicLearningQuestion.objects.create(
+            text="Strategic learning question", learning_area=learning_area
+        )
         self.report_1.learning_questions_related.add(learning_questions_related)
-        expected_row = [learning_questions_related.id,
-                        learning_questions_related.text,
-                        learning_questions_related.learning_area_id,
-                        learning_questions_related.learning_area.text]
+        expected_row = [
+            learning_questions_related.id,
+            learning_questions_related.text,
+            learning_questions_related.learning_area_id,
+            learning_questions_related.learning_area.text,
+        ]
 
         result = export_learning_questions_related(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
-    def test_export_learning_questions_related_without_report_id_returns_learning_questions_from_all_reports(self):
-        expected_header = [_('ID'), _('Learning question'), _('Learning area ID'), _('Learning area')]
+    def test_export_learning_questions_related_without_report_id_returns_learning_questions_from_all_reports(
+        self,
+    ):
+        expected_header = [
+            _("ID"),
+            _("Learning question"),
+            _("Learning area ID"),
+            _("Learning area"),
+        ]
 
         learning_area = LearningArea.objects.create(text="Learning area")
-        learning_questions_related_1 = StrategicLearningQuestion.objects.create(text="Strategic learning question 1", learning_area=learning_area)
-        learning_questions_related_2 = StrategicLearningQuestion.objects.create(text="Strategic learning question 2", learning_area=learning_area)
+        learning_questions_related_1 = StrategicLearningQuestion.objects.create(
+            text="Strategic learning question 1", learning_area=learning_area
+        )
+        learning_questions_related_2 = StrategicLearningQuestion.objects.create(
+            text="Strategic learning question 2", learning_area=learning_area
+        )
         self.report_1.learning_questions_related.add(learning_questions_related_1)
         self.report_2.learning_questions_related.add(learning_questions_related_2)
 
-        expected_row_1 = [learning_questions_related_1.id, learning_questions_related_1.text, learning_questions_related_1.learning_area_id, learning_questions_related_1.learning_area.text]
-        expected_row_2 = [learning_questions_related_2.id, learning_questions_related_2.text, learning_questions_related_2.learning_area_id, learning_questions_related_2.learning_area.text]
+        expected_row_1 = [
+            learning_questions_related_1.id,
+            learning_questions_related_1.text,
+            learning_questions_related_1.learning_area_id,
+            learning_questions_related_1.learning_area.text,
+        ]
+        expected_row_2 = [
+            learning_questions_related_2.id,
+            learning_questions_related_2.text,
+            learning_questions_related_2.learning_area_id,
+            learning_questions_related_2.learning_area.text,
+        ]
         expected_rows = [expected_row_1, expected_row_2]
 
         expected_df = pd.DataFrame(expected_rows, columns=expected_header)
@@ -1586,24 +2318,44 @@ class ReportExportViewTest(TestCase):
         self.assertTrue(result[result.isin(expected_df)].equals(expected_df))
 
     def test_export_organizers(self):
-        expected_header = [_('ID'), _("Organizer's name"), _("Organizer's institution ID"), _("Organizer institution's name"), _('Number of reports including this organizer')]
+        expected_header = [
+            _("ID"),
+            _("Organizer's name"),
+            _("Organizer's institution ID"),
+            _("Organizer institution's name"),
+            _("Number of reports including this organizer"),
+        ]
 
         partner = Partner.objects.create(name="Partner")
         organizer = Organizer.objects.create(name="Organizer")
         organizer.institution.add(partner)
         self.report_1.organizers.add(organizer)
-        expected_row = [organizer.id,
-                        organizer.name,
-                        ";".join(map(str, organizer.institution.values_list("id", flat=True))),
-                        ";".join(map(str, organizer.institution.values_list("name", flat=True))),
-                        organizer.organizers.count()]
+        expected_row = [
+            organizer.id,
+            organizer.name,
+            ";".join(map(str, organizer.institution.values_list("id", flat=True))),
+            ";".join(map(str, organizer.institution.values_list("name", flat=True))),
+            organizer.organizers.count(),
+        ]
 
         result = export_organizers(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
-    def test_export_organizers_without_report_id_returns_organizers_from_all_reports(self):
-        expected_header = [_('ID'), _("Organizer's name"), _("Organizer's institution ID"), _("Organizer institution's name"), _('Number of reports including this organizer')]
+    def test_export_organizers_without_report_id_returns_organizers_from_all_reports(
+        self,
+    ):
+        expected_header = [
+            _("ID"),
+            _("Organizer's name"),
+            _("Organizer's institution ID"),
+            _("Organizer institution's name"),
+            _("Number of reports including this organizer"),
+        ]
 
         partner = Partner.objects.create(name="Partner")
         organizer_1 = Organizer.objects.create(name="Organizer")
@@ -1612,8 +2364,20 @@ class ReportExportViewTest(TestCase):
         organizer_2.institution.add(partner)
         self.report_1.organizers.add(organizer_1)
         self.report_2.organizers.add(organizer_2)
-        expected_row_1 = [organizer_1.id, organizer_1.name, ";".join(map(str, organizer_1.institution.values_list("id", flat=True))), ";".join(map(str, organizer_1.institution.values_list("name", flat=True))), organizer_1.organizers.count()]
-        expected_row_2 = [organizer_2.id, organizer_2.name, ";".join(map(str, organizer_2.institution.values_list("id", flat=True))), ";".join(map(str, organizer_2.institution.values_list("name", flat=True))), organizer_2.organizers.count()]
+        expected_row_1 = [
+            organizer_1.id,
+            organizer_1.name,
+            ";".join(map(str, organizer_1.institution.values_list("id", flat=True))),
+            ";".join(map(str, organizer_1.institution.values_list("name", flat=True))),
+            organizer_1.organizers.count(),
+        ]
+        expected_row_2 = [
+            organizer_2.id,
+            organizer_2.name,
+            ";".join(map(str, organizer_2.institution.values_list("id", flat=True))),
+            ";".join(map(str, organizer_2.institution.values_list("name", flat=True))),
+            organizer_2.organizers.count(),
+        ]
         expected_rows = [expected_row_1, expected_row_2]
 
         expected_df = pd.DataFrame(expected_rows, columns=expected_header)
@@ -1621,25 +2385,56 @@ class ReportExportViewTest(TestCase):
         self.assertTrue(result[result.isin(expected_df)].equals(expected_df))
 
     def test_partners_activated(self):
-        expected_header = [_('ID'), _("Partners"), _("Partner's website"), _('Number of reports including this partner')]
+        expected_header = [
+            _("ID"),
+            _("Partners"),
+            _("Partner's website"),
+            _("Number of reports including this partner"),
+        ]
 
         partner = Partner.objects.create(name="Partner")
         self.report_1.partners_activated.add(partner)
-        expected_row = [partner.id, partner.name, partner.website, partner.partners.count()]
+        expected_row = [
+            partner.id,
+            partner.name,
+            partner.website,
+            partner.partners.count(),
+        ]
 
         result = export_partners_activated(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
-    def test_partners_activated_without_report_id_returns_partners_from_all_reports(self):
-        expected_header = [_('ID'), _("Partners"), _("Partner's website"), _('Number of reports including this partner')]
+    def test_partners_activated_without_report_id_returns_partners_from_all_reports(
+        self,
+    ):
+        expected_header = [
+            _("ID"),
+            _("Partners"),
+            _("Partner's website"),
+            _("Number of reports including this partner"),
+        ]
 
         partner_1 = Partner.objects.create(name="Partner 1")
         partner_2 = Partner.objects.create(name="Partner 2")
         self.report_1.partners_activated.add(partner_1)
         self.report_2.partners_activated.add(partner_2)
-        expected_row_1 = [partner_1.id, partner_1.name, partner_1.website, partner_1.partners.count()]
-        expected_row_2 = [partner_2.id, partner_2.name, partner_2.website, partner_2.partners.count()]
+        expected_row_1 = [
+            partner_1.id,
+            partner_1.name,
+            partner_1.website,
+            partner_1.partners.count(),
+        ]
+        expected_row_2 = [
+            partner_2.id,
+            partner_2.name,
+            partner_2.website,
+            partner_2.partners.count(),
+        ]
         expected_rows = [expected_row_1, expected_row_2]
 
         expected_df = pd.DataFrame(expected_rows, columns=expected_header)
@@ -1647,25 +2442,51 @@ class ReportExportViewTest(TestCase):
         self.assertTrue(result[result.isin(expected_df)].equals(expected_df))
 
     def test_export_technologies_used(self):
-        expected_header = [_('ID'), _("Technology"), _('Number of reports including this technology')]
+        expected_header = [
+            _("ID"),
+            _("Technology"),
+            _("Number of reports including this technology"),
+        ]
 
         technology_used = Technology.objects.create(name="Technology")
         self.report_1.technologies_used.add(technology_used)
-        expected_row = [technology_used.id, technology_used.name, technology_used.technologies.count()]
+        expected_row = [
+            technology_used.id,
+            technology_used.name,
+            technology_used.technologies.count(),
+        ]
 
         result = export_technologies_used(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
-    def test_export_technologies_used_without_report_id_returns_technologies_from_all_reports(self):
-        expected_header = [_('ID'), _("Technology"), _('Number of reports including this technology')]
+    def test_export_technologies_used_without_report_id_returns_technologies_from_all_reports(
+        self,
+    ):
+        expected_header = [
+            _("ID"),
+            _("Technology"),
+            _("Number of reports including this technology"),
+        ]
 
         technology_used_1 = Technology.objects.create(name="Technology 1")
         technology_used_2 = Technology.objects.create(name="Technology 2")
         self.report_1.technologies_used.add(technology_used_1)
         self.report_2.technologies_used.add(technology_used_2)
-        expected_row_1 = [technology_used_1.id, technology_used_1.name, technology_used_1.technologies.count()]
-        expected_row_2 = [technology_used_2.id, technology_used_2.name, technology_used_2.technologies.count()]
+        expected_row_1 = [
+            technology_used_1.id,
+            technology_used_1.name,
+            technology_used_1.technologies.count(),
+        ]
+        expected_row_2 = [
+            technology_used_2.id,
+            technology_used_2.name,
+            technology_used_2.technologies.count(),
+        ]
         expected_rows = [expected_row_1, expected_row_2]
 
         expected_df = pd.DataFrame(expected_rows, columns=expected_header)
@@ -1673,90 +2494,126 @@ class ReportExportViewTest(TestCase):
         self.assertTrue(result[result.isin(expected_df)].equals(expected_df))
 
     def test_export_operation_reports(self):
-        expected_header = [_('ID'), _('Report ID'), _('Metric ID'), _('Metric'), _('Number of people reached through social media'),
-              _('Number of new followers'), _('Number of mentions'), _('Number of community communications'),
-              _('Number of events'), _('Number of resources'), _('Number of partnerships activated'),
-              _('Number of new partnerships')]
+        expected_header = [
+            _("ID"),
+            _("Report ID"),
+            _("Metric ID"),
+            _("Metric"),
+            _("Number of people reached through social media"),
+            _("Number of new followers"),
+            _("Number of mentions"),
+            _("Number of community communications"),
+            _("Number of events"),
+            _("Number of resources"),
+            _("Number of partnerships activated"),
+            _("Number of new partnerships"),
+        ]
 
-        operation_report = OperationReport.objects.create(metric=self.metrics_related,
-                                                          report=self.report_1,
-                                                          number_of_events=1,
-                                                          number_of_mentions=2,
-                                                          number_of_resources=3,
-                                                          number_of_people_reached_through_social_media=4,
-                                                          number_of_new_followers=5,
-                                                          number_of_community_communications=6,
-                                                          number_of_new_partnerships=7,
-                                                          number_of_partnerships_activated=8)
-        expected_row = [operation_report.id,
-                        operation_report.report.id,
-                        operation_report.metric.id,
-                        operation_report.metric.text,
-                        operation_report.number_of_people_reached_through_social_media,
-                        operation_report.number_of_new_followers,
-                        operation_report.number_of_mentions,
-                        operation_report.number_of_community_communications,
-                        operation_report.number_of_events,
-                        operation_report.number_of_resources,
-                        operation_report.number_of_partnerships_activated,
-                        operation_report.number_of_new_partnerships]
+        operation_report = OperationReport.objects.create(
+            metric=self.metrics_related,
+            report=self.report_1,
+            number_of_events=1,
+            number_of_mentions=2,
+            number_of_resources=3,
+            number_of_people_reached_through_social_media=4,
+            number_of_new_followers=5,
+            number_of_community_communications=6,
+            number_of_new_partnerships=7,
+            number_of_partnerships_activated=8,
+        )
+        expected_row = [
+            operation_report.id,
+            operation_report.report.id,
+            operation_report.metric.id,
+            operation_report.metric.text,
+            operation_report.number_of_people_reached_through_social_media,
+            operation_report.number_of_new_followers,
+            operation_report.number_of_mentions,
+            operation_report.number_of_community_communications,
+            operation_report.number_of_events,
+            operation_report.number_of_resources,
+            operation_report.number_of_partnerships_activated,
+            operation_report.number_of_new_partnerships,
+        ]
 
         result = export_operation_report(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
-    def test_export_operation_report_without_report_id_returns_operation_reports_from_all_reports(self):
-        expected_header = [_('ID'), _('Report ID'), _('Metric ID'), _('Metric'),
-                           _('Number of people reached through social media'),
-                           _('Number of new followers'), _('Number of mentions'),
-                           _('Number of community communications'),
-                           _('Number of events'), _('Number of resources'), _('Number of partnerships activated'),
-                           _('Number of new partnerships')]
+    def test_export_operation_report_without_report_id_returns_operation_reports_from_all_reports(
+        self,
+    ):
+        expected_header = [
+            _("ID"),
+            _("Report ID"),
+            _("Metric ID"),
+            _("Metric"),
+            _("Number of people reached through social media"),
+            _("Number of new followers"),
+            _("Number of mentions"),
+            _("Number of community communications"),
+            _("Number of events"),
+            _("Number of resources"),
+            _("Number of partnerships activated"),
+            _("Number of new partnerships"),
+        ]
 
-        operation_report_1 = OperationReport.objects.create(metric=self.metrics_related,
-                                                            report=self.report_1,
-                                                            number_of_events=1,
-                                                            number_of_mentions=2,
-                                                            number_of_resources=3,
-                                                            number_of_people_reached_through_social_media=4,
-                                                            number_of_new_followers=5,
-                                                            number_of_community_communications=6,
-                                                            number_of_new_partnerships=7,
-                                                            number_of_partnerships_activated=8)
-        operation_report_2 = OperationReport.objects.create(metric=self.metrics_related,
-                                                            report=self.report_2,
-                                                            number_of_events=1,
-                                                            number_of_mentions=2,
-                                                            number_of_resources=3,
-                                                            number_of_people_reached_through_social_media=4,
-                                                            number_of_new_followers=5,
-                                                            number_of_community_communications=6,
-                                                            number_of_new_partnerships=7,
-                                                            number_of_partnerships_activated=8)
-        expected_row_1 = [operation_report_1.id,
-                          operation_report_1.report.id,
-                          operation_report_1.metric.id,
-                          operation_report_1.metric.text,
-                          operation_report_1.number_of_people_reached_through_social_media,
-                          operation_report_1.number_of_new_followers,
-                          operation_report_1.number_of_mentions,
-                          operation_report_1.number_of_community_communications,
-                          operation_report_1.number_of_events,
-                          operation_report_1.number_of_resources,
-                          operation_report_1.number_of_partnerships_activated,
-                          operation_report_1.number_of_new_partnerships]
-        expected_row_2 = [operation_report_2.id,
-                          operation_report_2.report.id,
-                          operation_report_2.metric.id,
-                          operation_report_2.metric.text,
-                          operation_report_2.number_of_people_reached_through_social_media,
-                          operation_report_2.number_of_new_followers,
-                          operation_report_2.number_of_mentions,
-                          operation_report_2.number_of_community_communications,
-                          operation_report_2.number_of_events,
-                          operation_report_2.number_of_resources,
-                          operation_report_2.number_of_partnerships_activated,
-                          operation_report_2.number_of_new_partnerships]
+        operation_report_1 = OperationReport.objects.create(
+            metric=self.metrics_related,
+            report=self.report_1,
+            number_of_events=1,
+            number_of_mentions=2,
+            number_of_resources=3,
+            number_of_people_reached_through_social_media=4,
+            number_of_new_followers=5,
+            number_of_community_communications=6,
+            number_of_new_partnerships=7,
+            number_of_partnerships_activated=8,
+        )
+        operation_report_2 = OperationReport.objects.create(
+            metric=self.metrics_related,
+            report=self.report_2,
+            number_of_events=1,
+            number_of_mentions=2,
+            number_of_resources=3,
+            number_of_people_reached_through_social_media=4,
+            number_of_new_followers=5,
+            number_of_community_communications=6,
+            number_of_new_partnerships=7,
+            number_of_partnerships_activated=8,
+        )
+        expected_row_1 = [
+            operation_report_1.id,
+            operation_report_1.report.id,
+            operation_report_1.metric.id,
+            operation_report_1.metric.text,
+            operation_report_1.number_of_people_reached_through_social_media,
+            operation_report_1.number_of_new_followers,
+            operation_report_1.number_of_mentions,
+            operation_report_1.number_of_community_communications,
+            operation_report_1.number_of_events,
+            operation_report_1.number_of_resources,
+            operation_report_1.number_of_partnerships_activated,
+            operation_report_1.number_of_new_partnerships,
+        ]
+        expected_row_2 = [
+            operation_report_2.id,
+            operation_report_2.report.id,
+            operation_report_2.metric.id,
+            operation_report_2.metric.text,
+            operation_report_2.number_of_people_reached_through_social_media,
+            operation_report_2.number_of_new_followers,
+            operation_report_2.number_of_mentions,
+            operation_report_2.number_of_community_communications,
+            operation_report_2.number_of_events,
+            operation_report_2.number_of_resources,
+            operation_report_2.number_of_partnerships_activated,
+            operation_report_2.number_of_new_partnerships,
+        ]
 
         expected_rows = [expected_row_1, expected_row_2]
         expected_df = pd.DataFrame(expected_rows, columns=expected_header)
@@ -1764,83 +2621,139 @@ class ReportExportViewTest(TestCase):
         self.assertTrue(result[result.isin(expected_df)].equals(expected_df))
 
     def test_export_fundings_with_ordinary_project(self):
-        expected_header = [_('ID'), _('Funding'), _('Value'), _('Project ID'), _('Project'), _('Active?'), _('Type of project')]
+        expected_header = [
+            _("ID"),
+            _("Funding"),
+            _("Value"),
+            _("Project ID"),
+            _("Project"),
+            _("Active?"),
+            _("Type of project"),
+        ]
 
         self.report_1.funding_associated.add(self.funding_associated)
         self.report_1.save()
 
-        expected_row = [self.funding_associated.id,
-                        self.funding_associated.name,
-                        float(self.funding_associated.value),
-                        self.funding_associated.project.id,
-                        self.funding_associated.project.text,
-                        self.funding_associated.project.active_status,
-                        _("Ordinary")]
+        expected_row = [
+            self.funding_associated.id,
+            self.funding_associated.name,
+            float(self.funding_associated.value),
+            self.funding_associated.project.id,
+            self.funding_associated.project.text,
+            self.funding_associated.project.active_status,
+            _("Ordinary"),
+        ]
 
         result = export_funding(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
     def test_export_fundings_with_poa_project(self):
-        expected_header = [_('ID'), _('Funding'), _('Value'), _('Project ID'), _('Project'), _('Active?'), _('Type of project')]
+        expected_header = [
+            _("ID"),
+            _("Funding"),
+            _("Value"),
+            _("Project ID"),
+            _("Project"),
+            _("Active?"),
+            _("Type of project"),
+        ]
         poa_project = Project.objects.create(text="POA", current_poa=True)
         funding = Funding.objects.create(name="Funding", project=poa_project, value=24)
         self.report_1.funding_associated.add(funding)
         self.report_1.save()
 
-        expected_row = [funding.id,
-                        funding.name,
-                        float(funding.value),
-                        funding.project.id,
-                        funding.project.text,
-                        funding.project.active_status,
-                        _("Current Plan of Activities")]
+        expected_row = [
+            funding.id,
+            funding.name,
+            float(funding.value),
+            funding.project.id,
+            funding.project.text,
+            funding.project.active_status,
+            _("Current Plan of Activities"),
+        ]
 
         result = export_funding(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
     def test_export_fundings_with_main_funding_project(self):
-        expected_header = [_('ID'), _('Funding'), _('Value'), _('Project ID'), _('Project'), _('Active?'), _('Type of project')]
+        expected_header = [
+            _("ID"),
+            _("Funding"),
+            _("Value"),
+            _("Project ID"),
+            _("Project"),
+            _("Active?"),
+            _("Type of project"),
+        ]
         main_project = Project.objects.create(text="Main", main_funding=True)
         funding = Funding.objects.create(name="Funding", project=main_project, value=24)
         self.report_1.funding_associated.add(funding)
         self.report_1.save()
 
-        expected_row = [funding.id,
-                        funding.name,
-                        float(funding.value),
-                        funding.project.id,
-                        funding.project.text,
-                        funding.project.active_status,
-                        _("Main funding")]
+        expected_row = [
+            funding.id,
+            funding.name,
+            float(funding.value),
+            funding.project.id,
+            funding.project.text,
+            funding.project.active_status,
+            _("Main funding"),
+        ]
 
         result = export_funding(report_id=self.report_1.id)
 
-        self.assertTrue(result[result.isin(expected_row)].equals(pd.DataFrame([expected_row], columns=expected_header)))
+        self.assertTrue(
+            result[result.isin(expected_row)].equals(
+                pd.DataFrame([expected_row], columns=expected_header)
+            )
+        )
 
     def test_export_fundings_without_report_id_returns_fundings_from_all_reports(self):
-        expected_header = [_('ID'), _('Funding'), _('Value'), _('Project ID'), _('Project'), _('Active?'), _('Type of project')]
+        expected_header = [
+            _("ID"),
+            _("Funding"),
+            _("Value"),
+            _("Project ID"),
+            _("Project"),
+            _("Active?"),
+            _("Type of project"),
+        ]
         main_project = Project.objects.create(text="Main", main_funding=True)
-        funding_2 = Funding.objects.create(name="Funding", project=main_project, value=48)
+        funding_2 = Funding.objects.create(
+            name="Funding", project=main_project, value=48
+        )
         self.report_1.funding_associated.add(self.funding_associated)
         self.report_1.save()
         self.report_2.funding_associated.add(funding_2)
         self.report_2.save()
-        expected_row_1 = [self.funding_associated.id,
-                          self.funding_associated.name,
-                          float(self.funding_associated.value),
-                          self.funding_associated.project.id,
-                          self.funding_associated.project.text,
-                          self.funding_associated.project.active_status,
-                          _("Ordinary")]
-        expected_row_2 = [funding_2.id,
-                          funding_2.name,
-                          float(funding_2.value),
-                          funding_2.project.id,
-                          funding_2.project.text,
-                          funding_2.project.active_status,
-                          _("Main funding")]
+        expected_row_1 = [
+            self.funding_associated.id,
+            self.funding_associated.name,
+            float(self.funding_associated.value),
+            self.funding_associated.project.id,
+            self.funding_associated.project.text,
+            self.funding_associated.project.active_status,
+            _("Ordinary"),
+        ]
+        expected_row_2 = [
+            funding_2.id,
+            funding_2.name,
+            float(funding_2.value),
+            funding_2.project.id,
+            funding_2.project.text,
+            funding_2.project.active_status,
+            _("Main funding"),
+        ]
 
         expected_rows = [expected_row_1, expected_row_2]
         expected_df = pd.DataFrame(expected_rows, columns=expected_header)
@@ -1855,5 +2768,57 @@ class ReportExportViewTest(TestCase):
         url = reverse("report:export_report", kwargs={"report_id": 1})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response,f"{reverse('report:list_reports')}")
+        self.assertRedirects(response, f"{reverse('report:list_reports')}")
 
+
+class GetLocalizedFieldTests(TestCase):
+
+    def setUp(self):
+        self.available_fields = [
+            "text",
+            "text_en",
+            "text_es",
+            "text_pt_br",
+        ]
+
+    @override_settings(LANGUAGE_FALLBACKS={"fr": ["pt", "en"]})
+    def test_returns_first_existing_fallback(self):
+        """
+        if a language is not available, the first fallback language is returned
+        """
+        field = get_localized_field(lang="fr", available_fields=self.available_fields)
+        self.assertEqual(field, "text_en")
+
+    @override_settings(LANGUAGE_FALLBACKS={"fr": ["es", "en"]})
+    def test_stops_at_first_valid_fallback(self):
+        """
+        if a language is not available, the first fallback language is returned
+        """
+        field = get_localized_field(lang="fr", available_fields=self.available_fields)
+        self.assertEqual(field, "text_es")
+
+    @override_settings(LANGUAGE_FALLBACKS={"fr": ["de", "it"]})
+    def test_falls_back_to_generic_field(self):
+        """
+        If no fallback exists, use it default
+        """
+        field = get_localized_field(lang="fr", available_fields=self.available_fields)
+        self.assertEqual(field, "text")
+
+    @override_settings(LANGUAGE_FALLBACKS={"fr": ["de", "it"]})
+    def test_returns_none_if_no_generic_field(self):
+        """
+        No fallback and text is not available
+        """
+        field = get_localized_field(lang="fr", available_fields=["text_en"])
+        self.assertIsNone(field)
+
+    @override_settings(LANGUAGE_FALLBACKS={"pt_br": ["pt", "en"]})
+    def test_exact_match_has_priority_over_fallback(self):
+        """
+        If exact field exists, use it
+        """
+        field = get_localized_field(
+            lang="pt-BR", available_fields=["text_pt_br", "text_en"]
+        )
+        self.assertEqual(field, "text_pt_br")

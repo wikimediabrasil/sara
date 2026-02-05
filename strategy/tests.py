@@ -1,14 +1,19 @@
-from django.test import TestCase
 from django.core.exceptions import ValidationError
-from strategy.models import StrategicAxis, Direction, StrategicLearningQuestion, EvaluationObjective, LearningArea
+from django.test import TestCase
 from django.urls import reverse
+
+from strategy.models import (Direction, EvaluationObjective, LearningArea,
+                             StrategicAxis, StrategicLearningQuestion)
+
 
 class DirectionModelTests(TestCase):
     def setUp(self):
         self.strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
 
     def test_direction_str_returns_its_text(self):
-        direction = Direction.objects.create(text="Direction", strategic_axis=self.strategic_axis)
+        direction = Direction.objects.create(
+            text="Direction", strategic_axis=self.strategic_axis
+        )
         self.assertEqual(str(direction), "Direction")
 
     def test_direction_cannot_have_empty_text(self):
@@ -58,8 +63,9 @@ class StrategicLearningQuestionModelTest(TestCase):
     def setUp(self):
         self.learning_area = LearningArea.objects.create(text="Learning Area")
         self.strategic_question_text = "Strategic Learning Question"
-        self.strategic_question = StrategicLearningQuestion.objects.create(text=self.strategic_question_text,
-                                                                           learning_area=self.learning_area)
+        self.strategic_question = StrategicLearningQuestion.objects.create(
+            text=self.strategic_question_text, learning_area=self.learning_area
+        )
 
     def test_strategic_learning_question_str_method_returns_its_text(self):
         self.assertEqual(str(self.strategic_question), self.strategic_question_text)
@@ -77,8 +83,9 @@ class EvaluationObjectiveModelTest(TestCase):
     def setUp(self):
         self.learning_area = LearningArea.objects.create(text="Test Learning Area")
         self.evaluation_objective_text = "Test Evaluation Objective"
-        self.evaluation_objective = EvaluationObjective.objects.create(text=self.evaluation_objective_text,
-                                                                       learning_area=self.learning_area)
+        self.evaluation_objective = EvaluationObjective.objects.create(
+            text=self.evaluation_objective_text, learning_area=self.learning_area
+        )
 
     def test_evaluation_objective_str_method_returns_its_text(self):
         self.assertEqual(str(self.evaluation_objective), self.evaluation_objective_text)

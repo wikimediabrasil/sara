@@ -9,13 +9,16 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
+
 import os
 from pathlib import Path
-import configparser
-from django.utils.translation import gettext_lazy as _
+
+# Feature flags — hard defaults (must exist)
+ENABLE_BUG_APP = False
+ENABLE_AGENDA_APP = False
 
 # SECURITY WARNING: keep the secret key used in production secret!
-from .settings_local import *
+from .settings_local import *  # noqa: E402, F401, F403
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,60 +29,59 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Application definition
 
 INSTALLED_APPS = [
-    'whitenoise.runserver_nostatic',
-    'users.apps.UsersConfig',
-    'strategy.apps.StrategyConfig',
-    'metrics.apps.MetricsConfig',
-    'report.apps.ReportConfig',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django_admin_logs',
-    'django_select2',
-    'social_django',
-    'modeltranslation'
+    "whitenoise.runserver_nostatic",
+    "users.apps.UsersConfig",
+    "strategy.apps.StrategyConfig",
+    "metrics.apps.MetricsConfig",
+    "report.apps.ReportConfig",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django_admin_logs",
+    "django_select2",
+    "social_django",
+    "modeltranslation",
 ]
 
 if ENABLE_BUG_APP:
-    INSTALLED_APPS.append('bug.apps.BugConfig')
+    INSTALLED_APPS.append("bug.apps.BugConfig")
 
 if ENABLE_AGENDA_APP:
-    INSTALLED_APPS.append('agenda.apps.AgendaConfig')
+    INSTALLED_APPS.append("agenda.apps.AgendaConfig")
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'social_django.middleware.SocialAuthExceptionMiddleware'
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "social_django.middleware.SocialAuthExceptionMiddleware",
 ]
 
-ROOT_URLCONF = 'sara.urls'
+ROOT_URLCONF = "sara.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'social_django.context_processors.backends',
-                'social_django.context_processors.login_redirect',
-                'utils.context_processors.global_flags',
-                'utils.context_processors.global_settings',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
+                "utils.context_processors.global_flags",
+                "utils.context_processors.global_settings",
             ],
         },
     },
@@ -87,74 +89,72 @@ TEMPLATES = [
 
 
 AUTHENTICATION_BACKENDS = (
-    'social_core.backends.mediawiki.MediaWiki',
-    'django.contrib.auth.backends.ModelBackend',
+    "social_core.backends.mediawiki.MediaWiki",
+    "django.contrib.auth.backends.ModelBackend",
 )
-SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['groups']
-SOCIAL_AUTH_URL_NAMESPACE = 'users:social'
+SOCIAL_AUTH_PROTECTED_USER_FIELDS = ["groups"]
+SOCIAL_AUTH_URL_NAMESPACE = "users:social"
 SOCIAL_AUTH_PIPELINE = (
-    'social_core.pipeline.social_auth.social_details',
-    'social_core.pipeline.social_auth.social_uid',
-    'social_core.pipeline.social_auth.auth_allowed',
-    'social_core.pipeline.social_auth.auth_allowed',
-    'social_core.pipeline.social_auth.social_user',
-    'users.pipeline.associate_by_wiki_handle',
-    'users.pipeline.get_username',
-    'social_core.pipeline.user.create_user',
-    'social_core.pipeline.social_auth.associate_user',
-    'social_core.pipeline.social_auth.load_extra_data',
-    'social_core.pipeline.user.user_details',
+    "social_core.pipeline.social_auth.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.auth_allowed",
+    "social_core.pipeline.social_auth.auth_allowed",
+    "social_core.pipeline.social_auth.social_user",
+    "users.pipeline.associate_by_wiki_handle",
+    "users.pipeline.get_username",
+    "social_core.pipeline.user.create_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+    "social_core.pipeline.user.user_details",
 )
 
-WSGI_APPLICATION = 'sara.wsgi.application'
+WSGI_APPLICATION = "sara.wsgi.application"
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
 USE_TZ = False
 
-LOCALE_PATHS = (
-    os.path.join(BASE_DIR, 'locale'),
-)
+LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 # STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'))
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_URL = 'users:login'
-LOGIN_REDIRECT_URL = 'metrics:index'
-LOGOUT_REDIRECT_URL = 'users:login'
+LOGIN_URL = "users:login"
+LOGIN_REDIRECT_URL = "metrics:index"
+LOGOUT_REDIRECT_URL = "users:login"
 
 DATE_FORMAT = "d \d\e F \d\e Y, \à\s g:i"

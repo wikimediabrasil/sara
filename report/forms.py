@@ -1,26 +1,31 @@
-from venv import create
-
-from django.utils import timezone
-from django import forms
-from django.shortcuts import get_object_or_404
-from django.utils.translation import gettext as _
-from django.core.exceptions import FieldDoesNotExist
-from django.db.models import fields, Q, Case, When, Value, IntegerField
-from django.db.models.functions import Lower
-from report.models import Report, Funding, Partner, Technology, Editor, Organizer, OperationReport
-from metrics.models import Area, Metric, Project
-from strategy.models import StrategicAxis, LearningArea
-from users.models import TeamArea, UserProfile
-
-from urllib.parse import quote
-import requests
 from datetime import datetime
+from urllib.parse import quote
+
+import requests
+from django import forms
+from django.core.exceptions import FieldDoesNotExist
+from django.db.models import Q
+from django.db.models.functions import Lower
 from django.forms import inlineformset_factory
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+
+from metrics.models import Area, Metric, Project
+from report.models import (Editor, Funding, OperationReport, Organizer,
+                           Partner, Report, Technology)
+from strategy.models import LearningArea, StrategicAxis
+from users.models import TeamArea, UserProfile
 
 
 class NewReportForm(forms.ModelForm):
-    editors_string = forms.CharField(required=False, widget=forms.Textarea,)
-    organizers_string = forms.CharField(required=False, widget=forms.Textarea,)
+    editors_string = forms.CharField(
+        required=False,
+        widget=forms.Textarea,
+    )
+    organizers_string = forms.CharField(
+        required=False,
+        widget=forms.Textarea,
+    )
 
     class Meta:
         model = Report
@@ -34,58 +39,67 @@ class NewReportForm(forms.ModelForm):
 
         self.fields["activity_associated"].choices = activities_associated_as_choices()
         self.fields["directions_related"].choices = directions_associated_as_choices()
-        self.fields["learning_questions_related"].choices = learning_questions_as_choices()
+        self.fields["learning_questions_related"].choices = (
+            learning_questions_as_choices()
+        )
 
-        self.fields["area_responsible"].queryset = TeamArea.objects.order_by(Lower("text"))
-        self.fields["area_activated"].queryset = TeamArea.objects.order_by(Lower("text"))
-        self.fields["partners_activated"].queryset = Partner.objects.order_by(Lower("name"))
-        self.fields["technologies_used"].queryset = Technology.objects.order_by(Lower("name"))
+        self.fields["area_responsible"].queryset = TeamArea.objects.order_by(
+            Lower("text")
+        )
+        self.fields["area_activated"].queryset = TeamArea.objects.order_by(
+            Lower("text")
+        )
+        self.fields["partners_activated"].queryset = Partner.objects.order_by(
+            Lower("name")
+        )
+        self.fields["technologies_used"].queryset = Technology.objects.order_by(
+            Lower("name")
+        )
 
-        self.fields["funding_associated"].queryset = Funding.objects.filter(project__active_status=True).order_by(Lower("name"))
+        self.fields["funding_associated"].queryset = Funding.objects.filter(
+            project__active_status=True
+        ).order_by(Lower("name"))
 
         if self.instance.pk:
             self.fields["area_responsible"].initial = self.instance.area_responsible_id
         else:
-            self.fields["area_responsible"].initial = area_responsible_of_user(self.user)
+            self.fields["area_responsible"].initial = area_responsible_of_user(
+                self.user
+            )
 
     def clean(self):
         cleaned = super().clean()
 
         raw_editors = cleaned.get("editors_string", "")
         editors = [
-            u.strip()
-            for u in remove_domain(raw_editors).splitlines()
-            if u.strip()
+            u.strip() for u in remove_domain(raw_editors).splitlines() if u.strip()
         ]
         cleaned["_parsed_editors"] = list(set(editors))
 
         raw_organizers = cleaned.get("organizers_string", "")
-        organizers = []
-        inferred_partners = set()
 
-        parsed_organizers =[]
+        parsed_organizers = []
         for line in raw_organizers.splitlines():
             if not line.strip():
                 continue
 
             name, institutions = (line + "|").split("|", 1)
-            parsed_organizers.append({
-                "name": name.strip(),
-                "institutions": [
-                    inst.strip()
-                    for inst in institutions.split("|")
-                    if inst.strip()
-                ],
-            })
-
+            parsed_organizers.append(
+                {
+                    "name": name.strip(),
+                    "institutions": [
+                        inst.strip() for inst in institutions.split("|") if inst.strip()
+                    ],
+                }
+            )
 
         cleaned["_parsed_organizers"] = parsed_organizers
 
         return cleaned
 
     def clean_end_date(self):
-        initial_date = self.cleaned_data.get('initial_date')
-        end_date = self.cleaned_data.get('end_date')
+        initial_date = self.cleaned_data.get("initial_date")
+        end_date = self.cleaned_data.get("end_date")
 
         if end_date:
             return end_date
@@ -104,10 +118,12 @@ class NewReportForm(forms.ModelForm):
             self._save_editors(report)
             self._save_organizers(report)
 
-            report.technologies_used.set(self.cleaned_data['technologies_used'])
-            report.area_activated.set(self.cleaned_data['area_activated'])
-            report.directions_related.set(self.cleaned_data['directions_related'])
-            report.learning_questions_related.set(self.cleaned_data['learning_questions_related'])
+            report.technologies_used.set(self.cleaned_data["technologies_used"])
+            report.area_activated.set(self.cleaned_data["area_activated"])
+            report.directions_related.set(self.cleaned_data["directions_related"])
+            report.learning_questions_related.set(
+                self.cleaned_data["learning_questions_related"]
+            )
 
             metrics = self._metrics_related()
             metrics = self._apply_implicit_metrics(report, metrics)
@@ -205,21 +221,29 @@ class NewReportForm(forms.ModelForm):
         ]
 
         for field_set in int_fields_names:
-            if any(self.cleaned_data.get(field_name, 0) > 0 for field_name in field_set):
+            if any(
+                self.cleaned_data.get(field_name, 0) > 0 for field_name in field_set
+            ):
                 query = Q()
                 for field in field_set:
                     try:
                         Metric._meta.get_field(field)
-                        metric_field= field
+                        metric_field = field
                     except FieldDoesNotExist:
                         metric_field = f"number_of_{field}"
 
                     query |= Q(**{f"{metric_field}__gt": 0})
 
-                metrics_related = metrics_related.union(metrics_main_funding.filter(query))
+                metrics_related = metrics_related.union(
+                    metrics_main_funding.filter(query)
+                )
 
         obj_fields_names = {
-            "editors": ["number_of_editors", "number_of_editors_retained", "number_of_new_editors"],
+            "editors": [
+                "number_of_editors",
+                "number_of_editors_retained",
+                "number_of_new_editors",
+            ],
             "organizers": ["number_of_organizers", "number_of_organizers_retained"],
             "partners_activated": ["number_of_partnerships_activated"],
         }
@@ -230,7 +254,9 @@ class NewReportForm(forms.ModelForm):
                 for field_name in field_names:
                     query |= Q(**{f"{field_name}__gt": 0})
 
-                metrics_related = metrics_related.union(metrics_main_funding.filter(query))
+                metrics_related = metrics_related.union(
+                    metrics_main_funding.filter(query)
+                )
 
         return metrics_related
 
@@ -238,7 +264,9 @@ class NewReportForm(forms.ModelForm):
     def _contributes_to_main_funding(report):
         if not report.activity_associated or not report.activity_associated.area:
             return False
-        return report.activity_associated.area.project.filter(counts_for_main_funding=True).exists()
+        return report.activity_associated.area.project.filter(
+            counts_for_main_funding=True
+        ).exists()
 
     def _apply_implicit_metrics(self, report, metrics):
         if not self._contributes_to_main_funding(report):
@@ -247,23 +275,49 @@ class NewReportForm(forms.ModelForm):
         main_funding = Project.objects.get(main_funding=True)
 
         if getattr(self, "_has_editors", False):
-            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_editors__gt=0))
+            metrics = metrics.union(
+                Metric.objects.filter(project=main_funding, number_of_editors__gt=0)
+            )
         if getattr(self, "_has_new_editors", False):
-            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_new_editors__gt=0))
+            metrics = metrics.union(
+                Metric.objects.filter(project=main_funding, number_of_new_editors__gt=0)
+            )
         if getattr(self, "_has_retained_editors", False):
-            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_editors_retained__gt=0))
+            metrics = metrics.union(
+                Metric.objects.filter(
+                    project=main_funding, number_of_editors_retained__gt=0
+                )
+            )
         if getattr(self, "_has_organizers", False):
-            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_organizers__gt=0))
+            metrics = metrics.union(
+                Metric.objects.filter(project=main_funding, number_of_organizers__gt=0)
+            )
         if getattr(self, "_has_new_organizers", False):
-            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_new_organizers__gt=0))
+            metrics = metrics.union(
+                Metric.objects.filter(
+                    project=main_funding, number_of_new_organizers__gt=0
+                )
+            )
         if getattr(self, "_has_retained_organizers", False):
-            metrics = metrics.union(Metric.objects.filter(project=main_funding, number_of_organizers_retained__gt=0))
+            metrics = metrics.union(
+                Metric.objects.filter(
+                    project=main_funding, number_of_organizers_retained__gt=0
+                )
+            )
 
         return metrics
 
 
 def remove_domain(users_string):
-    user_domains = ["User:", "Usuário (a):", "Usuário:", "Usuária:", "Utilizador(a):", "Utilizadora:", "Utilizador:"]
+    user_domains = [
+        "User:",
+        "Usuário (a):",
+        "Usuário:",
+        "Usuária:",
+        "Utilizador(a):",
+        "Utilizadora:",
+        "Utilizador:",
+    ]
     for domain in user_domains:
         users_string = users_string.replace(domain, "")
     return users_string
@@ -279,7 +333,12 @@ def area_responsible_of_user(user):
 
 def activities_associated_as_choices():
     areas = []
-    area_list = (Area.objects.filter(project__active_status=True).prefetch_related("activities").distinct().order_by("-poa_area", "text"))
+    area_list = (
+        Area.objects.filter(project__active_status=True)
+        .prefetch_related("activities")
+        .distinct()
+        .order_by("-poa_area", "text")
+    )
 
     for area in area_list:
         activities = [(a.id, f"{a.text} ({a.code})") for a in area.activities.all()]
@@ -290,7 +349,11 @@ def activities_associated_as_choices():
 
 def directions_associated_as_choices():
     axes = []
-    axes_qs = (StrategicAxis.objects.filter(active=True).prefetch_related("directions").distinct())
+    axes_qs = (
+        StrategicAxis.objects.filter(active=True)
+        .prefetch_related("directions")
+        .distinct()
+    )
     for axis in axes_qs:
         directions = [(d.id, d.text) for d in axis.directions.all()]
         axes.append((axis.text, tuple(directions)))
@@ -301,26 +364,39 @@ def directions_associated_as_choices():
 def learning_questions_as_choices():
     learning_areas = []
 
-    learning_areas_qs = (LearningArea.objects.filter(active=True).prefetch_related("strategic_question").distinct())
+    learning_areas_qs = (
+        LearningArea.objects.filter(active=True)
+        .prefetch_related("strategic_question")
+        .distinct()
+    )
 
     for learning_area in learning_areas_qs:
-        learning_questions = [(l.id, l.text) for l in learning_area.strategic_question.all()]
+        learning_questions = [
+            (learning.id, learning.text)
+            for learning in learning_area.strategic_question.all()
+        ]
         learning_areas.append((learning_area.text, tuple(learning_questions)))
 
     return tuple(learning_areas)
 
 
-
 def get_user_date_of_registration(user):
-    headers = {"User-Agent": "SARA-WMB/Toolforge (contact: User:EPorto (WMB) / mailto: eder.porto@wmnobrasil.org) environment=toolforge"}
-    url = "https://www.mediawiki.org/w/api.php?action=query&meta=globaluserinfo&format=json&guiuser=" + quote(user, safe="")
+    headers = {
+        "User-Agent": "SARA-WMB/Toolforge (contact: User:EPorto (WMB) / mailto: eder.porto@wmnobrasil.org) environment=toolforge"
+    }
+    url = (
+        "https://www.mediawiki.org/w/api.php?action=query&meta=globaluserinfo&format=json&guiuser="
+        + quote(user, safe="")
+    )
     result = requests.get(url, headers=headers)
     data = result.json()
     try:
-        date_obj = datetime.strptime(data["query"]["globaluserinfo"]["registration"], "%Y-%m-%dT%H:%M:%SZ")
+        date_obj = datetime.strptime(
+            data["query"]["globaluserinfo"]["registration"], "%Y-%m-%dT%H:%M:%SZ"
+        )
         date_str = date_obj.strftime("%Y-%m-%d %H:%M:%S")
         return date_str
-    except:
+    except (KeyError, TypeError, ValueError):
         return None
 
 
@@ -330,28 +406,53 @@ class OperationForm(forms.ModelForm):
         fields = "__all__"
 
     def clean_number_of_people_reached_through_social_media(self):
-        number_of_people_reached_through_social_media = self.cleaned_data.get("number_of_people_reached_through_social_media", 0)
-        return number_of_people_reached_through_social_media if number_of_people_reached_through_social_media else 0
+        number_of_people_reached_through_social_media = self.cleaned_data.get(
+            "number_of_people_reached_through_social_media", 0
+        )
+        return (
+            number_of_people_reached_through_social_media
+            if number_of_people_reached_through_social_media
+            else 0
+        )
+
     def clean_number_of_new_followers(self):
         number_of_new_followers = self.cleaned_data.get("number_of_new_followers", 0)
         return number_of_new_followers if number_of_new_followers else 0
+
     def clean_number_of_mentions(self):
         number_of_mentions = self.cleaned_data.get("number_of_mentions", 0)
         return number_of_mentions if number_of_mentions else 0
+
     def clean_number_of_community_communications(self):
-        number_of_community_communications = self.cleaned_data.get("number_of_community_communications", 0)
-        return number_of_community_communications if number_of_community_communications else 0
+        number_of_community_communications = self.cleaned_data.get(
+            "number_of_community_communications", 0
+        )
+        return (
+            number_of_community_communications
+            if number_of_community_communications
+            else 0
+        )
+
     def clean_number_of_events(self):
         number_of_events = self.cleaned_data.get("number_of_events", 0)
         return number_of_events if number_of_events else 0
+
     def clean_number_of_resources(self):
         number_of_resources = self.cleaned_data.get("number_of_resources", 0)
         return number_of_resources if number_of_resources else 0
+
     def clean_number_of_partnerships_activated(self):
-        number_of_partnerships_activated = self.cleaned_data.get("number_of_partnerships_activated", 0)
-        return number_of_partnerships_activated if number_of_partnerships_activated else 0
+        number_of_partnerships_activated = self.cleaned_data.get(
+            "number_of_partnerships_activated", 0
+        )
+        return (
+            number_of_partnerships_activated if number_of_partnerships_activated else 0
+        )
+
     def clean_number_of_new_partnerships(self):
-        number_of_new_partnerships = self.cleaned_data.get("number_of_new_partnerships", 0)
+        number_of_new_partnerships = self.cleaned_data.get(
+            "number_of_new_partnerships", 0
+        )
         return number_of_new_partnerships if number_of_new_partnerships else 0
 
 
@@ -359,13 +460,17 @@ OperationUpdateFormSet = inlineformset_factory(
     Report,
     OperationReport,
     form=OperationForm,
-    fields=('metric',
-            'number_of_people_reached_through_social_media',
-            'number_of_new_followers',
-            'number_of_mentions',
-            'number_of_community_communications',
-            'number_of_events',
-            'number_of_resources',
-            'number_of_partnerships_activated',
-            'number_of_new_partnerships'), extra=0,
-    can_delete=False)
+    fields=(
+        "metric",
+        "number_of_people_reached_through_social_media",
+        "number_of_new_followers",
+        "number_of_mentions",
+        "number_of_community_communications",
+        "number_of_events",
+        "number_of_resources",
+        "number_of_partnerships_activated",
+        "number_of_new_partnerships",
+    ),
+    extra=0,
+    can_delete=False,
+)

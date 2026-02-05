@@ -10,69 +10,325 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('auth', '0012_alter_user_first_name_max_length'),
-        ('metrics', '0001_initial'),
+        ("auth", "0012_alter_user_first_name_max_length"),
+        ("metrics", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='TeamArea',
+            name="TeamArea",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(help_text='Human-readable name of the team area', max_length=420, verbose_name='Name')),
-                ('text_en', models.CharField(help_text='Human-readable name of the team area', max_length=420, null=True, verbose_name='Name')),
-                ('text_pt_br', models.CharField(help_text='Human-readable name of the team area', max_length=420, null=True, verbose_name='Name')),
-                ('text_es', models.CharField(help_text='Human-readable name of the team area', max_length=420, null=True, verbose_name='Name')),
-                ('code', models.CharField(help_text='Short identifier of a CSS class of the team area', max_length=50, unique=True, verbose_name='Code')),
-                ('project', models.ManyToManyField(blank=True, help_text='The projects this team area belongs to', related_name='team_areas', to='metrics.project', verbose_name='Projects')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "text",
+                    models.CharField(
+                        help_text="Human-readable name of the team area",
+                        max_length=420,
+                        verbose_name="Name",
+                    ),
+                ),
+                (
+                    "text_en",
+                    models.CharField(
+                        help_text="Human-readable name of the team area",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Name",
+                    ),
+                ),
+                (
+                    "text_pt_br",
+                    models.CharField(
+                        help_text="Human-readable name of the team area",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Name",
+                    ),
+                ),
+                (
+                    "text_es",
+                    models.CharField(
+                        help_text="Human-readable name of the team area",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Name",
+                    ),
+                ),
+                (
+                    "code",
+                    models.CharField(
+                        help_text="Short identifier of a CSS class of the team area",
+                        max_length=50,
+                        unique=True,
+                        verbose_name="Code",
+                    ),
+                ),
+                (
+                    "project",
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text="The projects this team area belongs to",
+                        related_name="team_areas",
+                        to="metrics.project",
+                        verbose_name="Projects",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Team area',
-                'verbose_name_plural': 'Team areas',
-                'ordering': ['text'],
+                "verbose_name": "Team area",
+                "verbose_name_plural": "Team areas",
+                "ordering": ["text"],
             },
         ),
         migrations.CreateModel(
-            name='Position',
+            name="Position",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(help_text='Human-readable name of the position', max_length=420, verbose_name='Name')),
-                ('text_en', models.CharField(help_text='Human-readable name of the position', max_length=420, null=True, verbose_name='Name')),
-                ('text_pt_br', models.CharField(help_text='Human-readable name of the position', max_length=420, null=True, verbose_name='Name')),
-                ('text_es', models.CharField(help_text='Human-readable name of the position', max_length=420, null=True, verbose_name='Name')),
-                ('type', models.ForeignKey(help_text='The permission group this position belongs to', on_delete=django.db.models.deletion.PROTECT, to='auth.group', verbose_name='Permission group')),
-                ('area_associated', models.ForeignKey(help_text='The team area this position belongs to', on_delete=django.db.models.deletion.PROTECT, related_name='positions', to='users.teamarea', verbose_name='Team Area')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "text",
+                    models.CharField(
+                        help_text="Human-readable name of the position",
+                        max_length=420,
+                        verbose_name="Name",
+                    ),
+                ),
+                (
+                    "text_en",
+                    models.CharField(
+                        help_text="Human-readable name of the position",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Name",
+                    ),
+                ),
+                (
+                    "text_pt_br",
+                    models.CharField(
+                        help_text="Human-readable name of the position",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Name",
+                    ),
+                ),
+                (
+                    "text_es",
+                    models.CharField(
+                        help_text="Human-readable name of the position",
+                        max_length=420,
+                        null=True,
+                        verbose_name="Name",
+                    ),
+                ),
+                (
+                    "type",
+                    models.ForeignKey(
+                        help_text="The permission group this position belongs to",
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="auth.group",
+                        verbose_name="Permission group",
+                    ),
+                ),
+                (
+                    "area_associated",
+                    models.ForeignKey(
+                        help_text="The team area this position belongs to",
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="positions",
+                        to="users.teamarea",
+                        verbose_name="Team Area",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Position',
-                'verbose_name_plural': 'Positions',
-                'ordering': ['text'],
-                'unique_together': {('area_associated', 'text'), ('area_associated', 'text_en'), ('area_associated', 'text_es'), ('area_associated', 'text_pt_br')},
+                "verbose_name": "Position",
+                "verbose_name_plural": "Positions",
+                "ordering": ["text"],
+                "unique_together": {
+                    ("area_associated", "text"),
+                    ("area_associated", "text_en"),
+                    ("area_associated", "text_es"),
+                    ("area_associated", "text_pt_br"),
+                },
             },
         ),
         migrations.CreateModel(
-            name='UserProfile',
+            name="UserProfile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('gender', models.CharField(blank=True, choices=[('male', 'Male'), ('female', 'Female'), ('non_binary', 'Non Binary'), ('other', 'Other'), ('not_declared', 'Not declared')], default='not_declared', max_length=20, verbose_name='Gender')),
-                ('professional_wiki_handle', models.CharField(blank=True, default='', max_length=50, verbose_name='Professional username')),
-                ('personal_wiki_handle', models.CharField(blank=True, default='', max_length=50, verbose_name='Personal username')),
-                ('photograph', models.CharField(blank=True, default='', max_length=420, verbose_name='Photograph filename')),
-                ('twitter', models.CharField(blank=True, default='', help_text='Twitter handle', max_length=100, verbose_name='Twitter')),
-                ('facebook', models.CharField(blank=True, default='', help_text='Facebook handle', max_length=100, verbose_name='Facebook')),
-                ('instagram', models.CharField(blank=True, default='', help_text='Instagram handle', max_length=100, verbose_name='Instagram')),
-                ('wikidata_item', models.CharField(blank=True, default='', help_text='Wikidata QID', max_length=100, verbose_name='Wikidata item')),
-                ('linkedin', models.CharField(blank=True, default='', help_text='LinkedIn handle', max_length=100, verbose_name='LinkedIn')),
-                ('lattes', models.CharField(blank=True, default='', help_text='Lattes ID', max_length=100, verbose_name='Lattes')),
-                ('orcid', models.CharField(blank=True, default='', help_text='ORCID ID', max_length=100, verbose_name='ORCID')),
-                ('google_scholar', models.CharField(blank=True, default='', help_text='Google Scholar ID', max_length=100, verbose_name='Google Scholar')),
-                ('position', models.ForeignKey(blank=True, help_text='The position this user belongs to', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='users', to='users.position', verbose_name='Position')),
-                ('user', models.OneToOneField(help_text="The user which this profile's about", on_delete=django.db.models.deletion.CASCADE, related_name='profile', to=settings.AUTH_USER_MODEL, verbose_name='User')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "gender",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("male", "Male"),
+                            ("female", "Female"),
+                            ("non_binary", "Non Binary"),
+                            ("other", "Other"),
+                            ("not_declared", "Not declared"),
+                        ],
+                        default="not_declared",
+                        max_length=20,
+                        verbose_name="Gender",
+                    ),
+                ),
+                (
+                    "professional_wiki_handle",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        max_length=50,
+                        verbose_name="Professional username",
+                    ),
+                ),
+                (
+                    "personal_wiki_handle",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        max_length=50,
+                        verbose_name="Personal username",
+                    ),
+                ),
+                (
+                    "photograph",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        max_length=420,
+                        verbose_name="Photograph filename",
+                    ),
+                ),
+                (
+                    "twitter",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="Twitter handle",
+                        max_length=100,
+                        verbose_name="Twitter",
+                    ),
+                ),
+                (
+                    "facebook",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="Facebook handle",
+                        max_length=100,
+                        verbose_name="Facebook",
+                    ),
+                ),
+                (
+                    "instagram",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="Instagram handle",
+                        max_length=100,
+                        verbose_name="Instagram",
+                    ),
+                ),
+                (
+                    "wikidata_item",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="Wikidata QID",
+                        max_length=100,
+                        verbose_name="Wikidata item",
+                    ),
+                ),
+                (
+                    "linkedin",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="LinkedIn handle",
+                        max_length=100,
+                        verbose_name="LinkedIn",
+                    ),
+                ),
+                (
+                    "lattes",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="Lattes ID",
+                        max_length=100,
+                        verbose_name="Lattes",
+                    ),
+                ),
+                (
+                    "orcid",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="ORCID ID",
+                        max_length=100,
+                        verbose_name="ORCID",
+                    ),
+                ),
+                (
+                    "google_scholar",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="Google Scholar ID",
+                        max_length=100,
+                        verbose_name="Google Scholar",
+                    ),
+                ),
+                (
+                    "position",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="The position this user belongs to",
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="users",
+                        to="users.position",
+                        verbose_name="Position",
+                    ),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        help_text="The user which this profile's about",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="profile",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="User",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'User profile',
-                'verbose_name_plural': 'User profiles',
+                "verbose_name": "User profile",
+                "verbose_name_plural": "User profiles",
             },
         ),
     ]

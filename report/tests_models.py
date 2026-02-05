@@ -1,11 +1,14 @@
-from django.test import TestCase
-from django.core.exceptions import ValidationError
-from django.db import IntegrityError
-from report.models import Funding, Editor, Organizer, Partner, Technology, Report, StrategicAxis, Project, OperationReport
-from users.models import TeamArea, UserProfile, User
-from metrics.models import Activity, Metric
-from strategy.models import Direction, LearningArea, StrategicLearningQuestion
 from datetime import datetime, timedelta
+
+from django.db import IntegrityError
+from django.test import TestCase
+
+from metrics.models import Activity, Metric
+from report.models import (Editor, Funding, OperationReport, Organizer,
+                           Partner, Project, Report, Technology)
+from strategy.models import (Direction, LearningArea, StrategicAxis,
+                             StrategicLearningQuestion)
+from users.models import TeamArea, User, UserProfile
 
 
 class FundingModelTest(TestCase):
@@ -13,7 +16,9 @@ class FundingModelTest(TestCase):
         self.name = "Funding"
         self.value = 1000
         self.project = Project.objects.create(text="Project")
-        self.funding = Funding.objects.create(name=self.name, value=self.value, project=self.project)
+        self.funding = Funding.objects.create(
+            name=self.name, value=self.value, project=self.project
+        )
 
     def test_funding_str_method_returns_its_text(self):
         self.assertEqual(str(self.funding), self.name)
@@ -102,9 +107,13 @@ class ReportModelTest(TestCase):
         project = Project.objects.create(text="Project")
         self.funding = Funding.objects.create(name="Funding", project=project)
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
-        self.direction = Direction.objects.create(text="Direction", strategic_axis=strategic_axis)
+        self.direction = Direction.objects.create(
+            text="Direction", strategic_axis=strategic_axis
+        )
         learning_area = LearningArea.objects.create(text="Learning area")
-        self.slq = StrategicLearningQuestion.objects.create(text="SLQ", learning_area=learning_area)
+        self.slq = StrategicLearningQuestion.objects.create(
+            text="SLQ", learning_area=learning_area
+        )
 
     def test_report_creation(self):
         report = Report.objects.create(
@@ -118,7 +127,7 @@ class ReportModelTest(TestCase):
             links="https://testlink.com",
             participants=10,
             feedbacks=3,
-            learning="Learning"*60,
+            learning="Learning" * 60,
         )
         self.assertEqual(report.description, "Report")
 
@@ -173,12 +182,16 @@ class OperationReportModelTest(TestCase):
 
     def test_operation_report_creation(self):
         self.assertEqual(OperationReport.objects.count(), 0)
-        OperationReport.objects.create(report = self.report, metric = self.metric)
+        OperationReport.objects.create(report=self.report, metric=self.metric)
         self.assertEqual(OperationReport.objects.count(), 1)
 
     def test_operation_str_representation(self):
-        operation_report = OperationReport.objects.create(report = self.report, metric = self.metric)
-        self.assertEqual(str(operation_report), self.report.description + " - " + self.metric.text)
+        operation_report = OperationReport.objects.create(
+            report=self.report, metric=self.metric
+        )
+        self.assertEqual(
+            str(operation_report), self.report.description + " - " + self.metric.text
+        )
 
     def test_operation_report_without_report_fails(self):
         with self.assertRaises(IntegrityError):
@@ -186,4 +199,4 @@ class OperationReportModelTest(TestCase):
 
     def test_operation_report_without_metric_fails(self):
         with self.assertRaises(IntegrityError):
-            OperationReport.objects.create(report = self.report)
+            OperationReport.objects.create(report=self.report)

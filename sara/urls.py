@@ -13,37 +13,39 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import include, path, register_converter
+
 from django.conf import settings
+from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.urls import include, path, register_converter
 
 
 class SpaceUnderscoreConverter:
-    regex = r'[^/]+'
+    regex = r"[^/]+"
 
     def to_python(self, value):
-        return value.replace(' ', '_')
+        return value.replace(" ", "_")
 
     def to_url(self, value):
-        return value.replace(' ', '_')
+        return value.replace(" ", "_")
 
-register_converter(SpaceUnderscoreConverter, 'su')
+
+register_converter(SpaceUnderscoreConverter, "su")
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('i18n/', include('django.conf.urls.i18n')),
-    path('oauth/', include('social_django.urls', namespace='social')),
-    path('user/', include('users.urls', namespace='user')),
-    path('strategy', include('strategy.urls', namespace='strategy')),
-    path('', include('metrics.urls', namespace='metrics')),
-    path('report/', include('report.urls', namespace='report')),
+    path("admin/", admin.site.urls),
+    path("i18n/", include("django.conf.urls.i18n")),
+    path("oauth/", include("social_django.urls", namespace="social")),
+    path("user/", include("users.urls", namespace="user")),
+    path("strategy", include("strategy.urls", namespace="strategy")),
+    path("", include("metrics.urls", namespace="metrics")),
+    path("report/", include("report.urls", namespace="report")),
 ]
 
 if settings.ENABLE_BUG_APP:
-    urlpatterns += [path('bug/', include('bug.urls', namespace='bug'))]
+    urlpatterns += [path("bug/", include("bug.urls", namespace="bug"))]
 
 if settings.ENABLE_AGENDA_APP:
-    urlpatterns += [path('calendar/', include('agenda.urls', namespace='agenda'))]
+    urlpatterns += [path("calendar/", include("agenda.urls", namespace="agenda"))]
 
 urlpatterns += staticfiles_urlpatterns()

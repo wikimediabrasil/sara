@@ -9,147 +9,586 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('metrics', '0001_initial'),
+        ("metrics", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Editor',
+            name="Editor",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('username', models.CharField(max_length=420, unique=True)),
-                ('account_creation_date', models.DateTimeField(blank=True, null=True)),
-                ('retained_at', models.DateField(blank=True, null=True)),
-                ('retained', models.BooleanField(default=False)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("username", models.CharField(max_length=420, unique=True)),
+                ("account_creation_date", models.DateTimeField(blank=True, null=True)),
+                ("retained_at", models.DateField(blank=True, null=True)),
+                ("retained", models.BooleanField(default=False)),
             ],
             options={
-                'verbose_name': 'Editor',
-                'verbose_name_plural': 'Editors',
+                "verbose_name": "Editor",
+                "verbose_name_plural": "Editors",
             },
         ),
         migrations.CreateModel(
-            name='Partner',
+            name="Partner",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=420)),
-                ('website', models.URLField(blank=True, null=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=420)),
+                ("website", models.URLField(blank=True, null=True)),
             ],
             options={
-                'verbose_name': 'Partner',
-                'verbose_name_plural': 'Partners',
+                "verbose_name": "Partner",
+                "verbose_name_plural": "Partners",
             },
         ),
         migrations.CreateModel(
-            name='Technology',
+            name="Technology",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=420)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=420)),
             ],
             options={
-                'verbose_name': 'Technology',
-                'verbose_name_plural': 'Technologies',
+                "verbose_name": "Technology",
+                "verbose_name_plural": "Technologies",
             },
         ),
         migrations.CreateModel(
-            name='Funding',
+            name="Funding",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=420)),
-                ('value', models.FloatField(blank=True, default=0, null=True)),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, related_name='project_related', to='metrics.project')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=420)),
+                ("value", models.FloatField(blank=True, default=0, null=True)),
+                (
+                    "project",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.RESTRICT,
+                        related_name="project_related",
+                        to="metrics.project",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Funding',
-                'verbose_name_plural': 'Fundings',
+                "verbose_name": "Funding",
+                "verbose_name_plural": "Fundings",
             },
         ),
         migrations.CreateModel(
-            name='OperationReport',
+            name="OperationReport",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('number_of_people_reached_through_social_media', models.IntegerField(blank=True, default=0)),
-                ('number_of_new_followers', models.IntegerField(blank=True, default=0)),
-                ('number_of_mentions', models.IntegerField(blank=True, default=0)),
-                ('number_of_community_communications', models.IntegerField(blank=True, default=0)),
-                ('number_of_events', models.IntegerField(blank=True, default=0)),
-                ('number_of_resources', models.IntegerField(blank=True, default=0)),
-                ('number_of_partnerships_activated', models.IntegerField(blank=True, default=0)),
-                ('number_of_new_partnerships', models.IntegerField(blank=True, default=0)),
-                ('metric', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, related_name='operation_metric', to='metrics.metric')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "number_of_people_reached_through_social_media",
+                    models.IntegerField(blank=True, default=0),
+                ),
+                ("number_of_new_followers", models.IntegerField(blank=True, default=0)),
+                ("number_of_mentions", models.IntegerField(blank=True, default=0)),
+                (
+                    "number_of_community_communications",
+                    models.IntegerField(blank=True, default=0),
+                ),
+                ("number_of_events", models.IntegerField(blank=True, default=0)),
+                ("number_of_resources", models.IntegerField(blank=True, default=0)),
+                (
+                    "number_of_partnerships_activated",
+                    models.IntegerField(blank=True, default=0),
+                ),
+                (
+                    "number_of_new_partnerships",
+                    models.IntegerField(blank=True, default=0),
+                ),
+                (
+                    "metric",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.RESTRICT,
+                        related_name="operation_metric",
+                        to="metrics.metric",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Operation Report',
-                'verbose_name_plural': 'Operation Reports',
+                "verbose_name": "Operation Report",
+                "verbose_name_plural": "Operation Reports",
             },
         ),
         migrations.CreateModel(
-            name='Organizer',
+            name="Organizer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=420)),
-                ('retained', models.BooleanField(default=False)),
-                ('institution', models.ManyToManyField(related_name='organizer_institution', to='report.partner')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=420)),
+                ("retained", models.BooleanField(default=False)),
+                (
+                    "institution",
+                    models.ManyToManyField(
+                        related_name="organizer_institution", to="report.partner"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Organizer',
-                'verbose_name_plural': 'Organizers',
+                "verbose_name": "Organizer",
+                "verbose_name_plural": "Organizers",
             },
         ),
         migrations.CreateModel(
-            name='Report',
+            name="Report",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='Date the report was created', verbose_name='Date of creation')),
-                ('modified_at', models.DateTimeField(auto_now_add=True, help_text='Date the report was modified', verbose_name='Date of modification')),
-                ('locked', models.BooleanField(default=False, help_text='Whether the report is locked', verbose_name='Locked')),
-                ('reference_text', models.TextField(blank=True, default='', help_text='The reference text of the report, in wikitext', max_length=10000, null=True, verbose_name='Reference text')),
-                ('partial_report', models.BooleanField(blank=True, default=False, help_text='Whether the report is a partial report', verbose_name='Partial report')),
-                ('initial_date', models.DateField(help_text='The initial date of the activity reported', verbose_name='Initial date')),
-                ('end_date', models.DateField(blank=True, help_text='The end date of the activity reported', null=True, verbose_name='End date')),
-                ('description', models.TextField(help_text='The description of the activity reported', max_length=420, verbose_name='Description')),
-                ('links', models.TextField(help_text='The links associated with the activity', max_length=10000, verbose_name='Links')),
-                ('private_links', models.BooleanField(blank=True, default=False, help_text='Whether the links associated with the activity are private', verbose_name='Private links')),
-                ('wikipedia_created', models.IntegerField(default=0, help_text='Number of items created/edited on Wikipedia.', null=True, verbose_name='Created in Wikipedia')),
-                ('wikipedia_edited', models.IntegerField(default=0, help_text='Number of items edited on Wikipedia.', null=True, verbose_name='Edited in Wikipedia')),
-                ('commons_created', models.IntegerField(default=0, help_text='Number of items created/edited on Wikimedia Commons.', null=True, verbose_name='Created in Wikimedia Commons')),
-                ('commons_edited', models.IntegerField(default=0, help_text='Number of items edited on Wikimedia Commons.', null=True, verbose_name='Edited in Wikimedia Commons')),
-                ('wikidata_created', models.IntegerField(default=0, help_text='Number of items created/edited on Wikidata.', null=True, verbose_name='Created in Wikidata')),
-                ('wikidata_edited', models.IntegerField(default=0, help_text='Number of items created/edited on Wikidata.', null=True, verbose_name='Edited in Wikidata')),
-                ('wikiversity_created', models.IntegerField(default=0, help_text='Number of items created/edited on Wikiversity.', null=True, verbose_name='Created in Wikiversity')),
-                ('wikiversity_edited', models.IntegerField(default=0, help_text='Number of items created/edited on Wikiversity.', null=True, verbose_name='Edited in Wikiversity')),
-                ('wikibooks_created', models.IntegerField(default=0, help_text='Number of items created/edited on Wikibooks.', null=True, verbose_name='Created in Wikibooks')),
-                ('wikibooks_edited', models.IntegerField(default=0, help_text='Number of items created/edited on Wikibooks.', null=True, verbose_name='Edited in Wikibooks')),
-                ('wikisource_created', models.IntegerField(default=0, help_text='Number of items created/edited on Wikisource.', null=True, verbose_name='Created in Wikisource')),
-                ('wikisource_edited', models.IntegerField(default=0, help_text='Number of items created/edited on Wikisource.', null=True, verbose_name='Edited in Wikisource')),
-                ('wikinews_created', models.IntegerField(default=0, help_text='Number of items created/edited on Wikinews.', null=True, verbose_name='Created in Wikinews')),
-                ('wikinews_edited', models.IntegerField(default=0, help_text='Number of items created/edited on Wikinews.', null=True, verbose_name='Edited in Wikinews')),
-                ('wikiquote_created', models.IntegerField(default=0, help_text='Number of items created/edited on Wikiquote.', null=True, verbose_name='Created in Wikiquote')),
-                ('wikiquote_edited', models.IntegerField(default=0, help_text='Number of items created/edited on Wikiquote.', null=True, verbose_name='Edited in Wikiquote')),
-                ('wiktionary_created', models.IntegerField(default=0, help_text='Number of items created/edited on Wiktionary.', null=True, verbose_name='Created in Wiktionary')),
-                ('wiktionary_edited', models.IntegerField(default=0, help_text='Number of items created/edited on Wiktionary.', null=True, verbose_name='Edited in Wiktionary')),
-                ('wikivoyage_created', models.IntegerField(default=0, help_text='Number of items created/edited on Wikivoyage.', null=True, verbose_name='Created in Wikivoyage')),
-                ('wikivoyage_edited', models.IntegerField(default=0, help_text='Number of items created/edited on Wikivoyage.', null=True, verbose_name='Edited in Wikivoyage')),
-                ('wikispecies_created', models.IntegerField(default=0, help_text='Number of items created/edited on Wikispecies.', null=True, verbose_name='Created in Wikispecies')),
-                ('wikispecies_edited', models.IntegerField(default=0, help_text='Number of items created/edited on Wikispecies.', null=True, verbose_name='Edited in Wikispecies')),
-                ('metawiki_created', models.IntegerField(default=0, help_text='Number of items created/edited on Meta-Wiki.', null=True, verbose_name='Created in Meta-Wiki')),
-                ('metawiki_edited', models.IntegerField(default=0, help_text='Number of items created/edited on Meta-Wiki.', null=True, verbose_name='Edited in Meta-Wiki')),
-                ('mediawiki_created', models.IntegerField(default=0, help_text='Number of items created/edited on Mediawiki.', null=True, verbose_name='Created in Mediawiki')),
-                ('mediawiki_edited', models.IntegerField(default=0, help_text='Number of items created/edited on Mediawiki.', null=True, verbose_name='Edited in Mediawiki')),
-                ('wikifunctions_created', models.IntegerField(default=0, help_text='Number of items created/edited on WikiFunctions.', null=True, verbose_name='Created in WikiFunctions')),
-                ('wikifunctions_edited', models.IntegerField(default=0, help_text='Number of items created/edited on WikiFunctions.', null=True, verbose_name='Edited in WikiFunctions')),
-                ('incubator_created', models.IntegerField(default=0, help_text='Number of items created/edited on Wikimedia Incubator.', null=True, verbose_name='Created in Wikimedia Incubator')),
-                ('incubator_edited', models.IntegerField(default=0, help_text='Number of items created/edited on Wikimedia Incubator.', null=True, verbose_name='Edited in Wikimedia Incubator')),
-                ('participants', models.IntegerField(blank=True, default=0, help_text='Number of participants of the activity reported.', verbose_name='Participants')),
-                ('feedbacks', models.IntegerField(blank=True, default=0, help_text='Number of people providing feedback on the activity reported.', verbose_name='Feedbacks')),
-                ('learning', models.TextField(blank=True, default='', help_text='Specific learning about the activity reported.', max_length=5000, null=True, verbose_name='Learning')),
-                ('donors', models.IntegerField(default=0, null=True)),
-                ('submissions', models.IntegerField(default=0, null=True)),
-                ('activity_associated', models.ForeignKey(blank=True, help_text='The activity associated with the report', null=True, on_delete=django.db.models.deletion.RESTRICT, related_name='report_activity', to='metrics.activity', verbose_name='Activity')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="Date the report was created",
+                        verbose_name="Date of creation",
+                    ),
+                ),
+                (
+                    "modified_at",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="Date the report was modified",
+                        verbose_name="Date of modification",
+                    ),
+                ),
+                (
+                    "locked",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Whether the report is locked",
+                        verbose_name="Locked",
+                    ),
+                ),
+                (
+                    "reference_text",
+                    models.TextField(
+                        blank=True,
+                        default="",
+                        help_text="The reference text of the report, in wikitext",
+                        max_length=10000,
+                        null=True,
+                        verbose_name="Reference text",
+                    ),
+                ),
+                (
+                    "partial_report",
+                    models.BooleanField(
+                        blank=True,
+                        default=False,
+                        help_text="Whether the report is a partial report",
+                        verbose_name="Partial report",
+                    ),
+                ),
+                (
+                    "initial_date",
+                    models.DateField(
+                        help_text="The initial date of the activity reported",
+                        verbose_name="Initial date",
+                    ),
+                ),
+                (
+                    "end_date",
+                    models.DateField(
+                        blank=True,
+                        help_text="The end date of the activity reported",
+                        null=True,
+                        verbose_name="End date",
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        help_text="The description of the activity reported",
+                        max_length=420,
+                        verbose_name="Description",
+                    ),
+                ),
+                (
+                    "links",
+                    models.TextField(
+                        help_text="The links associated with the activity",
+                        max_length=10000,
+                        verbose_name="Links",
+                    ),
+                ),
+                (
+                    "private_links",
+                    models.BooleanField(
+                        blank=True,
+                        default=False,
+                        help_text="Whether the links associated with the activity are private",
+                        verbose_name="Private links",
+                    ),
+                ),
+                (
+                    "wikipedia_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikipedia.",
+                        null=True,
+                        verbose_name="Created in Wikipedia",
+                    ),
+                ),
+                (
+                    "wikipedia_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items edited on Wikipedia.",
+                        null=True,
+                        verbose_name="Edited in Wikipedia",
+                    ),
+                ),
+                (
+                    "commons_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikimedia Commons.",
+                        null=True,
+                        verbose_name="Created in Wikimedia Commons",
+                    ),
+                ),
+                (
+                    "commons_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items edited on Wikimedia Commons.",
+                        null=True,
+                        verbose_name="Edited in Wikimedia Commons",
+                    ),
+                ),
+                (
+                    "wikidata_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikidata.",
+                        null=True,
+                        verbose_name="Created in Wikidata",
+                    ),
+                ),
+                (
+                    "wikidata_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikidata.",
+                        null=True,
+                        verbose_name="Edited in Wikidata",
+                    ),
+                ),
+                (
+                    "wikiversity_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikiversity.",
+                        null=True,
+                        verbose_name="Created in Wikiversity",
+                    ),
+                ),
+                (
+                    "wikiversity_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikiversity.",
+                        null=True,
+                        verbose_name="Edited in Wikiversity",
+                    ),
+                ),
+                (
+                    "wikibooks_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikibooks.",
+                        null=True,
+                        verbose_name="Created in Wikibooks",
+                    ),
+                ),
+                (
+                    "wikibooks_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikibooks.",
+                        null=True,
+                        verbose_name="Edited in Wikibooks",
+                    ),
+                ),
+                (
+                    "wikisource_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikisource.",
+                        null=True,
+                        verbose_name="Created in Wikisource",
+                    ),
+                ),
+                (
+                    "wikisource_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikisource.",
+                        null=True,
+                        verbose_name="Edited in Wikisource",
+                    ),
+                ),
+                (
+                    "wikinews_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikinews.",
+                        null=True,
+                        verbose_name="Created in Wikinews",
+                    ),
+                ),
+                (
+                    "wikinews_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikinews.",
+                        null=True,
+                        verbose_name="Edited in Wikinews",
+                    ),
+                ),
+                (
+                    "wikiquote_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikiquote.",
+                        null=True,
+                        verbose_name="Created in Wikiquote",
+                    ),
+                ),
+                (
+                    "wikiquote_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikiquote.",
+                        null=True,
+                        verbose_name="Edited in Wikiquote",
+                    ),
+                ),
+                (
+                    "wiktionary_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wiktionary.",
+                        null=True,
+                        verbose_name="Created in Wiktionary",
+                    ),
+                ),
+                (
+                    "wiktionary_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wiktionary.",
+                        null=True,
+                        verbose_name="Edited in Wiktionary",
+                    ),
+                ),
+                (
+                    "wikivoyage_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikivoyage.",
+                        null=True,
+                        verbose_name="Created in Wikivoyage",
+                    ),
+                ),
+                (
+                    "wikivoyage_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikivoyage.",
+                        null=True,
+                        verbose_name="Edited in Wikivoyage",
+                    ),
+                ),
+                (
+                    "wikispecies_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikispecies.",
+                        null=True,
+                        verbose_name="Created in Wikispecies",
+                    ),
+                ),
+                (
+                    "wikispecies_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikispecies.",
+                        null=True,
+                        verbose_name="Edited in Wikispecies",
+                    ),
+                ),
+                (
+                    "metawiki_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Meta-Wiki.",
+                        null=True,
+                        verbose_name="Created in Meta-Wiki",
+                    ),
+                ),
+                (
+                    "metawiki_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Meta-Wiki.",
+                        null=True,
+                        verbose_name="Edited in Meta-Wiki",
+                    ),
+                ),
+                (
+                    "mediawiki_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Mediawiki.",
+                        null=True,
+                        verbose_name="Created in Mediawiki",
+                    ),
+                ),
+                (
+                    "mediawiki_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Mediawiki.",
+                        null=True,
+                        verbose_name="Edited in Mediawiki",
+                    ),
+                ),
+                (
+                    "wikifunctions_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on WikiFunctions.",
+                        null=True,
+                        verbose_name="Created in WikiFunctions",
+                    ),
+                ),
+                (
+                    "wikifunctions_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on WikiFunctions.",
+                        null=True,
+                        verbose_name="Edited in WikiFunctions",
+                    ),
+                ),
+                (
+                    "incubator_created",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikimedia Incubator.",
+                        null=True,
+                        verbose_name="Created in Wikimedia Incubator",
+                    ),
+                ),
+                (
+                    "incubator_edited",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Number of items created/edited on Wikimedia Incubator.",
+                        null=True,
+                        verbose_name="Edited in Wikimedia Incubator",
+                    ),
+                ),
+                (
+                    "participants",
+                    models.IntegerField(
+                        blank=True,
+                        default=0,
+                        help_text="Number of participants of the activity reported.",
+                        verbose_name="Participants",
+                    ),
+                ),
+                (
+                    "feedbacks",
+                    models.IntegerField(
+                        blank=True,
+                        default=0,
+                        help_text="Number of people providing feedback on the activity reported.",
+                        verbose_name="Feedbacks",
+                    ),
+                ),
+                (
+                    "learning",
+                    models.TextField(
+                        blank=True,
+                        default="",
+                        help_text="Specific learning about the activity reported.",
+                        max_length=5000,
+                        null=True,
+                        verbose_name="Learning",
+                    ),
+                ),
+                ("donors", models.IntegerField(default=0, null=True)),
+                ("submissions", models.IntegerField(default=0, null=True)),
+                (
+                    "activity_associated",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="The activity associated with the report",
+                        null=True,
+                        on_delete=django.db.models.deletion.RESTRICT,
+                        related_name="report_activity",
+                        to="metrics.activity",
+                        verbose_name="Activity",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Report',
-                'verbose_name_plural': 'Reports',
-                'permissions': [('can_edit_locked_report', 'Can edit locked report')],
+                "verbose_name": "Report",
+                "verbose_name_plural": "Reports",
+                "permissions": [("can_edit_locked_report", "Can edit locked report")],
             },
         ),
     ]

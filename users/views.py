@@ -1,13 +1,17 @@
-from django.db import transaction
-from django.db.models import OuterRef, Subquery, IntegerField, When, Case
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.contrib.auth.decorators import permission_required, user_passes_test
-from django.shortcuts import render, redirect, reverse, get_object_or_404
-from django.utils.translation import get_language, gettext as _
-from .forms import UserProfileForm, UserForm, UserPositionForm
-from .models import User, UserPosition, Position
+from django.contrib.auth.decorators import (permission_required,
+                                            user_passes_test)
+from django.db import transaction
+from django.db.models import Case, IntegerField, OuterRef, Subquery, When
+from django.shortcuts import get_object_or_404, redirect, render, reverse
+from django.utils.translation import get_language
+from django.utils.translation import gettext as _
+
 from report.views import get_localized_field
+
+from .forms import UserForm, UserPositionForm, UserProfileForm
+from .models import Position, User, UserPosition
 
 
 @permission_required("auth.change_user")
@@ -56,19 +60,31 @@ def update_profile(request, username):
     request_user = request.user
     profile = user.profile
 
-    current_position = (profile.position_history.filter(end_date__isnull=True).order_by("-start_date").first())
+    current_position = (
+        profile.position_history.filter(end_date__isnull=True)
+        .order_by("-start_date")
+        .first()
+    )
     user_form = UserForm(request.POST or None, instance=user)
     user_profile_form = UserProfileForm(request.POST or None, instance=user.profile)
-    user_position_form = UserPositionForm(request.POST or None, instance=current_position, request_user=request_user)
+    user_position_form = UserPositionForm(
+        request.POST or None, instance=current_position, request_user=request_user
+    )
 
     if request.method == "POST":
-        if user_form.is_valid() and user_profile_form.is_valid() and user_position_form.is_valid():
+        if (
+            user_form.is_valid()
+            and user_profile_form.is_valid()
+            and user_position_form.is_valid()
+        ):
             with transaction.atomic():
                 user_form.save()
                 user_profile_form.save()
 
                 # Only superusers can change positions
-                if request_user.is_superuser and user_position_form.cleaned_data.get("position"):
+                if request_user.is_superuser and user_position_form.cleaned_data.get(
+                    "position"
+                ):
                     update_user_position(
                         profile=profile,
                         position=user_position_form.cleaned_data["position"],
@@ -85,7 +101,7 @@ def update_profile(request, username):
         "profile_form": user_profile_form,
         "position_form": user_position_form,
         "title": username,
-        "user": user
+        "user": user,
     }
 
     return render(request, "users/update_profile.html", context)
@@ -163,8 +179,7 @@ def detail_profile(request, username):
     profile = user.profile
 
     current_or_last_position = (
-        profile.position_history
-        .annotate(
+        profile.position_history.annotate(
             is_finished=Case(
                 When(end_date__isnull=True, then=0),
                 default=1,
@@ -191,26 +206,47 @@ def list_profiles(request):
     can_edit = request.user.is_superuser
     current_language = get_language()
 
-    available_fields = [f.name for f in Position._meta.get_fields() if f.name.startswith("text")]
+    available_fields = [
+        f.name for f in Position._meta.get_fields() if f.name.startswith("text")
+    ]
     current_field = get_localized_field(current_language, available_fields)
 
-    latest_position = UserPosition.objects.filter(user_profile=OuterRef('profile')).order_by('-start_date')
-    earliest_position = UserPosition.objects.filter(user_profile=OuterRef('profile')).order_by('start_date')
+    latest_position = UserPosition.objects.filter(
+        user_profile=OuterRef("profile")
+    ).order_by("-start_date")
+    earliest_position = UserPosition.objects.filter(
+        user_profile=OuterRef("profile")
+    ).order_by("start_date")
     users_sorted = (
-        User.objects
-        .annotate(
-            latest_end_date=Subquery(latest_position.values('end_date')[:1]),
-            earliest_start_date=Subquery(earliest_position.values('start_date')[:1]),
-            latest_position_text=Subquery(latest_position.values(f'position__{current_field}')[:1]
-                                          )
+        User.objects.annotate(
+            latest_end_date=Subquery(latest_position.values("end_date")[:1]),
+            earliest_start_date=Subquery(earliest_position.values("start_date")[:1]),
+            latest_position_text=Subquery(
+                latest_position.values(f"position__{current_field}")[:1]
+            ),
         )
         .filter(profile__position_history__isnull=False)
-        .order_by("-is_staff", "latest_end_date", "earliest_start_date", "latest_position_text", "username"))
+        .order_by(
+            "-is_staff",
+            "latest_end_date",
+            "earliest_start_date",
+            "latest_position_text",
+            "username",
+        )
+    )
 
-    active_users = users_sorted.filter(profile__position_history__end_date__isnull=True).distinct()
-    inactive_users = users_sorted.exclude(id__in=active_users.values_list("id", flat=True)).distinct()
+    active_users = users_sorted.filter(
+        profile__position_history__end_date__isnull=True
+    ).distinct()
+    inactive_users = users_sorted.exclude(
+        id__in=active_users.values_list("id", flat=True)
+    ).distinct()
 
-    context = {"active_users": active_users, "inactive_users": inactive_users, "can_edit": can_edit}
+    context = {
+        "active_users": active_users,
+        "inactive_users": inactive_users,
+        "can_edit": can_edit,
+    }
     return render(request, "users/list_profiles.html", context)
 
 

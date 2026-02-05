@@ -1,5 +1,6 @@
-from modeltranslation.translator import register, TranslationOptions
-from .models import TeamArea, Position
+from modeltranslation.translator import TranslationOptions, register
+
+from .models import Position, TeamArea
 
 
 @register(TeamArea)

@@ -9,19 +9,30 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('bug', '0001_initial'),
-        ('users', '0001_initial'),
+        ("bug", "0001_initial"),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='bug',
-            name='reporter',
-            field=models.ForeignKey(editable=False, help_text='User who reported the bug.', on_delete=django.db.models.deletion.RESTRICT, related_name='reporter', to='users.userprofile'),
+            model_name="bug",
+            name="reporter",
+            field=models.ForeignKey(
+                editable=False,
+                help_text="User who reported the bug.",
+                on_delete=django.db.models.deletion.RESTRICT,
+                related_name="reporter",
+                to="users.userprofile",
+            ),
         ),
         migrations.AddField(
-            model_name='observation',
-            name='bug_report',
-            field=models.OneToOneField(help_text='Observation associated with a bug.', on_delete=django.db.models.deletion.CASCADE, related_name='observation', to='bug.bug'),
+            model_name="observation",
+            name="bug_report",
+            field=models.OneToOneField(
+                help_text="Observation associated with a bug.",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="observation",
+                to="bug.bug",
+            ),
         ),
     ]

@@ -1,5 +1,6 @@
-from django.shortcuts import redirect
 from django.conf import settings
+from django.shortcuts import redirect
+
 
 def show_strategy(request):
     """

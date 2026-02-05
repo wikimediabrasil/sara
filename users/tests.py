@@ -1,23 +1,24 @@
 import datetime
 from unittest.mock import patch
-from django.test import TestCase
-from django.urls import reverse
-from django.core.exceptions import ValidationError
-from django.db.models import RestrictedError, ProtectedError
-from django.contrib.auth.models import Group, Permission
-from django.contrib.auth.admin import User
-from django.test.client import RequestFactory
-from django.contrib.admin.sites import AdminSite
-from django.utils.translation import gettext as _
-from django.contrib.messages import get_messages
-from django.db import IntegrityError, transaction
 
-from users.models import TeamArea, Position, UserProfile, UserPosition
-from users.admin import AccountUserAdmin, UserProfileInline
-from users.views import login_oauth, logout_oauth, update_user_position
-from users.pipeline import associate_by_wiki_handle, get_username
-from users.forms import UserPositionForm
+from django.contrib.admin.sites import AdminSite
+from django.contrib.auth.admin import User
+from django.contrib.auth.models import Group, Permission
+from django.contrib.messages import get_messages
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
+from django.db.models import ProtectedError, RestrictedError
+from django.test import TestCase
+from django.test.client import RequestFactory
+from django.urls import reverse
+from django.utils.translation import gettext as _
+
 from agenda.models import Event
+from users.admin import AccountUserAdmin, UserProfileInline
+from users.forms import UserPositionForm
+from users.models import Position, TeamArea, UserPosition, UserProfile
+from users.pipeline import associate_by_wiki_handle, get_username
+from users.views import login_oauth, logout_oauth, update_user_position
 
 
 class TeamAreaModelTests(TestCase):
@@ -53,7 +54,9 @@ class TeamAreaModelTests(TestCase):
         with self.assertRaises(RestrictedError):
             self.team_area.delete()
 
-    def test_trying_to_delete_team_area_that_are_not_responsible_for_events_succeeds(self):
+    def test_trying_to_delete_team_area_that_are_not_responsible_for_events_succeeds(
+        self,
+    ):
         team_area2 = TeamArea.objects.create(text="Team Area 2", code="team_area_2")
 
         Event.objects.create(
@@ -71,11 +74,13 @@ class PositionModelTest(TestCase):
     def setUp(self):
         self.group = Group.objects.create(name="Group_name")
         self.text = "Position"
-        self.area_associated = TeamArea.objects.create(text="Team Area", code="team_area")
+        self.area_associated = TeamArea.objects.create(
+            text="Team Area", code="team_area"
+        )
 
-        self.position = Position.objects.create(text=self.text,
-                                                type=self.group,
-                                                area_associated=self.area_associated)
+        self.position = Position.objects.create(
+            text=self.text, type=self.group, area_associated=self.area_associated
+        )
 
     def test_str_method(self):
         self.assertEqual(str(self.position), self.text)
@@ -101,10 +106,13 @@ class UserProfileModelTest(TestCase):
             username="username",
             email="email@email.com",
             first_name=self.first_name,
-            last_name="Last Name")
+            last_name="Last Name",
+        )
         self.user_profile = UserProfile.objects.filter(user=self.user).first()
 
-    def test_str_method_returns_first_name_if_there_is_no_professional_wiki_handle(self):
+    def test_str_method_returns_first_name_if_there_is_no_professional_wiki_handle(
+        self,
+    ):
         self.assertTrue(str(self.user_profile), self.first_name)
 
     def test_str_method_returns_professional_wiki_handle_if_present(self):
@@ -223,7 +231,8 @@ class UserPositionModelTest(TestCase):
         self.assertIn("since", s)
 
     def test_ordering_most_recent_first(self):
-        older = UserPosition.objects.create(
+        # older
+        UserPosition.objects.create(
             user_profile=self.profile,
             position=self.position,
             start_date=datetime.date(2022, 1, 1),
@@ -245,7 +254,9 @@ class UserPositionFormSaveTest(TestCase):
     def setUp(self):
         self.username = "username"
         self.password = "password"
-        self.user = User.objects.create_user(username=self.username, password=self.password)
+        self.user = User.objects.create_user(
+            username=self.username, password=self.password
+        )
         self.user_profile = UserProfile.objects.filter(user=self.user).first()
         self.group = Group.objects.create(name="Manager")
         self.area = TeamArea.objects.create(text="Area", code="area")
@@ -284,56 +295,86 @@ class UserProfileViewTest(TestCase):
     def setUp(self):
         self.username = "username"
         self.password = "password"
-        self.user = User.objects.create_user(username=self.username, password=self.password)
+        self.user = User.objects.create_user(
+            username=self.username, password=self.password
+        )
         self.user_profile = UserProfile.objects.filter(user=self.user).first()
-        self.view_userprofile_permission = Permission.objects.get(codename="view_userprofile")
+        self.view_userprofile_permission = Permission.objects.get(
+            codename="view_userprofile"
+        )
         self.view_user_permission = Permission.objects.get(codename="view_user")
-        self.change_userprofile_permission = Permission.objects.get(codename="change_userprofile")
+        self.change_userprofile_permission = Permission.objects.get(
+            codename="change_userprofile"
+        )
         self.change_user_permission = Permission.objects.get(codename="change_user")
         self.user.user_permissions.add(self.view_userprofile_permission)
         self.user.user_permissions.add(self.view_user_permission)
         self.user.user_permissions.add(self.change_userprofile_permission)
         self.user.user_permissions.add(self.change_user_permission)
-        self.area_responsible = TeamArea.objects.create(text="Area responsible", code="Ar code")
+        self.area_responsible = TeamArea.objects.create(
+            text="Area responsible", code="Ar code"
+        )
 
     def test_user_profile_when_the_user_has_no_position_has_no_instance(self):
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('users:update_profile', kwargs={"username": self.user.username}))
+        response = self.client.get(
+            reverse("users:update_profile", kwargs={"username": self.user.username})
+        )
         self.assertEqual(response.status_code, 200)
         position_form = response.context["position_form"]
         self.assertIsNotNone(position_form)
         self.assertIsNone(position_form.instance.pk)
 
     def test_user_profile_is_not_accessible_by_not_logged_in_users(self):
-        response = self.client.get(reverse('users:view_profile', kwargs={"username": self.user.username}))
-        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('users:view_profile', kwargs={'username': self.user.username})}")
+        response = self.client.get(
+            reverse("users:view_profile", kwargs={"username": self.user.username})
+        )
+        self.assertEqual(
+            response.url,
+            f"{reverse('users:login')}?next={reverse('users:view_profile', kwargs={'username': self.user.username})}",
+        )
 
     def test_user_profile_is_not_accessible_by_logged_in_users_without_permission(self):
         self.user.user_permissions.remove(self.view_user_permission)
         self.user.user_permissions.remove(self.view_userprofile_permission)
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('users:view_profile', kwargs={"username": self.user.username}))
-        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('users:view_profile', kwargs={'username': self.user.username})}")
+        response = self.client.get(
+            reverse("users:view_profile", kwargs={"username": self.user.username})
+        )
+        self.assertEqual(
+            response.url,
+            f"{reverse('users:login')}?next={reverse('users:view_profile', kwargs={'username': self.user.username})}",
+        )
 
     def test_user_profile_is_accessible_by_logged_in_users_with_view_permission(self):
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('users:view_profile', kwargs={"username": self.user.username}))
+        response = self.client.get(
+            reverse("users:view_profile", kwargs={"username": self.user.username})
+        )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'users/detail_profile.html')
+        self.assertTemplateUsed(response, "users/detail_profile.html")
 
     def test_user_profile_update_post_fails_if_no_position_is_given(self):
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('users:update_profile', kwargs={"username": self.user.username}))
+        response = self.client.get(
+            reverse("users:update_profile", kwargs={"username": self.user.username})
+        )
 
         self.assertEqual(self.user_profile.professional_wiki_handle, "")
         self.assertEqual(response.status_code, 200)
         data = {"professional_wiki_handle": "Handle"}
 
-        response = self.client.post(reverse('users:update_profile', kwargs={"username": self.user.username}), data=data, follow=True)
+        response = self.client.post(
+            reverse("users:update_profile", kwargs={"username": self.user.username}),
+            data=data,
+            follow=True,
+        )
         messages = list(get_messages(response.wsgi_request))
         self.assertTrue(any(_("Something went wrong!") == str(m) for m in messages))
 
-    def test_user_profile_update_post_saves_profile_without_changing_position_details_if_user_is_not_superuser(self):
+    def test_user_profile_update_post_saves_profile_without_changing_position_details_if_user_is_not_superuser(
+        self,
+    ):
         self.client.login(username=self.username, password=self.password)
 
         self.assertEqual(self.user_profile.professional_wiki_handle, "")
@@ -353,7 +394,6 @@ class UserProfileViewTest(TestCase):
 
         data = {
             "professional_wiki_handle": "Handle",
-
             "position": position.pk,
             "start_date": "2025-03-24",
         }
@@ -365,7 +405,9 @@ class UserProfileViewTest(TestCase):
         )
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any(_("Changes done successfully!") == str(m) for m in messages))
+        self.assertTrue(
+            any(_("Changes done successfully!") == str(m) for m in messages)
+        )
 
         self.user_profile.refresh_from_db()
         user_position.refresh_from_db()
@@ -375,7 +417,9 @@ class UserProfileViewTest(TestCase):
         self.assertEqual(user_position.position, position)
         self.assertEqual(user_position.start_date, datetime.date(2023, 3, 24))
 
-    def test_user_profile_update_post_changes_position_details_if_user_is_superuser(self):
+    def test_user_profile_update_post_changes_position_details_if_user_is_superuser(
+        self,
+    ):
         self.user.is_superuser = True
         self.user.save(update_fields=["is_superuser"])
 
@@ -413,11 +457,15 @@ class UserProfileViewTest(TestCase):
         )
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any(_("Changes done successfully!") == str(m) for m in messages))
+        self.assertTrue(
+            any(_("Changes done successfully!") == str(m) for m in messages)
+        )
 
         self.user_profile.refresh_from_db()
 
-        self.assertTrue(self.user_profile.position_history.filter(position=position_2).exists())
+        self.assertTrue(
+            self.user_profile.position_history.filter(position=position_2).exists()
+        )
 
         current_position = self.user_profile.position_history.get(end_date__isnull=True)
 
@@ -425,20 +473,31 @@ class UserProfileViewTest(TestCase):
         self.assertEqual(current_position.start_date, datetime.date(2025, 3, 24))
         self.assertIsNone(current_position.end_date)
 
-    def test_user_profile_update_post_succeeds_if_position_is_given_and_user_requesting_is_superuser(self):
+    def test_user_profile_update_post_succeeds_if_position_is_given_and_user_requesting_is_superuser(
+        self,
+    ):
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('users:update_profile', kwargs={"username": self.user.username}))
+        response = self.client.get(
+            reverse("users:update_profile", kwargs={"username": self.user.username})
+        )
 
         self.assertEqual(self.user_profile.professional_wiki_handle, "")
         self.assertEqual(response.status_code, 200)
         group = Group.objects.create(name="Manager")
-        position = Position.objects.create(text="Position", type=group, area_associated=self.area_responsible)
-        user_position = UserPosition.objects.create(user_profile=self.user_profile,
-                                               position=position,
-                                               start_date=datetime.date(2023, 3, 24))
+        position = Position.objects.create(
+            text="Position", type=group, area_associated=self.area_responsible
+        )
+        user_position = UserPosition.objects.create(
+            user_profile=self.user_profile,
+            position=position,
+            start_date=datetime.date(2023, 3, 24),
+        )
         data = {"professional_wiki_handle": "Handle", "position": user_position}
 
-        response = self.client.post(reverse('users:update_profile', kwargs={"username": self.user.username}), data=data)
+        response = self.client.post(
+            reverse("users:update_profile", kwargs={"username": self.user.username}),
+            data=data,
+        )
         self.assertContains(response, _("Changes done successfully!"))
 
         user_profile = UserProfile.objects.get(user=self.user)
@@ -446,13 +505,18 @@ class UserProfileViewTest(TestCase):
 
     def test_user_profile_post_with_invalid_parameters_fails(self):
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('users:update_profile', kwargs={"username": self.user.username}))
+        response = self.client.get(
+            reverse("users:update_profile", kwargs={"username": self.user.username})
+        )
 
         self.assertEqual(self.user_profile.professional_wiki_handle, "")
         self.assertEqual(response.status_code, 200)
         data = {"professional_wiki_handle": ""}
 
-        response = self.client.post(reverse('users:update_profile', kwargs={"username": self.user.username}), data=data)
+        response = self.client.post(
+            reverse("users:update_profile", kwargs={"username": self.user.username}),
+            data=data,
+        )
         self.assertContains(response, _("Something went wrong!"))
 
         user_profile = UserProfile.objects.get(user=self.user)
@@ -551,13 +615,15 @@ class UserProfileViewTest(TestCase):
 
 class AccountUserAdminTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_superuser(username='superuser', password='password', email='admin@example.com')
+        self.user = User.objects.create_superuser(
+            username="superuser", password="password", email="admin@example.com"
+        )
         self.factory = RequestFactory()
         self.site = AdminSite()
         self.account_user_admin = AccountUserAdmin(User, self.site)
 
     def test_add_view_sets_inlines_to_empty_list(self):
-        url = reverse('admin:auth_user_add')
+        url = reverse("admin:auth_user_add")
         request = self.factory.get(url)
         request.user = self.user
         response = self.account_user_admin.add_view(request)
@@ -566,8 +632,8 @@ class AccountUserAdminTest(TestCase):
         self.assertEqual(self.account_user_admin.inlines, [])
 
     def test_change_view_sets_inlines_to_user_profile_inline(self):
-        user = User.objects.create_user(username='username', password='password')
-        url = reverse('admin:auth_user_change', args=[user.pk])
+        user = User.objects.create_user(username="username", password="password")
+        url = reverse("admin:auth_user_change", args=[user.pk])
         request = self.factory.get(url)
         request.user = self.user
         response = self.account_user_admin.change_view(request, object_id=str(user.pk))
@@ -600,8 +666,12 @@ class OauthViewTest(TestCase):
 
 class ListProfilesViewTest(TestCase):
     def setUp(self):
-        self.superuser = User.objects.create_superuser(username="admin", password="pass", email="admin@test.com")
-        self.staff = User.objects.create_user(username="bob", password="pass", is_staff=True)
+        self.superuser = User.objects.create_superuser(
+            username="admin", password="pass", email="admin@test.com"
+        )
+        self.staff = User.objects.create_user(
+            username="bob", password="pass", is_staff=True
+        )
         self.user = User.objects.create_user(username="alice", password="pass")
         self.url = reverse("users:list_profiles")
 
@@ -651,9 +721,7 @@ class AssociateByWikiHandleTests(TestCase):
         self.assertEqual(result, {"user": self.user})
 
     def test_fallback_matches_by_username(self):
-        other = User.objects.create_user(
-            username="WikiUser", password="pass"
-        )
+        other = User.objects.create_user(username="WikiUser", password="pass")
 
         result = associate_by_wiki_handle(
             backend=None,

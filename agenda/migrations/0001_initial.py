@@ -7,22 +7,48 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Event',
+            name="Event",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Title of the event', max_length=420, verbose_name='Name')),
-                ('initial_date', models.DateField(help_text='Date of the beginning of the event', verbose_name='Initial date')),
-                ('end_date', models.DateField(help_text='Date of the ending of the event', verbose_name='End date')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Title of the event",
+                        max_length=420,
+                        verbose_name="Name",
+                    ),
+                ),
+                (
+                    "initial_date",
+                    models.DateField(
+                        help_text="Date of the beginning of the event",
+                        verbose_name="Initial date",
+                    ),
+                ),
+                (
+                    "end_date",
+                    models.DateField(
+                        help_text="Date of the ending of the event",
+                        verbose_name="End date",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Event',
-                'verbose_name_plural': 'Events',
-                'ordering': ['initial_date'],
+                "verbose_name": "Event",
+                "verbose_name_plural": "Events",
+                "ordering": ["initial_date"],
             },
         ),
     ]

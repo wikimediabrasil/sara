@@ -9,18 +9,27 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('agenda', '0001_initial'),
-        ('users', '0001_initial'),
+        ("agenda", "0001_initial"),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='event',
-            name='area_responsible',
-            field=models.ForeignKey(help_text='Area responsible for the event', on_delete=django.db.models.deletion.RESTRICT, related_name='events', to='users.teamarea', verbose_name='Area responsible'),
+            model_name="event",
+            name="area_responsible",
+            field=models.ForeignKey(
+                help_text="Area responsible for the event",
+                on_delete=django.db.models.deletion.RESTRICT,
+                related_name="events",
+                to="users.teamarea",
+                verbose_name="Area responsible",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='event',
-            constraint=models.CheckConstraint(condition=models.Q(('end_date__gte', models.F('initial_date'))), name='event_end_date_after_start_date'),
+            model_name="event",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("end_date__gte", models.F("initial_date"))),
+                name="event_end_date_after_start_date",
+            ),
         ),
     ]

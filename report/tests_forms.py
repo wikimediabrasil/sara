@@ -1,11 +1,15 @@
+from unittest.mock import patch
+
+from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.utils import timezone
-from django.contrib.auth.models import Group
-from unittest.mock import patch
-from .forms import NewReportForm
-from .models import Report, Editor, Organizer, Partner, Technology, Funding, Project, Metric, UserProfile, Activity
-from users.models import User, Position, TeamArea
+
 from metrics.models import Area
+from users.models import Position, TeamArea, User
+
+from .forms import NewReportForm
+from .models import (Activity, Funding, Metric, Organizer, Partner, Project,
+                     Report, UserProfile)
 
 
 class NewReportFormTest(TestCase):
@@ -18,9 +22,13 @@ class NewReportFormTest(TestCase):
         self.partner = Partner.objects.create(name="Partner Test")
         self.activity = Activity.objects.create(text="Activity Test", area=self.area)
         self.main_funding = Project.objects.create(text="Main", main_funding=True)
-        self.project = Project.objects.create(text="Project", counts_for_main_funding=True)
+        self.project = Project.objects.create(
+            text="Project", counts_for_main_funding=True
+        )
         self.funding = Funding.objects.create(name="Funding Test", project=self.project)
-        self.metric = Metric.objects.create(text="Metric Test", activity=self.activity, number_of_editors=13)
+        self.metric = Metric.objects.create(
+            text="Metric Test", activity=self.activity, number_of_editors=13
+        )
         self.metric.project.add(self.main_funding)
         self.area.project.add(self.project)
 
@@ -44,26 +52,43 @@ class NewReportFormTest(TestCase):
             "submissions": 0,
             "partners_activated": [self.partner.id],
             "metrics_related": [self.metric.id],
-            "wikipedia_created": 0, "wikipedia_edited": 0,
-            "commons_created": 0, "commons_edited": 0,
-            "wikidata_created": 0, "wikidata_edited": 0,
-            "wikiversity_created": 0, "wikiversity_edited": 0,
-            "wikibooks_created": 0, "wikibooks_edited": 0,
-            "wikisource_created": 0, "wikisource_edited": 0,
-            "wikinews_created": 0, "wikinews_edited": 0,
-            "wikiquote_created": 0, "wikiquote_edited": 0,
-            "wiktionary_created": 0, "wiktionary_edited": 0,
-            "wikivoyage_created": 0, "wikivoyage_edited": 0,
-            "wikispecies_created": 0, "wikispecies_edited": 0,
-            "metawiki_created": 0, "metawiki_edited": 0,
-            "mediawiki_created": 0, "mediawiki_edited": 0,
-            "wikifunctions_created": 0, "wikifunctions_edited": 0,
-            "incubator_created": 0, "incubator_edited": 0,
+            "wikipedia_created": 0,
+            "wikipedia_edited": 0,
+            "commons_created": 0,
+            "commons_edited": 0,
+            "wikidata_created": 0,
+            "wikidata_edited": 0,
+            "wikiversity_created": 0,
+            "wikiversity_edited": 0,
+            "wikibooks_created": 0,
+            "wikibooks_edited": 0,
+            "wikisource_created": 0,
+            "wikisource_edited": 0,
+            "wikinews_created": 0,
+            "wikinews_edited": 0,
+            "wikiquote_created": 0,
+            "wikiquote_edited": 0,
+            "wiktionary_created": 0,
+            "wiktionary_edited": 0,
+            "wikivoyage_created": 0,
+            "wikivoyage_edited": 0,
+            "wikispecies_created": 0,
+            "wikispecies_edited": 0,
+            "metawiki_created": 0,
+            "metawiki_edited": 0,
+            "mediawiki_created": 0,
+            "mediawiki_edited": 0,
+            "wikifunctions_created": 0,
+            "wikifunctions_edited": 0,
+            "incubator_created": 0,
+            "incubator_edited": 0,
         }
 
     def test_form_initialization_sets_area_responsible_for_new(self):
         group = Group.objects.create(name="Test Group")
-        position = Position.objects.create(text="Test Position", type=group, area_associated=self.team_area)
+        position = Position.objects.create(
+            text="Test Position", type=group, area_associated=self.team_area
+        )
         self.user.profile.position = position
         self.user.profile.save()
         self.user.save()
@@ -87,7 +112,7 @@ class NewReportFormTest(TestCase):
         form.is_valid()
         self.assertEqual(form.clean_end_date(), timezone.datetime(2026, 1, 1).date())
 
-    @patch('report.forms.get_user_date_of_registration')
+    @patch("report.forms.get_user_date_of_registration")
     def test_save_creates_report_and_sets_relationships(self, mock_registration_date):
         mock_registration_date.return_value = timezone.now().date()
         form = NewReportForm(user=self.user, data=self.form_data)
@@ -111,9 +136,13 @@ class NewReportFormTest(TestCase):
         form = NewReportForm(user=self.user_profile, data=self.form_data)
         form.is_valid()
         report = Report.objects.create(
-            created_by=self.user_profile, modified_by=self.user_profile,
-            area_responsible=self.team_area, activity_associated=self.activity,
-            initial_date="2026-01-01", description="Test", links="link"
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            area_responsible=self.team_area,
+            activity_associated=self.activity,
+            initial_date="2026-01-01",
+            description="Test",
+            links="link",
         )
         form._has_editors = True
         form._has_new_editors = True
@@ -143,7 +172,9 @@ class NewReportFormTest(TestCase):
 
     def test_save_handles_institutions_of_organizers(self):
         data = self.form_data.copy()
-        data["organizers_string"] = "Organizer1|Partner 1\n \nOrganizer2|Partner 2|Partner 3"
+        data["organizers_string"] = (
+            "Organizer1|Partner 1\n \nOrganizer2|Partner 2|Partner 3"
+        )
         form = NewReportForm(user=self.user, data=data)
         self.assertTrue(form.is_valid())
         report = form.save(commit=True, user=self.user)
@@ -182,12 +213,15 @@ class NewReportFormTest(TestCase):
         form = NewReportForm(user=self.user_profile, data=self.form_data)
         form.is_valid()
         report = Report.objects.create(
-            created_by=self.user_profile, modified_by=self.user_profile,
-            area_responsible=self.team_area, activity_associated=self.activity,
-            initial_date="2026-01-01", description="Test", links="link"
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            area_responsible=self.team_area,
+            activity_associated=self.activity,
+            initial_date="2026-01-01",
+            description="Test",
+            links="link",
         )
         form._has_editors = True
         form._has_new_editors = True
         metrics = form._apply_implicit_metrics(report, Metric.objects.none())
         self.assertTrue(metrics.exists())
-
