@@ -1,4 +1,4 @@
-django>=5.1.1
+django>=4.2,<6
 pandas>=2.2.2
 whitenoise
 xlsxwriter
