@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.contrib.auth.decorators import (permission_required,
-                                            user_passes_test)
+from django.contrib.auth.decorators import permission_required, user_passes_test
 from django.db import transaction
 from django.db.models import Case, IntegerField, OuterRef, Subquery, When
 from django.shortcuts import get_object_or_404, redirect, render, reverse

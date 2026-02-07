@@ -5,8 +5,7 @@ from io import BytesIO
 import pandas as pd
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.shortcuts import (HttpResponse, get_object_or_404, redirect,
-                              render, reverse)
+from django.shortcuts import HttpResponse, get_object_or_404, redirect, render, reverse
 from django.utils.translation import gettext as _
 
 from .forms import BugForm, BugUpdateForm, ObservationForm

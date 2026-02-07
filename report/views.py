@@ -10,8 +10,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
-from django.shortcuts import (HttpResponse, get_object_or_404, redirect,
-                              render, reverse)
+from django.shortcuts import HttpResponse, get_object_or_404, redirect, render, reverse
 from django.utils import timezone, translation
 from django.utils.timezone import now
 from django.utils.translation import gettext as _

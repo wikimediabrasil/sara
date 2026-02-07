@@ -1,7 +1,14 @@
 from django.contrib import admin
 
-from .models import (Editor, Funding, OperationReport, Organizer, Partner,
-                     Report, Technology)
+from .models import (
+    Editor,
+    Funding,
+    OperationReport,
+    Organizer,
+    Partner,
+    Report,
+    Technology,
+)
 
 admin.site.register(Funding)
 admin.site.register(Editor)

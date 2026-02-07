@@ -8,8 +8,16 @@ from metrics.models import Area
 from users.models import Position, TeamArea, User
 
 from .forms import NewReportForm
-from .models import (Activity, Funding, Metric, Organizer, Partner, Project,
-                     Report, UserProfile)
+from .models import (
+    Activity,
+    Funding,
+    Metric,
+    Organizer,
+    Partner,
+    Project,
+    Report,
+    UserProfile,
+)
 
 
 class NewReportFormTest(TestCase):

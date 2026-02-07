@@ -15,8 +15,7 @@ from django.utils.translation import gettext as _
 from metrics.link_utils import process_all_references, wikify_link
 from metrics.models import Activity, Metric
 from metrics.utils import render_to_pdf
-from report.models import (Editor, OperationReport, Organizer, Partner,
-                           Project, Report)
+from report.models import Editor, OperationReport, Organizer, Partner, Project, Report
 from users.models import TeamArea
 
 register = template.Library()

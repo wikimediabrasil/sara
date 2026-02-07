@@ -11,8 +11,15 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from metrics.models import Area, Metric, Project
-from report.models import (Editor, Funding, OperationReport, Organizer,
-                           Partner, Report, Technology)
+from report.models import (
+    Editor,
+    Funding,
+    OperationReport,
+    Organizer,
+    Partner,
+    Report,
+    Technology,
+)
 from strategy.models import LearningArea, StrategicAxis
 from users.models import TeamArea, UserProfile
 

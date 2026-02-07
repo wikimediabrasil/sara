@@ -11,16 +11,32 @@ from django.utils.translation import gettext as _
 
 from metrics.models import Activity, Area, Metric
 from report.forms import NewReportForm
-from report.models import (Editor, Funding, OperationReport, Organizer,
-                           Partner, Project, Report, StrategicLearningQuestion,
-                           Technology)
-from report.views import (export_area_activated, export_directions_related,
-                          export_editors, export_funding,
-                          export_learning_questions_related, export_metrics,
-                          export_operation_report, export_organizers,
-                          export_partners_activated, export_report_instance,
-                          export_technologies_used, export_user_profile,
-                          get_localized_field)
+from report.models import (
+    Editor,
+    Funding,
+    OperationReport,
+    Organizer,
+    Partner,
+    Project,
+    Report,
+    StrategicLearningQuestion,
+    Technology,
+)
+from report.views import (
+    export_area_activated,
+    export_directions_related,
+    export_editors,
+    export_funding,
+    export_learning_questions_related,
+    export_metrics,
+    export_operation_report,
+    export_organizers,
+    export_partners_activated,
+    export_report_instance,
+    export_technologies_used,
+    export_user_profile,
+    get_localized_field,
+)
 from strategy.models import Direction, LearningArea, StrategicAxis
 from users.models import Position, TeamArea, User, UserPosition, UserProfile
 

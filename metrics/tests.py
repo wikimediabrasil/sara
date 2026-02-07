@@ -12,19 +12,36 @@ from django.urls import reverse
 from django.utils.translation import activate
 from django.utils.translation import gettext_lazy as _
 
-from metrics.link_utils import (build_wiki_ref, dewikify_url,
-                                process_all_references, replace_with_links,
-                                unwikify_link)
+from metrics.link_utils import (
+    build_wiki_ref,
+    dewikify_url,
+    process_all_references,
+    replace_with_links,
+    unwikify_link,
+)
 from metrics.models import Activity, Area, Metric, Project
-from metrics.templatetags.metricstags import (bool_yesno, bool_yesnopartial,
-                                              categorize, is_yesno, perc)
+from metrics.templatetags.metricstags import (
+    bool_yesno,
+    bool_yesnopartial,
+    categorize,
+    is_yesno,
+    perc,
+)
 from metrics.utils import render_to_pdf
-from metrics.views import (build_wiki_ref_for_reports,
-                           get_metrics_and_aggregate_per_project,
-                           get_results_for_timespan, get_timespan_array,
-                           show_metrics_for_specific_project)
-from report.models import (Direction, Editor, OperationReport, Report,
-                           StrategicLearningQuestion)
+from metrics.views import (
+    build_wiki_ref_for_reports,
+    get_metrics_and_aggregate_per_project,
+    get_results_for_timespan,
+    get_timespan_array,
+    show_metrics_for_specific_project,
+)
+from report.models import (
+    Direction,
+    Editor,
+    OperationReport,
+    Report,
+    StrategicLearningQuestion,
+)
 from strategy.models import LearningArea, StrategicAxis
 from users.models import TeamArea, User, UserProfile
 

@@ -13,15 +13,21 @@ from django.utils.timezone import now
 
 from agenda.models import Event
 from agenda.services import build_message_about_reports, send_event_reports
-from agenda.templatetags.calendar_tags import (date_tag, next_day_tag,
-                                               next_month_tag, next_year_tag,
-                                               previous_day_tag,
-                                               previous_month_tag,
-                                               previous_year_tag)
-from agenda.views import (get_activities_about_to_kickoff,
-                          get_activities_already_finished,
-                          get_activities_soon_to_be_finished,
-                          list_of_reports_of_area)
+from agenda.templatetags.calendar_tags import (
+    date_tag,
+    next_day_tag,
+    next_month_tag,
+    next_year_tag,
+    previous_day_tag,
+    previous_month_tag,
+    previous_year_tag,
+)
+from agenda.views import (
+    get_activities_about_to_kickoff,
+    get_activities_already_finished,
+    get_activities_soon_to_be_finished,
+    list_of_reports_of_area,
+)
 from users.models import Position, TeamArea, User, UserPosition, UserProfile
 
 
@@ -201,7 +207,10 @@ class EventViewTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('agenda:create_event')}")
+        self.assertEqual(
+            response.url,
+            f"{reverse('users:login')}?next={reverse('agenda:create_event')}",
+        )
 
     def test_add_event_post(self):
         self.client.login(username=self.username, password=self.password)
