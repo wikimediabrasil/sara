@@ -6,16 +6,26 @@
 {% block footer %}{% endblock %}
 {% block content %}
     <div class="w3-container user_form">
-        <h2>{% blocktrans with id_=event.id %}Delete activity nº {{ id_ }}?{% endblocktrans %}</h2>
-        <div style="font-size: 1.5em; line-height: 1.5em;">
-            {% blocktrans with name=event.name %}<i>"{{ name }}"</i>{% endblocktrans %}
-            <br><br>
-            {% blocktrans %}Are you <b>ABSOLUTELY</b> sure you want to delete this activity? <b>This cannot be undone!</b>{% endblocktrans %}
-            <br><br>
-            <form method="post">
-                {% csrf_token %}
-                <button id="delete_button" type="submit" class="custom_button" value="Delete">{% trans "Delete" %}</button>
-            </form>
-        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="w3-row">
+                <div class="w3-quarter disappear ">&nbsp;</div>
+                <div class="w3-half">
+                    <h1 style="margin-bottom: 1em;">{% blocktrans with name=event.name %}Delete {{ name }}?{% endblocktrans %}</h1>
+                </div>
+            </div>
+            <div class="w3-row">
+                <div class="w3-quarter disappear ">&nbsp;</div>
+                <div class="w3-half view_field" style="font-size: 1.5em; margin-bottom: 1em;">
+                    {% blocktrans %}Are you <b>ABSOLUTELY</b> sure you want to delete this activity? <b>This cannot be undone!</b>{% endblocktrans %}
+                </div>
+            </div>
+            <div class="w3-row">
+                <div class="w3-quarter disappear">&nbsp;</div>
+                <div class="w3-half">
+                        <button class="custom_button btn-delete" type="submit"><i class="fa-solid fa-times"></i> {% trans 'Delete' %}</button>
+                </div>
+            </div>
+        </form>
     </div>
 {% endblock %}

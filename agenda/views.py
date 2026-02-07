@@ -231,7 +231,7 @@ def days_of_the_month(year, month):
 
 
 # CREATE
-@login_required
+@permission_required("agenda.add_event")
 @transaction.atomic
 def add_event(request):
     form_valid_message = _("Changes done successfully!")
@@ -268,13 +268,13 @@ def detail_event(request, event_id):
     return render(request, "agenda/detail_event.html", context)
 
 
-@login_required
+@permission_required("agenda.delete_event")
 @transaction.atomic
 def delete_event(request, event_id):
     event = Event.objects.get(pk=event_id)
     context = {
         "event": event,
-        "title": _("Delete event %(event_id)s") % {"event_id": event_id},
+        "title": _("Delete event %(event)s") % {"event": event.name},
     }
 
     if request.method == "POST":
@@ -284,7 +284,7 @@ def delete_event(request, event_id):
     return render(request, "agenda/delete_event.html", context)
 
 
-@login_required
+@permission_required("agenda.change_event")
 @transaction.atomic
 def update_event(request, event_id):
     form_valid_message = _("Changes done successfully!")

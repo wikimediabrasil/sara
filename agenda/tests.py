@@ -119,6 +119,13 @@ class EventViewTests(TestCase):
             area_responsible=self.team_area,
         )
 
+        self.add_permission = Permission.objects.get(codename="add_event")
+        self.edit_permission = Permission.objects.get(codename="change_event")
+        self.delete_permission = Permission.objects.get(codename="delete_event")
+        self.user.user_permissions.add(self.add_permission)
+        self.user.user_permissions.add(self.edit_permission)
+        self.user.user_permissions.add(self.delete_permission)
+
     def test_show_calendar_year(self):
         response = self.client.get(reverse("agenda:show_calendar_year"))
         self.assertRedirects(
@@ -180,12 +187,21 @@ class EventViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "agenda/calendar_day.html")
 
-    def test_add_event_get(self):
+    def test_add_event_with_permission_shows_page(self):
         self.client.login(username=self.username, password=self.password)
         url = reverse("agenda:create_event")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
+
+    def test_add_event_without_permission_redirects(self):
+        self.user.user_permissions.remove(self.add_permission)
+        self.client.login(username=self.username, password=self.password)
+        url = reverse("agenda:create_event")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={reverse('agenda:create_event')}")
 
     def test_add_event_post(self):
         self.client.login(username=self.username, password=self.password)
@@ -245,6 +261,15 @@ class EventViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "agenda/delete_event.html")
 
+    def test_delete_event_without_permission_redirects(self):
+        self.user.user_permissions.remove(self.delete_permission)
+        self.client.login(username=self.username, password=self.password)
+        url = reverse("agenda:delete_event", kwargs={"event_id": self.event.pk})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={url}")
+
     def test_delete_event_post(self):
         self.client.login(username=self.username, password=self.password)
         url = reverse("agenda:delete_event", kwargs={"event_id": self.event.pk})
@@ -260,6 +285,15 @@ class EventViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "agenda/update_event.html")
+
+    def test_update_event_without_permission_redirects(self):
+        self.user.user_permissions.remove(self.edit_permission)
+        self.client.login(username=self.username, password=self.password)
+        url = reverse("agenda:edit_event", kwargs={"event_id": self.event.pk})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"{reverse('users:login')}?next={url}")
 
     def test_update_event_post(self):
         self.client.login(username=self.username, password=self.password)

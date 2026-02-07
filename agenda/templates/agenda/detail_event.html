@@ -15,22 +15,52 @@
 {% block footer %}{% endblock %}
 {% block content %}
     <div class="w3-container user_form">
-        <h1 style="margin-bottom: 1em;">{{ event.name }}</h1>
         <div class="w3-row">
-            <div class="w3-third">
-                <label class="field_title" for="links">{% translate "Initial date" %}</label>
-            </div>
-            <div class="w3-twothird formfield">
-                <input class="w3-row formfield" value="{{ event.initial_date|date:'Y-m-d' }}" readonly>
+            <div class="w3-quarter disappear ">&nbsp;</div>
+            <div class="w3-half">
+                <h1 style="margin-bottom: 1em;">{{ event.name }}</h1>
             </div>
         </div>
         <div class="w3-row">
-            <div class="w3-third">
-                <label class="field_title" for="links">{% translate "End date" %}</label>
-            </div>
-            <div class="w3-twothird formfield">
-                <input class="w3-row formfield" value="{{ event.end_date|date:'Y-m-d' }}" readonly>
+            <div class="w3-quarter disappear ">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title">{% trans "Initial date" %}</div>
+                <div class="w3-twothird formfield view_field">{{ event.initial_date|date:'Y-m-d' }}</div>
             </div>
         </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear ">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title"> {% trans "End date" %}</div>
+                <div class="w3-twothird formfield view_field">{{ event.end_date|date:'Y-m-d' }}</div>
+            </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-quarter disappear ">&nbsp;</div>
+            <div class="w3-half">
+                <div class="w3-third field_title"> {% trans "Area responsible" %}</div>
+                <div class="w3-twothird formfield view_field">{{ event.area_responsible }}</div>
+            </div>
+        </div>
+        {% if perms.events.change_event or perms.events.delete_event %}
+            <div class="w3-row">
+                <div class="w3-quarter disappear ">&nbsp;</div>
+                <div class="w3-half">
+                    <div class="w3-third field_title">{% trans "Actions" %}</div>
+                    <div class="w3-twothird">
+                        {% if perms.events.change_event %}
+                            <a href="{% url 'agenda:edit_event' event_id=event.pk %}" aria-label="{% trans 'Update' %}">
+                                <button class="custom_button btn-update" type="button"><i class="fa-solid fa-pen"></i> {% trans 'Update' %}</button>
+                            </a>
+                        {% endif %}
+                        {% if perms.events.delete_event %}
+                            <a href="{% url 'agenda:delete_event' event_id=event.pk %}" aria-label="{% trans 'Delete' %}">
+                                <button class="custom_button btn-delete" type="button"><i class="fa-solid fa-times"></i> {% trans 'Delete' %}</button>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
     </div>
 {% endblock %}
