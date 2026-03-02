@@ -119,32 +119,32 @@ def prepare_pdf(request, *args, **kwargs):
 @login_required
 @permission_required("metrics.view_metric")
 def show_metrics_per_project(request):
+    """
+    Aggregates metrics per active project.
+    Prioritizes current Plan of Activities and Main Funding projects,
+    but displays metrics for all the active projects.
+    """
+
     current_language = get_language()
-    poa_project = Project.objects.filter(current_poa=True).first()
-    operational_dataset = get_metrics_and_aggregate_per_project(
-        project_query=Q(current_poa=True),
-        metric_query=Q(is_operation=True),
-        lang=current_language,
+
+    full_dataset = get_metrics_and_aggregate_per_project(
+        project_query=Q(active_status=True),
+        lang = current_language
     )
 
-    poa_dataset = get_metrics_and_aggregate_per_project(
-        project_query=Q(current_poa=True),
-        metric_query=Q(boolean_type=True),
-        field="Occurrence",
-        lang=current_language,
-    )
+    poa_dataset = {}
+    other_projects_dataset = {}
 
-    if poa_dataset and operational_dataset:
-        poa_dataset[poa_project.id]["project_metrics"] += operational_dataset[
-            poa_project.id
-        ]["project_metrics"]
+    if full_dataset:
+        for project_id, data in full_dataset.items():
+            if data.get("current_poa"):
+                poa_dataset[project_id] = data
+            else:
+                other_projects_dataset[project_id] = data
 
     context = {
         "poa_dataset": poa_dataset,
-        "dataset": get_metrics_and_aggregate_per_project(
-            project_query=Q(active_status=True, current_poa=False),
-            lang=current_language,
-        ),
+        "dataset": other_projects_dataset,
         "title": _("Show metrics per project"),
         "show_index": True,
     }
@@ -156,25 +156,34 @@ def show_metrics_per_project(request):
 @permission_required("metrics.view_metric")
 def show_metrics_for_specific_project(request, project_id):
     current_language = get_language()
-    project = Project.objects.get(pk=project_id)
+
+    project = (Project.objects.only("id", "current_poa", "text").get(pk=project_id))
 
     if project.current_poa:
+        poa_query = Q(pk=project.id)
+
         operational_dataset = get_metrics_and_aggregate_per_project(
-            project_query=Q(current_poa=True),
+            project_query=poa_query,
             metric_query=Q(is_operation=True),
             lang=current_language,
         )
 
         metrics_aggregated = get_metrics_and_aggregate_per_project(
-            project_query=Q(current_poa=True),
+            project_query=poa_query,
             metric_query=Q(boolean_type=True),
             field="Occurrence",
             lang=current_language,
         )
-        if metrics_aggregated and operational_dataset:
-            metrics_aggregated[project.id]["project_metrics"] += operational_dataset[
-                project.id
-            ]["project_metrics"]
+        # Merge safely
+        if (
+                metrics_aggregated
+                and operational_dataset
+                and project.id in metrics_aggregated
+                and project.id in operational_dataset
+        ):
+            metrics_aggregated[project.id]["project_metrics"] += (
+                operational_dataset[project.id]["project_metrics"]
+            )
     else:
         metrics_aggregated = get_metrics_and_aggregate_per_project(
             project_query=Q(pk=project_id), lang=current_language
