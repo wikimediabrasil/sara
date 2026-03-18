@@ -18,7 +18,7 @@
     <style>
         @media print {
             body * { visibility: hidden;}
-            nav, .index, .actions, .noprint { display: none !important; }
+            nav, .index, .actions:not([colspan="6"]), .noprint { display: none !important; }
             .printable_content, .printable_content * { visibility: visible; }
             #page_content { width: 100% !important; }
             body { margin: 0; padding: 0; }
