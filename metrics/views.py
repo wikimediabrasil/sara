@@ -211,6 +211,16 @@ def show_detailed_metrics_per_project(request):
     return render(request, "metrics/list_metrics_per_project.html", context)
 
 
+def build_list_values(qs, name_field, reports, related_name):
+    result = []
+    for obj in qs:
+        obj_reports = reports.filter(**{related_name: obj})
+        result.append({
+            "name": getattr(obj, name_field),
+            "reports": list(obj_reports.values("id", "description")),
+        })
+    return result
+
 @login_required
 @permission_required("metrics.view_metric")
 def metrics_reports(request, metric_id):
@@ -220,6 +230,20 @@ def metrics_reports(request, metric_id):
 
         goals = get_goal_for_metric(metric)
         filtered_goals = {key: value for key, value in goals.items() if goals[key] > 0}
+
+        all_editors = Editor.objects.filter(editors__in=reports).distinct()
+        all_organizers = Organizer.objects.filter(organizers__in=reports).distinct()
+        all_partners = Partner.objects.filter(partners__in=reports).distinct()
+
+        LIST_METRICS = {
+            "Number of editors": lambda: build_list_values(all_editors, "username", reports, "editors"),
+            "Number of editors retained": lambda: build_list_values(all_editors.filter(retained=True), "username", reports, "editors"),
+            "Number of new editors": lambda: build_list_values(all_editors.filter(account_creation_date__gte=F("editors__initial_date")), "username", reports, "editors"),
+            "Number of organizers": lambda: build_list_values(all_organizers, "name", reports, "organizers"),
+            "Number of organizers retained": lambda: build_list_values(all_organizers.filter(retained=True), "name", reports, "organizers"),
+            "Number of new organizers": lambda: build_list_values(all_organizers.filter(first_seen_at__gte=F("organizers__initial_date")), "name", reports, "organizers"),
+            "Number of partnerships activated": lambda: build_list_values(all_partners, "name", reports, "partners"),
+        }
 
         values = []
         for goal_key, goal_value in filtered_goals.items():
@@ -243,6 +267,7 @@ def metrics_reports(request, metric_id):
                     "goal": goal_value,
                     "done": sum([report_aux["done"] for report_aux in report_values]),
                     "reports": report_values,
+                    "list_values": LIST_METRICS[goal_key]() if goal_key in LIST_METRICS else None,
                 }
             )
 
