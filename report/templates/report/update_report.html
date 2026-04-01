@@ -19,6 +19,7 @@
         let metrics_set = {{ metrics_set|default:"[]"|safe }};
         let get_metrics_url = "{% url 'report:get_metrics' %}";
         let report_id = {{ report_id|default:"null" }};
+        let select_partners = "{% trans 'Select or type formal partnerships activated' %}";
     </script>
     <script src="{% static 'js/report.js' %}" defer></script>
 {% endblock %}

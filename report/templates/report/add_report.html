@@ -14,11 +14,12 @@
     <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script>
-        let submitText = "{% translate 'Submit' %}";
-        let nextStrategic = "{% translate 'Fill strategic report' %}";
+        let submitText = "{% trans 'Submit' %}";
+        let nextStrategic = "{% trans 'Fill strategic report' %}";
         let metrics_set = {{ metrics_set|default:"[]"|safe }};
         let get_metrics_url = "{% url 'report:get_metrics' %}";
         let report_id = "{{ report_id|default:'' }}";
+        let select_partners = "{% trans 'Select or type formal partnerships activated' %}";
     </script>
     <script src="{% static 'js/report.js' %}" defer></script>
 {% endblock %}

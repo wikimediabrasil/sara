@@ -157,15 +157,14 @@ class UserProfile(models.Model):
 
     @property
     def current_position(self):
-        return self.position_history.order_by(
-            models.Case(
-                models.When(end_date__isnull=True, then=0),
-                default=1,
-                output_field=models.IntegerField(),
-            ),
-            "-start_date",
-        ).first()
+        return self.position_history.filter(end_date__isnull=True).first()
 
+    @property
+    def latest_position(self):
+        return self.position_history.order_by(
+            models.F("end_date").desc(nulls_first=True),
+            "-start_date"
+        ).first()
 
 class UserPosition(models.Model):
     user_profile = models.ForeignKey(

@@ -470,11 +470,9 @@ class Report(models.Model):
         ]
 
     def save(self, *args, **kwargs):
-        super(Report, self).save(*args, **kwargs)
         if not self.end_date:
             self.end_date = self.initial_date
-        if not self.reference_text:
-            self.reference_text = build_wiki_ref(self.links, self.pk)
+        super(Report, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.description

@@ -1,11 +1,12 @@
 from unittest.mock import patch
 
+from black import datetime
 from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.utils import timezone
 
 from metrics.models import Area
-from users.models import Position, TeamArea, User
+from users.models import Position, TeamArea, User, UserPosition
 
 from .forms import NewReportForm
 from .models import (
@@ -17,6 +18,8 @@ from .models import (
     Project,
     Report,
     UserProfile,
+    Editor,
+
 )
 
 
@@ -92,7 +95,7 @@ class NewReportFormTest(TestCase):
             "incubator_edited": 0,
         }
 
-    def test_form_initialization_sets_area_responsible_for_new(self):
+    def test_form_initialization_sets_area_responsible__if_user_has_current_position(self):
         group = Group.objects.create(name="Test Group")
         position = Position.objects.create(
             text="Test Position", type=group, area_associated=self.team_area
@@ -100,6 +103,7 @@ class NewReportFormTest(TestCase):
         self.user.profile.position = position
         self.user.profile.save()
         self.user.save()
+        UserPosition.objects.create(user_profile=self.user.profile, position=position, start_date=datetime.today())
 
         form = NewReportForm(user=self.user, data={}, is_update=False)
         self.assertEqual(form.fields["area_responsible"].initial, self.team_area.id)
@@ -120,6 +124,30 @@ class NewReportFormTest(TestCase):
         form.is_valid()
         self.assertEqual(form.clean_end_date(), timezone.datetime(2026, 1, 1).date())
 
+    def test_clean_end_date_returns_end_date_when_provided(self):
+        data = self.form_data.copy()
+        data["end_date"] = "2026-02-15"
+        form = NewReportForm(user=self.user, data=data)
+        form.is_valid()
+        from datetime import date
+        self.assertEqual(form.cleaned_data["end_date"], date(2026, 2, 15))
+
+    def test_clean_partners_activated_with_querydict(self):
+        from django.http import QueryDict
+        qd = QueryDict(f"partners_activated={self.partner.id}&partners_activated=New+Partner")
+        form = NewReportForm(data=qd, user=self.user)
+        form.is_valid()
+        self.assertIn(str(self.partner.id), form.cleaned_data["partners_activated"])
+        self.assertIn("New Partner", form.cleaned_data["partners_activated"])
+
+    def test_clean_partners_activated_with_plain_dict(self):
+        data = self.form_data.copy()
+        data["partners_activated"] = [str(self.partner.id), "New Partner"]
+        form = NewReportForm(data=data, user=self.user)
+        form.is_valid()
+        self.assertIn(str(self.partner.id), form.cleaned_data["partners_activated"])
+        self.assertIn("New Partner", form.cleaned_data["partners_activated"])
+
     @patch("report.forms.get_user_date_of_registration")
     def test_save_creates_report_and_sets_relationships(self, mock_registration_date):
         mock_registration_date.return_value = timezone.now().date()
@@ -139,6 +167,57 @@ class NewReportFormTest(TestCase):
         self.assertTrue(form.is_valid())
         metrics = form._metrics_related()
         self.assertIn(self.metric, metrics)
+
+    def test_metrics_related_adds_partnership_metric_when_partners_present(self):
+        partnership_metric = Metric.objects.create(
+            text="Partnership Metric",
+            activity=self.activity,
+            number_of_partnerships_activated=5,
+        )
+        partnership_metric.project.add(self.main_funding)
+
+        data = self.form_data.copy()
+        data["partners_activated"] = ["Some Partner"]
+        form = NewReportForm(user=self.user, data=data)
+        form.is_valid()
+
+        metrics = form._metrics_related()
+        self.assertIn(partnership_metric, metrics)
+
+    def test_metrics_related_skips_partnership_metric_when_partners_empty(self):
+        partnership_metric = Metric.objects.create(
+            text="Partnership Metric",
+            activity=self.activity,
+            number_of_partnerships_activated=5,
+        )
+        partnership_metric.project.add(self.main_funding)
+
+        data = self.form_data.copy()
+        data["partners_activated"] = []
+        data["metrics_related"] = []
+        form = NewReportForm(user=self.user, data=data)
+        form.is_valid()
+
+        metrics = form._metrics_related()
+        self.assertNotIn(partnership_metric, metrics)
+
+    @patch("report.forms.get_user_date_of_registration")
+    def test_metrics_related_adds_editor_metrics(self, mock_reg):
+        mock_reg.return_value = None
+        editor_metric = Metric.objects.create(
+            text="Editor Metric",
+            activity=self.activity,
+            number_of_editors=5,
+        )
+        editor_metric.project.add(self.main_funding)
+
+        data = self.form_data.copy()
+        data["editors_string"] = "editor1"
+        form = NewReportForm(user=self.user, data=data)
+        form.is_valid()
+
+        metrics = form._metrics_related()
+        self.assertIn(editor_metric, metrics)
 
     def test_apply_implicit_metrics_adds_correct_metrics(self):
         form = NewReportForm(user=self.user_profile, data=self.form_data)
@@ -166,6 +245,55 @@ class NewReportFormTest(TestCase):
         report = form.save(commit=True, user=self.user)
         self.assertEqual(report.editors.count(), 0)
         self.assertEqual(report.organizers.count(), 0)
+
+    @patch("report.forms.get_user_date_of_registration")
+    def test_save_editors_does_not_mark_new_editor_if_created_before_initial_date(self, mock_reg):
+        mock_reg.return_value = None
+        editor = Editor.objects.create(username="OldEditor")
+        editor.first_seen_at = timezone.datetime(2020, 1, 1)
+        editor.save()
+
+        report = Report.objects.create(
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            area_responsible=self.team_area,
+            activity_associated=self.activity,
+            initial_date="2026-01-01",
+            description="Test",
+            links="link",
+        )
+
+        form = NewReportForm(user=self.user, data=self.form_data, is_update=False)
+        form.is_valid()
+        form.cleaned_data["_parsed_editors"] = ["OldEditor"]
+        form.cleaned_data["initial_date"] = timezone.datetime(2026, 1, 1).date()
+        form._save_editors(report)
+
+        self.assertFalse(form._has_new_editors)
+        self.assertTrue(form._has_retained_editors)
+
+    @patch("report.forms.get_user_date_of_registration")
+    def test_save_editors_does_not_mark_retained_on_update(self, mock_reg):
+        mock_reg.return_value = None
+        Editor.objects.create(username="ExistingEditor")
+
+        report = Report.objects.create(
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            area_responsible=self.team_area,
+            activity_associated=self.activity,
+            initial_date="2026-01-01",
+            description="Test",
+            links="link",
+        )
+
+        form = NewReportForm(user=self.user, data=self.form_data, is_update=True)
+        form.is_valid()
+        form.cleaned_data["_parsed_editors"] = ["ExistingEditor"]
+        form.cleaned_data["initial_date"] = timezone.datetime(2026, 1, 1).date()
+        form._save_editors(report)
+
+        self.assertFalse(form._has_retained_editors)
 
     def test_save_handles_space_organizers(self):
         data = self.form_data.copy()
@@ -217,6 +345,64 @@ class NewReportFormTest(TestCase):
         self.assertFalse(organizer2.retained)
         self.assertFalse(organizer3.retained)
 
+    def test_save_partners_handles_mix_of_id_and_name(self):
+        report = Report.objects.create(
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            area_responsible=self.team_area,
+            activity_associated=self.activity,
+            initial_date="2026-01-01",
+            description="Test",
+            links="link",
+        )
+
+        form = NewReportForm(user=self.user, data=self.form_data)
+        form.is_valid()
+        form.cleaned_data["partners_activated"] = [str(self.partner.id), "Brand New Partner"]
+        form._save_partners(report)
+
+        partner_names = list(report.partners_activated.values_list("name", flat=True))
+        self.assertIn("Partner Test", partner_names)
+        self.assertIn("Brand New Partner", partner_names)
+        self.assertEqual(report.partners_activated.count(), 2)
+
+    def test_save_partners_creates_new_partner_by_name(self):
+        report = Report.objects.create(
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            area_responsible=self.team_area,
+            activity_associated=self.activity,
+            initial_date="2026-01-01",
+            description="Test",
+            links="link",
+        )
+
+        form = NewReportForm(user=self.user, data=self.form_data)
+        form.is_valid()
+        form.cleaned_data["partners_activated"] = ["Totally New Partner"]
+        form._save_partners(report)
+
+        self.assertTrue(Partner.objects.filter(name="Totally New Partner").exists())
+        self.assertEqual(report.partners_activated.count(), 1)
+
+    def test_save_partners_does_not_duplicate_existing_partner(self):
+        report = Report.objects.create(
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            area_responsible=self.team_area,
+            activity_associated=self.activity,
+            initial_date="2026-01-01",
+            description="Test",
+            links="link",
+        )
+
+        form = NewReportForm(user=self.user, data=self.form_data)
+        form.is_valid()
+        form.cleaned_data["partners_activated"] = ["Partner Test"]  # already exists in setUp
+        form._save_partners(report)
+
+        self.assertEqual(Partner.objects.filter(name="Partner Test").count(), 1)
+
     def test_add_metrics_related_depending_on_values(self):
         form = NewReportForm(user=self.user_profile, data=self.form_data)
         form.is_valid()
@@ -233,3 +419,63 @@ class NewReportFormTest(TestCase):
         form._has_new_editors = True
         metrics = form._apply_implicit_metrics(report, Metric.objects.none())
         self.assertTrue(metrics.exists())
+
+    @patch("report.forms.get_user_date_of_registration")
+    @patch("report.forms.build_wiki_ref")
+    def test_save_builds_reference_text_on_first_save(self, mock_build_wiki_ref, mock_reg):
+        mock_reg.return_value = None
+        mock_build_wiki_ref.return_value = "<ref name=\"sara-1\">[https://example.com Test]</ref>"
+
+        form = NewReportForm(user=self.user, data=self.form_data)
+        self.assertTrue(form.is_valid())
+        report = form.save(commit=True, user=self.user)
+
+        mock_build_wiki_ref.assert_called_with(report.links, report.pk, report.description)
+        self.assertEqual(report.reference_text, "<ref name=\"sara-1\">[https://example.com Test]</ref>")
+
+    @patch("report.forms.get_user_date_of_registration")
+    @patch("report.forms.build_wiki_ref")
+    def test_save_fills_reference_text_if_empty_on_update(self, mock_build_wiki_ref, mock_reg):
+        mock_reg.return_value = None
+        mock_build_wiki_ref.return_value = "<ref name=\"sara-1\">[https://example.com Test]</ref>"
+
+        existing_report = Report.objects.create(
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            area_responsible=self.team_area,
+            activity_associated=self.activity,
+            initial_date="2026-01-01",
+            description="Test",
+            links="https://example.com",
+            reference_text="",
+        )
+
+        form = NewReportForm(user=self.user, data=self.form_data, instance=existing_report)
+        self.assertTrue(form.is_valid())
+        report = form.save(commit=True, user=self.user)
+
+        mock_build_wiki_ref.assert_called_with(report.links, report.pk, report.description)
+        self.assertEqual(report.reference_text, "<ref name=\"sara-1\">[https://example.com Test]</ref>")
+
+    @patch("report.forms.get_user_date_of_registration")
+    @patch("report.forms.build_wiki_ref")
+    def test_save_does_not_overwrite_existing_reference_text_on_update(self, mock_build_wiki_ref, mock_reg):
+        mock_reg.return_value = None
+
+        existing_report = Report.objects.create(
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            area_responsible=self.team_area,
+            activity_associated=self.activity,
+            initial_date="2026-01-01",
+            description="Test",
+            links="https://example.com",
+            reference_text="<ref name=\"sara-1\">[https://example.com Test]</ref>",
+        )
+
+        form = NewReportForm(user=self.user, data=self.form_data, instance=existing_report)
+        self.assertTrue(form.is_valid())
+        report = form.save(commit=True, user=self.user)
+
+        mock_build_wiki_ref.assert_not_called()
+        self.assertEqual(report.reference_text, "<ref name=\"sara-1\">[https://example.com Test]</ref>")

@@ -234,6 +234,7 @@ def metrics_reports(request, metric_id):
                         "end_date": report.end_date,
                         "done": done[goal_key],
                         "partial": report.partial_report,
+                        "area_responsible": report.area_responsible,
                     }
                 )
             values.append(
@@ -522,6 +523,8 @@ def get_metrics_and_aggregate_per_project(
             aggregated_metrics_and_results[project.id] = {
                 "project": project.text,
                 "project_metrics": project_metrics,
+                "current_poa": project.current_poa,
+                "main_funding": project.main_funding,
             }
     return aggregated_metrics_and_results
 

@@ -220,7 +220,7 @@ class MetricViewsTests(TestCase):
             str(metric_1),
         )
         self.assertEqual(
-            response.context["poa_dataset"][1]["project_metrics"][1][
+            response.context["poa_dataset"][1]["project_metrics"][0][
                 "activity_metrics"
             ][2]["title"],
             str(metric_2),
@@ -482,7 +482,9 @@ class PreparePDFViewTests(TestCase):
 
 class MetricFunctionsTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.username = "testuser"
+        self.password = "testpass"
+        self.user = User.objects.create_user(username=self.username, password=self.password)
         self.user_profile = UserProfile.objects.get(user=self.user)
         self.team_area = TeamArea.objects.create(text="Area")
         self.area = Area.objects.create(text="Area")
@@ -491,6 +493,7 @@ class MetricFunctionsTests(TestCase):
         self.metric_1 = Metric.objects.create(text="Metric 1", activity=self.activity_1)
         self.metric_2 = Metric.objects.create(text="Metric 2", activity=self.activity_1)
         self.metric_3 = Metric.objects.create(text="Metric 3", activity=self.activity_2)
+        self.metric_4 = Metric.objects.create(text="Metric 4", activity=self.activity_2)
 
         self.report_1 = Report.objects.create(
             created_by=self.user_profile,
@@ -590,50 +593,50 @@ class MetricFunctionsTests(TestCase):
 
     def test_get_metrics_and_aggregate_per_project_with_data_and_metric_unclear(self):
         project = Project.objects.create(text="Project")
-        self.metric_2.project.add(project)
-        self.metric_2.save()
+        self.metric_3.project.add(project)
+        self.metric_3.save()
         area = Area.objects.create(text="Area")
         area.project.add(project)
         area.save()
-        self.activity_1.area = area
-        self.activity_1.save()
+        self.activity_2.area = area
+        self.activity_2.save()
         aggregated_metrics = get_metrics_and_aggregate_per_project()
         self.assertEqual(list(aggregated_metrics.keys())[0], project.id)
         self.assertEqual(aggregated_metrics[1]["project"], project.text)
         self.assertEqual(
             aggregated_metrics[1]["project_metrics"][0]["activity_id"],
-            self.activity_1.id,
+            self.activity_2.id,
         )
         self.assertEqual(
             aggregated_metrics[1]["project_metrics"][0]["activity"],
-            self.activity_1.text,
+            self.activity_2.text,
         )
         self.assertEqual(
             list(
                 aggregated_metrics[1]["project_metrics"][0]["activity_metrics"].keys()
             )[0],
-            self.metric_2.id,
+            self.metric_3.id,
         )
         self.assertEqual(
-            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2]["title"],
-            self.metric_2.text,
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3]["title"],
+            self.metric_3.text,
         )
         self.assertEqual(
             list(
-                aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2][
+                aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3][
                     "metrics"
                 ].keys()
             )[0],
             "Other metric",
         )
         self.assertEqual(
-            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2][
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3][
                 "metrics"
             ]["Other metric"]["goal"],
             "-",
         )
         self.assertEqual(
-            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][2][
+            aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3][
                 "metrics"
             ]["Other metric"]["done"],
             "-",
@@ -750,6 +753,57 @@ class MetricFunctionsTests(TestCase):
     def test_get_metrics_and_aggregate_per_project_without_data(self):
         aggregated_metrics = get_metrics_and_aggregate_per_project()
         self.assertEqual(aggregated_metrics, {})
+
+    def test_get_metrics_and_aggregate_per_project_with_specific_field(self):
+        project = Project.objects.create(text="Project")
+        area = Area.objects.create(text="Area")
+        area.project.add(project)
+        area.save()
+        self.activity_1.area = area
+        self.activity_1.save()
+
+        metric = Metric.objects.create(
+            text="Boolean Metric",
+            activity=self.activity_1,
+            boolean_type=True,
+        )
+        metric.project.add(project)
+        metric.save()
+
+        aggregated_metrics = get_metrics_and_aggregate_per_project(
+            field="Occurrence"
+        )
+
+        activity_metrics = aggregated_metrics[project.id]["project_metrics"][0]["activity_metrics"]
+        self.assertIn(metric.id, activity_metrics)
+        self.assertIn("Occurrence", activity_metrics[metric.id]["metrics"])
+        self.assertEqual(
+            activity_metrics[metric.id]["metrics"]["Occurrence"]["goal"],
+            True,
+        )
+
+    def test_show_metrics_per_project_adds_non_poa_project_to_other_projects_dataset(self):
+        self.client.login(username=self.username, password=self.password)
+        self.user.user_permissions.add(
+            Permission.objects.get(codename="view_metric")
+        )
+
+        project = Project.objects.create(text="Other Project", current_poa=False, active_status=True)
+        area = Area.objects.create(text="Area")
+        area.project.add(project)
+        area.save()
+        activity = Activity.objects.create(text="Activity", area=area)
+        metric = Metric.objects.create(
+            text="Metric", text_en="Metric", boolean_type=True, activity=activity
+        )
+        metric.project.add(project)
+        metric.save()
+
+        url = reverse("metrics:per_project")
+        response = self.client.get(url)
+
+        self.assertIn(project.id, response.context["dataset"])
+        self.assertNotIn(project.id, response.context["poa_dataset"])
 
     def test_get_references_for_report_with_external_reference_formats_it(self):
         self.report_1.metrics_related.add(self.metric_1)
@@ -1090,6 +1144,40 @@ class ReferencesFunctionsTests(TestCase):
 
         wiki_ref = build_wiki_ref(links, 1)
         self.assertEqual(wiki_ref, "")
+
+    def test_wikify_link_uses_friendly_name_when_provided(self):
+        from metrics.link_utils import wikify_link
+        result = wikify_link(
+            "https://pt.wikipedia.org/wiki/Página_inicial",
+            friendly_name="My event"
+        )
+        self.assertEqual(result, "[[w:pt:Página_inicial|My event]]")
+
+    def test_wikify_link_uses_page_name_when_no_friendly_name(self):
+        from metrics.link_utils import wikify_link
+        result = wikify_link("https://pt.wikipedia.org/wiki/Página_inicial")
+        self.assertEqual(result, "[[w:pt:Página_inicial|Página inicial]]")
+
+    def test_build_wiki_ref_uses_description_as_friendly_name(self):
+        from metrics.link_utils import build_wiki_ref
+        result = build_wiki_ref(
+            "https://pt.wikipedia.org/wiki/Página_inicial",
+            report_id=1,
+            friendly_name="My edit-a-thon"
+        )
+        self.assertEqual(
+            result,
+            '<ref name="sara-1">[[w:pt:Página_inicial|My edit-a-thon]]</ref>'
+        )
+
+    def test_build_wiki_ref_with_multiple_links_uses_friendly_name_for_all(self):
+        from metrics.link_utils import build_wiki_ref
+        links = "https://pt.wikipedia.org/wiki/Página_inicial\nhttps://commons.wikimedia.org/wiki/Main_Page"
+        result = build_wiki_ref(links, report_id=1, friendly_name="My event")
+        self.assertEqual(
+            result,
+            '<ref name="sara-1">[[w:pt:Página_inicial|My event]], [[c:Main_Page|My event]]</ref>'
+        )
 
 
 class TagsTests(TestCase):

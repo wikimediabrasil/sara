@@ -157,4 +157,4 @@ LOGIN_URL = "users:login"
 LOGIN_REDIRECT_URL = "metrics:index"
 LOGOUT_REDIRECT_URL = "users:login"
 
-DATE_FORMAT = "d \d\e F \d\e Y, \à\s g:i"
+DATE_FORMAT = "%d de %B de %Y, às %H:%M"

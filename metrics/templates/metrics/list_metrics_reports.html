@@ -37,6 +37,7 @@
                         <tr>
                             <th data-field="id" data-sortable="true">{% trans "ID" %}</th>
                             <th data-field="report" data-sortable="true">{% trans "Report" %}</th>
+                            <th data-field="area_responsible" data-sortable="true">{% trans "Area responsible" %}</th>
                             <th data-field="done" data-sortable="true">{% trans "Done" %}</th>
                         </tr>
                     </thead>
@@ -45,6 +46,7 @@
                             <tr>
                                 <th scope="row">{{ report.id }}</th>
                                 <td><a title="{% trans 'View' %}" href="{% url 'report:detail_report' report_id=report.id %}">{{ report.description }}{% if report.partial %} {% translate "(Partial)" %}{% endif %}</a><br><small>({{ report.initial_date }} - {{ report.end_date }})</small></td>
+                                <td>{{ report.area_responsible }}</td>
                                 <td>{{ report.done }}</td>
                             </tr>
                         {% endfor %}

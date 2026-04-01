@@ -10,6 +10,7 @@ from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
+from metrics.link_utils import build_wiki_ref
 from metrics.models import Area, Metric, Project
 from report.models import (
     Editor,
@@ -24,6 +25,16 @@ from strategy.models import LearningArea, StrategicAxis
 from users.models import TeamArea, UserProfile
 
 
+class PartnerField(forms.Field):
+    def to_python(self, value):
+        if not value:
+            return []
+        return value if isinstance(value, list) else [value]
+
+    def validate(self, value):
+        pass
+
+
 class NewReportForm(forms.ModelForm):
     editors_string = forms.CharField(
         required=False,
@@ -33,6 +44,7 @@ class NewReportForm(forms.ModelForm):
         required=False,
         widget=forms.Textarea,
     )
+    partners_activated = PartnerField(required=False)
 
     class Meta:
         model = Report
@@ -73,6 +85,11 @@ class NewReportForm(forms.ModelForm):
             self.fields["area_responsible"].initial = area_responsible_of_user(
                 self.user
             )
+
+    def clean_partners_activated(self):
+        if hasattr(self.data, 'getlist'):
+            return self.data.getlist("partners_activated")
+        return self.data.get("partners_activated", [])
 
     def clean(self):
         cleaned = super().clean()
@@ -118,12 +135,21 @@ class NewReportForm(forms.ModelForm):
 
         if commit:
             user_profile = get_object_or_404(UserProfile, user=user)
-            report.created_by = user_profile
+
+            if not report.pk:
+                report.created_by = user_profile
+
             report.modified_by = user_profile
             report.save()
 
+            # Save references
+            if not report.reference_text:
+                report.reference_text = build_wiki_ref(report.links, report.pk, report.description)
+                report.save(update_fields=["reference_text"])
+
             self._save_editors(report)
             self._save_organizers(report)
+            self._save_partners(report)
 
             report.technologies_used.set(self.cleaned_data["technologies_used"])
             report.area_activated.set(self.cleaned_data["area_activated"])
@@ -202,8 +228,23 @@ class NewReportForm(forms.ModelForm):
 
         report.organizers.set(organizers.values())
 
+    def _save_partners(self, report):
+        values = [str(v).strip() for v in self.cleaned_data["partners_activated"] if str(v).strip()]
+
+        ids = [int(v) for v in values if v.isdigit()]
+        names = [v for v in values if not v.isdigit()]
+
+        partners_by_id = list(Partner.objects.filter(id__in=ids))
+
+        partners_by_name = []
+        for name in names:
+            partner, _ = Partner.objects.get_or_create(name=name)
+            partners_by_name.append(partner)
+
+        report.partners_activated.set(partners_by_id + partners_by_name)
+
     def _metrics_related(self):
-        metrics_related = self.cleaned_data.get("metrics_related")
+        metrics_related = self.cleaned_data.get("metrics_related") or Metric.objects.none()
         main_funding = Project.objects.get(main_funding=True)
         metrics_main_funding = Metric.objects.filter(project=main_funding)
 
@@ -256,7 +297,7 @@ class NewReportForm(forms.ModelForm):
         }
 
         for field_set, field_names in obj_fields_names.items():
-            if self.cleaned_data.get(field_set):
+            if self.cleaned_data.get(field_set) not in [None, [], ""]:
                 query = Q()
                 for field_name in field_names:
                     query |= Q(**{f"{field_name}__gt": 0})
@@ -332,7 +373,7 @@ def remove_domain(users_string):
 
 def area_responsible_of_user(user):
     try:
-        team_area = user.profile.position.area_associated
+        team_area = user.profile.current_position.position.area_associated
         return team_area.id
     except (TeamArea.DoesNotExist, AttributeError):
         return ""

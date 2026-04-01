@@ -3,9 +3,25 @@ $(document).ready(function () {
     if (this.checked) {
       toggle_field(this.id);
     }
-  })
+  });
+
   show_metrics_options();
-  $(".select-with-text").select2();
+
+  $(".select-with-text").not("#partners_activated").select2();
+
+  $('#partners_activated').select2({
+    tags: true,
+    placeholder: select_partners,
+    createTag: function (params) {
+      var term = $.trim(params.term);
+      if (term === '') return null;
+      return {
+        id: term,
+        text: term,
+        newTag: true
+      };
+    }
+  });
 
   let learning = $("#learning");
   if (learning.val() > 0) {
@@ -53,6 +69,7 @@ function openTab(evt, section) {
   for (i = 0; i < tab_links.length; i++) {
     tab_links[i].classList.remove("active");
   }
+
   $("#" + section)[0].style.display = "block";
   $("#nav_" + section)[0].classList.add("active");
 }
@@ -75,7 +92,7 @@ function validateForm() {
   let learning_tab = $("#nav_Learning");
   let admin_fields = ["#activity_associated", "#area_responsible", "#initial_date", "#description", "#links"];
   let learning_fields = ["#learning"];
-  let activity_associated = form.find("#activity_associated option:selected").data("poa_area")
+  let activity_associated = form.find("#activity_associated option:selected").data("poa_area");
 
   for (let i = 0; i < admin_fields.length; i++) {
     if (focus_is_empty(form.find(admin_fields[i]), admin_tab)) {
@@ -144,18 +161,20 @@ function show_metrics_options() {
       url: get_metrics_url,
       method: 'GET',
       dataType: 'json',
-      data: {activity: activity_associated, fundings: funding_associated, instance: report_id},
+      data: { activity: activity_associated, fundings: funding_associated, instance: report_id },
       success: function (response) {
         let learning = $("#learning");
         let learning_container = $("#learning_container");
         let inner_html = "<fieldset id='metrics_fieldset' class='sub_container'><div style='overflow-y:scroll; max-height:200px'>";
+
         if (response["objects"]) {
           response["objects"].forEach(function (projectEl) {
-            inner_html += "<div class='w3-container field_title' style='color:var(--main-color);'>" + projectEl["project"] + "</div>"
+            inner_html += "<div class='w3-container field_title' style='color:var(--main-color);'>" + projectEl["project"] + "</div>";
             projectEl["metrics"].forEach(function (metric) {
               let checked = "";
               let button_type = "checkbox";
               let check_style = "";
+
               if (jQuery.inArray(metric.id, metrics_related) >= 0) {
                 checked = "checked";
               }
@@ -163,16 +182,18 @@ function show_metrics_options() {
                 button_type = "radio";
                 check_style = "radio-checkmark";
               }
+
               let metric_label = (projectEl["lang"] === "en") ? metric.text_en : metric.text;
               let metric_element = "<label class='select-container'>" + metric_label +
                 "<input type='" + button_type + "' name='metrics_related' value='" + metric.id +
-                "' " + checked + ">" + "<span class='checkmark " + check_style + "'></span></label>"
-              inner_html += metric_element
-            })
+                "' " + checked + ">" + "<span class='checkmark " + check_style + "'></span></label>";
+              inner_html += metric_element;
+            });
           });
           inner_html += "</div></fieldset>";
           $("#metrics_to_select").html(inner_html);
         }
+
         if (response["main"]) {
           learning.data("has_learning", true);
           learning_container.show();
@@ -182,7 +203,7 @@ function show_metrics_options() {
         }
       },
       error: function (response) {
-        console.log(response)
+        console.log(response);
       }
     });
   }

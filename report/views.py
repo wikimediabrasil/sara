@@ -94,6 +94,7 @@ def add_report(request):
         "report_form": report_form,
         "operation_metrics": operation_metrics,
         "title": _("Add report"),
+        "partners_set": request.POST.getlist("partners_activated") if request.method == "POST" else [],
     }
 
     return render(request, "report/add_report.html", context)
@@ -1043,6 +1044,8 @@ def update_report(request, report_id):
         ),
         "metrics_set": list(report.metrics_related.values_list("id", flat=True)),
         "title": _("Edit report %(report_id)s") % {"report_id": report.id},
+        "partners_set": (request.POST.getlist("partners_activated") if request.method == "POST" else list(
+            report.partners_activated.values_list("id", flat=True))),
     }
 
     return render(request, "report/update_report.html", context)

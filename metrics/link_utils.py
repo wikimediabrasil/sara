@@ -411,7 +411,7 @@ def dewikify_url(link, meta=False):
 # 1. receive and wikify the links field (deal with external and internal links, including from mapped projects)
 # 2. create the reference text
 # ======================================================================================================================
-def wikify_link(link):
+def wikify_link(link, friendly_name=None):
     """
     Receives a URL link and tries to wikify it, based on the patterns and correspondences.
     There are 4 scenarios for the return:
@@ -436,8 +436,12 @@ def wikify_link(link):
                 page = match.group(1)
 
             page = ur.unquote(page)
-            clean_page = page.replace("_", " ")
-            clean_page = clean_page[:-1] if clean_page.endswith("/") else clean_page
+
+            if friendly_name:
+                clean_page = friendly_name
+            else:
+                clean_page = page.replace("_", " ")
+                clean_page = clean_page[:-1] if clean_page.endswith("/") else clean_page
 
             return (
                 f"[[{prefix}{project}/{page}|{clean_page}]]"
@@ -448,11 +452,11 @@ def wikify_link(link):
     return f"[{link}]" if link != "-" else ""
 
 
-def build_wiki_ref(links, report_id):
+def build_wiki_ref(links, report_id, friendly_name=None):
     links = links.replace("\\r\\n", "\r\n").splitlines()
     formatted_links = []
     for link in links:
-        formatted_links.append(wikify_link(link))
+        formatted_links.append(wikify_link(link, friendly_name))
 
     ref_content = ", ".join(formatted_links)
     if ref_content:

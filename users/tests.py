@@ -145,6 +145,40 @@ class UserPositionModelTest(TestCase):
         self.assertIsNone(up.end_date)
         self.assertEqual(self.profile.position_history.count(), 1)
 
+    def test_latest_position_returns_current_position_when_active(self):
+        UserPosition.objects.create(
+            user_profile=self.profile,
+            position=self.position,
+            start_date=datetime.date(2022, 1, 1),
+            end_date=datetime.date(2022, 12, 31),
+        )
+        current = UserPosition.objects.create(
+            user_profile=self.profile,
+            position=self.position,
+            start_date=datetime.date(2024, 1, 1),
+        )
+
+        self.assertEqual(self.profile.latest_position, current)
+
+    def test_latest_position_returns_most_recent_past_position_when_no_current(self):
+        UserPosition.objects.create(
+            user_profile=self.profile,
+            position=self.position,
+            start_date=datetime.date(2022, 1, 1),
+            end_date=datetime.date(2022, 12, 31),
+        )
+        newer = UserPosition.objects.create(
+            user_profile=self.profile,
+            position=self.position,
+            start_date=datetime.date(2023, 1, 1),
+            end_date=datetime.date(2023, 12, 31),
+        )
+
+        self.assertEqual(self.profile.latest_position, newer)
+
+    def test_latest_position_returns_none_when_no_positions(self):
+        self.assertIsNone(self.profile.latest_position)
+
     def test_end_date_before_start_date_raises_error(self):
         with self.assertRaises(IntegrityError):
             UserPosition.objects.create(

@@ -41,8 +41,8 @@ Username 2{% endblocktrans %}">{% if report_form.instance.id %}{% for editor in 
             <p class="form-legend">{% translate "List of usernames (or full names if they don't have usernames) of people who organized the activity" %} <b>{% translate "One per line" %}</b></p>
         </div>
         <div class="w3-twothird formfield">
-            <textarea id="organizers" name="organizers_string" rows="4" placeholder="{% blocktrans %}Username 1|Institution 1
-Username 2|Institution 2{% endblocktrans %}">{% if report_form.instance.id %}{% for organizer in report_form.instance.organizers.all %}{{ organizer.name }}{% if not forloop.last %}&#13;&#10;{% endif %}{% endfor %}{% endif %}</textarea>
+            <textarea id="organizers" name="organizers_string" rows="4" placeholder="{% blocktrans %}Username 1 or name
+Username 2 or name{% endblocktrans %}">{% if report_form.instance.id %}{% for organizer in report_form.instance.organizers.all %}{{ organizer.name }}{% if not forloop.last %}&#13;&#10;{% endif %}{% endfor %}{% endif %}</textarea>
         </div>
     </div>
     <div class="w3-row">
@@ -51,9 +51,9 @@ Username 2|Institution 2{% endblocktrans %}">{% if report_form.instance.id %}{% 
             <p class="form-legend">{% translate "Which are the formal collaborative relationships activated in this activity?" %}</p>
         </div>
         <div class="w3-twothird formfield">
-            <select class="select-with-text" id="partners_activated" name="partners_activated" multiple>
+            <select class="select-with-text" id="partners_activated" name="partners_activated" multiple data-tags="true">
                 {% for partner in report_form.fields.partners_activated.queryset %}
-                    <option value="{{ partner.id }}" {% if partner in report_form.instance.partners_activated.all %}selected{% endif %}>{{ partner.name }}</option>
+                    <option value="{{ partner.id }}" {% if partner.pk in partners_set %}selected{% endif %}>{{ partner.name }}</option>
                 {% endfor %}
             </select>
         </div>
