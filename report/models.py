@@ -101,7 +101,7 @@ class Report(models.Model):
     )
     modified_at = models.DateTimeField(
         _("Date of modification"),
-        auto_now_add=True,
+        auto_now=True,
         help_text=_("Date the report was modified"),
     )
     locked = models.BooleanField(

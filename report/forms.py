@@ -157,6 +157,7 @@ class NewReportForm(forms.ModelForm):
             report.learning_questions_related.set(
                 self.cleaned_data["learning_questions_related"]
             )
+            report.funding_associated.set(self.cleaned_data["funding_associated"])
 
             metrics = self._metrics_related()
             metrics = self._apply_implicit_metrics(report, metrics)
@@ -229,7 +230,7 @@ class NewReportForm(forms.ModelForm):
         report.organizers.set(organizers.values())
 
     def _save_partners(self, report):
-        values = [str(v).strip() for v in self.cleaned_data["partners_activated"] if str(v).strip()]
+        values = [str(v).strip() for v in self.cleaned_data.get("partners_activated", []) if str(v).strip()]
 
         ids = [int(v) for v in values if v.isdigit()]
         names = [v for v in values if not v.isdigit()]
