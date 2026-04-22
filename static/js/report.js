@@ -183,7 +183,7 @@ function show_metrics_options() {
                 check_style = "radio-checkmark";
               }
 
-              let metric_label = (projectEl["lang"] === "en") ? metric.text_en : metric.text;
+              let metric_label = metric.text;
               let metric_element = "<label class='select-container'>" + metric_label +
                 "<input type='" + button_type + "' name='metrics_related' value='" + metric.id +
                 "' " + checked + ">" + "<span class='checkmark " + check_style + "'></span></label>";
