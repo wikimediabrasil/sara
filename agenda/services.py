@@ -95,7 +95,7 @@ def send_event_reports():
                 from_email=settings.EMAIL_HOST_USER,
                 to=[manager.user_profile.user.email],
                 reply_to=[settings.EMAIL_HOST_USER],
-                bcc=[settings.EMAIL_COORDINATOR],
+                bcc=settings.EMAIL_COORDINATORS,
             )
         )
 

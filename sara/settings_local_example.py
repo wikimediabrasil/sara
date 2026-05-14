@@ -71,7 +71,7 @@ EMAIL_HOST_USER = "<host_email>"
 EMAIL_HOST_PASSWORD = "<host_password>"
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-EMAIL_COORDINATOR = "<coordinator_email>"
+EMAIL_COORDINATORS = ["<coordinator_email>"]
 
 # Database
 HOME = os.environ.get("HOME") or ""
