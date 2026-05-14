@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-01 03:24-0300\n"
+"POT-Creation-Date: 2026-05-14 01:10-0300\n"
 "PO-Revision-Date: 2024-02-09 16:44-0300\n"
 "Last-Translator: Éder Porto <eder.porto@wmnobrasil.org>\n"
 "Language-Team: PT_BR <LL@li.org>\n"
@@ -19,8 +19,10 @@ msgstr ""
 
 #: .\agenda\models.py:29 .\agenda\templates\agenda\add_event.html:24
 #: .\agenda\templates\agenda\list_events.html:37
-#: .\agenda\templates\agenda\update_event.html:16 .\users\models.py:14
-#: .\users\models.py:41 .\users\templates\users\detail_profile.html:35
+#: .\agenda\templates\agenda\update_event.html:16
+#: .\metrics\templates\metrics\list_metrics_reports.html:64
+#: .\users\models.py:14 .\users\models.py:41
+#: .\users\templates\users\detail_profile.html:35
 #: .\users\templates\users\list_profiles.html:53
 #: .\users\templates\users\list_profiles.html:97
 msgid "Name"
@@ -144,6 +146,7 @@ msgstr ""
 "<br><br>Por favor, confira:"
 
 #: .\agenda\templates\agenda\area_activities.html:16
+#: .\agenda\templates\agenda\email_template.html:26
 msgid "◂ Past activities"
 msgstr "◂ Atividades passadas"
 
@@ -338,26 +341,23 @@ msgstr ""
 "atividades sob sua responsabilidade que devem ser reportados na SARA."
 "<br><br>Por favor, confira:"
 
-#: .\agenda\templates\agenda\email_template.html:26
-msgid "◂ Possible late reports"
-msgstr "◂ Relatórios possivelmente atrasados"
-
 #: .\agenda\templates\agenda\email_template.html:27
-msgid ""
-"Activities that might not have a report associated with them registered."
+msgid "Activities that might not have a report associated with them registered. "
+"Please, verify"
 msgstr ""
-"Atividades que talvez não possuam um relatório associado a elas registrado."
+"Atividades que talvez não possuam um relatório associado a elas registrado. "
+"Por favor, verifique"
 
 #: .\agenda\templates\agenda\email_template.html:35
-msgid "◂ Upcoming reports"
-msgstr "◂ Próximos relatórios"
+msgid "◂ Upcoming activities"
+msgstr "◂ Próximas atividades"
 
 #: .\agenda\templates\agenda\email_template.html:36
 msgid "Activities that will end in the next two weeks."
 msgstr "Atividades que terminarão nas próximas duas semanas."
 
 #: .\agenda\templates\agenda\email_template.html:44
-msgid "◂ About to kickoff"
+msgid "◂ Activities about to kickoff"
 msgstr "◂ Atividades prestes a começar"
 
 #: .\agenda\templates\agenda\email_template.html:45
@@ -1368,6 +1368,15 @@ msgstr "Relatório"
 msgid "(Partial)"
 msgstr "(Parcial)"
 
+#: .\metrics\templates\metrics\list_metrics_reports.html:56
+msgid "List"
+msgstr "Lista"
+
+#: .\metrics\templates\metrics\list_metrics_reports.html:65
+#: .\report\models.py:467 .\templates\navbar.html:34
+msgid "Reports"
+msgstr "Relatórios"
+
 #: .\metrics\templates\metrics\translations.html:3
 msgid "Wikipedia (created)"
 msgstr "Wikipédia (criados)"
@@ -1791,10 +1800,6 @@ msgstr "Métricas associadas"
 #: .\report\models.py:456
 msgid "Metrics guiding the activity reported."
 msgstr "Métricas associadas à atividade reportada."
-
-#: .\report\models.py:467 .\templates\navbar.html:34
-msgid "Reports"
-msgstr "Relatórios"
 
 #: .\report\models.py:504
 msgid "Operation Report"
