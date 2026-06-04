@@ -6,6 +6,7 @@ django-admin-logs
 django_select2
 requests>=2.32.3
 xhtml2pdf>=0.2.16
+svglib>=1.2.1,<1.6
 social-auth-app-django
 django-modeltranslation>=0.19.19
 isort
