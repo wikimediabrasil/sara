@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+  <h2>{{ title }}</h2>
+
+  <p>{% blocktranslate count counter=count %}{{ counter }} report is associated to a metric but contributes nothing to it.{% plural %}{{ counter }} reports are associated to a metric but contribute nothing to it.{% endblocktranslate %}</p>
+
+  <p>
+    {% if partial %}
+      <a href="?">{% translate "Strict view: only reports that contribute zero to the whole metric" %}</a>
+    {% else %}
+      <a href="?partial=1">{% translate "Partial view: also show reports missing at least one dimension" %}</a>
+    {% endif %}
+  </p>
+
+  {% if rows %}
+  <table class="table" border="1" cellpadding="6" cellspacing="0">
+    <thead>
+      <tr>
+        <th>{% translate "Metric" %}</th>
+        <th>{% translate "Activity" %}</th>
+        <th>{% translate "Report" %}</th>
+        <th>{% translate "Period" %}</th>
+        <th>{% translate "Empty dimensions (goal / done)" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td><a href="{% url 'admin:metrics_metric_change' row.metric_id %}">{{ row.metric }}</a></td>
+        <td>{{ row.activity }}</td>
+        <td>
+          <a href="{% url 'admin:report_report_change' row.report_id %}">#{{ row.report_id }} — {{ row.report }}</a>
+          {% if row.partial_report %}<em>({% translate "partial" %})</em>{% endif %}
+        </td>
+        <td>{{ row.initial_date }}{% if row.end_date and row.end_date != row.initial_date %} – {{ row.end_date }}{% endif %}</td>
+        <td>
+          <ul style="margin:0; padding-left:1.1em;">
+            {% for dim in row.zero_dimensions %}
+              <li>{{ dim.dimension }} <small>({{ dim.goal }} / {{ dim.done }})</small></li>
+            {% endfor %}
+          </ul>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>{% translate "No empty metric associations found." %}</p>
+  {% endif %}
+</div>
+{% endblock %}

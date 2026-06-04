@@ -44,4 +44,5 @@ urlpatterns = [
         name="export_reports_per_year_per_area",
     ),
     path("prepare_pdf", views.prepare_pdf, name="wmf_report"),
+    path("empty-associations", views.show_empty_metric_associations, name="empty_associations"),
 ]

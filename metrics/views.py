@@ -338,6 +338,19 @@ def export_timespan_report(request, timeframe="trimester", by_area=False):
 
     return response
 
+@login_required
+@permission_required("metrics.view_metric")
+def show_empty_metric_associations(request):
+    partial = request.GET.get("partial") == "1"
+    rows = find_empty_metric_associations(partial=partial)
+    context = {
+        "title": _("Reports associated to a metric with zero contribution"),
+        "rows": rows,
+        "partial": partial,
+        "count": len(rows),
+    }
+    return render(request, "metrics/list_empty_metric_associations.html", context)
+
 
 # ======================================================================================================================
 # FUNCTIONS
@@ -847,3 +860,54 @@ def is_there_a_final_report(reports):
         ).exists()
         or False
     )
+
+def find_empty_metric_associations(metric_query=Q(), partial=False):
+    """
+    Reports linked to a metric via `metrics_related` that contribute zero to it.
+
+    Relevant dimensions = keys of get_goal_for_metric() with a nonzero goal.
+    The boolean "Occurrence" is skipped (it's a truth value, not a number).
+
+    partial=False -> flag a report only if it contributes zero to EVERY relevant
+                     dimension (i.e. the association produced nothing).
+    partial=True  -> flag every (report, dimension) where done == 0, even if the
+                     report contributed to other dimensions of the same metric.
+    """
+    results = []
+
+    for metric in Metric.objects.filter(metric_query).select_related("activity"):
+        goal = get_goal_for_metric(metric)
+        relevant = {
+            key: value
+            for key, value in goal.items()
+            if value and key != "Occurrence"
+        }
+        if not relevant:
+            continue
+
+        for report in Report.objects.filter(metrics_related=metric).order_by("pk"):
+            done = get_done_for_report(Report.objects.filter(pk=report.pk), metric)
+
+            zero_dims = [
+                {"dimension": key, "goal": relevant[key], "done": done.get(key) or 0}
+                for key in relevant
+                if not done.get(key)
+            ]
+            if not zero_dims:
+                continue
+            if not partial and len(zero_dims) != len(relevant):
+                continue  # contributed to at least one dimension
+
+            results.append({
+                "metric_id": metric.id,
+                "metric": metric.text,
+                "activity": metric.activity.text,
+                "report_id": report.id,
+                "report": report.description,
+                "initial_date": report.initial_date,
+                "end_date": report.end_date,
+                "partial_report": report.partial_report,
+                "zero_dimensions": zero_dims,
+            })
+
+    return results
