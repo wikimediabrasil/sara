@@ -10,7 +10,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         week = datetime.now().isocalendar().week
 
-        if week % 2 != 0:
+        if week % 2 == 0:
             self.stdout.write("Skipping this week")
             return
 
