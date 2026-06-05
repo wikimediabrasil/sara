@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from black import datetime
+from datetime import datetime
 from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.utils import timezone

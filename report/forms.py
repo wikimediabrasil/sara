@@ -177,7 +177,7 @@ class NewReportForm(forms.ModelForm):
             if created:
                 editor.account_creation_date = get_user_date_of_registration(username)
                 self._has_editors = True
-                if editor.account_creation_date >= self.cleaned_data["initial_date"] - timedelta(days=30):
+                if editor.account_creation_date and editor.account_creation_date >= self.cleaned_data["initial_date"] - timedelta(days=30):
                     self._has_new_editors = True
             elif not self.is_update:
                 editor.retained = True
@@ -437,15 +437,13 @@ def get_user_date_of_registration(user):
         "https://www.mediawiki.org/w/api.php?action=query&meta=globaluserinfo&format=json&guiuser="
         + quote(user, safe="")
     )
-    result = requests.get(url, headers=headers)
-    data = result.json()
     try:
-        date_obj = datetime.strptime(
-            data["query"]["globaluserinfo"]["registration"], "%Y-%m-%dT%H:%M:%SZ"
-        )
-        date_str = date_obj.strftime("%Y-%m-%d %H:%M:%S")
-        return date_str
-    except (KeyError, TypeError, ValueError):
+        result = requests.get(url, headers=headers, timeout=60)
+        result.raise_for_status()
+        data = result.json()
+        registration = data["query"]["globaluserinfo"]["registration"]
+        return datetime.strptime(registration, "%Y-%m-%dT%H:%M:%SZ").date()
+    except (KeyError, TypeError, ValueError, requests.RequestException):
         return None
 
 
