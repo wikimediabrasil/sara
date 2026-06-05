@@ -519,7 +519,7 @@ def get_metrics_and_aggregate_per_project(
                 q_filter = Q(project=project) & metric_query
             for metric in Metric.objects.filter(q_filter):
                 goal, done, final = get_goal_and_done_for_metric(
-                    metric, supplementary_query, project.main_funding
+                    metric, supplementary_query, project.main_funding or project.counts_for_main_funding
                 )
 
                 if field and goal[field] != 0:
