@@ -755,9 +755,10 @@ def get_done_for_report(reports, metric):
         "Number of feedbacks": reports_aggregations["feedbacks"] or 0,
         "Number of editors": editor_qs.count(),
         "Number of editors retained": editor_qs.filter(retained=True).count(),
-        "Number of new editors": editor_qs.filter(
-            account_creation_date__gte=F("editors__initial_date") - timedelta(days=30)
-        ).count(),
+        "Number of new editors": Editor.objects.filter(
+            editors__in=reports,
+            account_creation_date__gte=F("editors__initial_date") - timedelta(days=30),
+        ).distinct().count(),
         "Number of organizers": organizer_qs.count(),
         "Number of organizers retained": organizer_qs.filter(retained=True).count(),
         "Number of new organizers": organizer_qs.filter(
