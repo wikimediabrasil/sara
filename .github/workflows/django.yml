@@ -37,7 +37,7 @@ jobs:
         ALLOWED_HOSTS = ['localhost', '127.0.0.1']
         DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'db.sqlite3'}}
         POA_URL = 'https://meta.wikimedia.org/wiki/Wikimedia_Brasil/Plan_of_Activities'
-        EMAIL_COORDINATOR = 'test@test.com'
+        EMAIL_COORDINATORS = ['test@test.com']
         STRATEGY_URL = 'https://br.wikimedia.org/wiki/Estrat%C3%A9gia_Wiki_Movimento_Brasil_2023-2025'
         ENABLE_BUG_APP = True
         ENABLE_AGENDA_APP = True
