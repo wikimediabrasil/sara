@@ -41,6 +41,7 @@ jobs:
         echo "ENABLE_BUG_APP = True" >> sara/settings_local.py
         echo "ENABLE_AGENDA_APP = True" >> sara/settings_local.py
         echo "REPORT_TIMESTAMPS = {}" >> sara/settings_local.py
+        echo "LANGUAGES = [('en', 'English'), ('pt-br', 'Brazilian Portuguese')]"
     - name: Coverage report
       run: |
         pip install coverage
