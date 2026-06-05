@@ -177,7 +177,7 @@ class NewReportForm(forms.ModelForm):
             if created:
                 editor.account_creation_date = get_user_date_of_registration(username)
                 self._has_editors = True
-                if editor.first_seen_at.date() >= self.cleaned_data["initial_date"] - timedelta(days=30):
+                if editor.account_creation_date >= self.cleaned_data["initial_date"] - timedelta(days=30):
                     self._has_new_editors = True
             elif not self.is_update:
                 editor.retained = True
