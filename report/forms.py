@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import quote
 
 import requests
@@ -177,7 +177,7 @@ class NewReportForm(forms.ModelForm):
             if created:
                 editor.account_creation_date = get_user_date_of_registration(username)
                 self._has_editors = True
-                if editor.first_seen_at.date() >= report.initial_date:
+                if editor.first_seen_at.date() >= self.cleaned_data["initial_date"] - timedelta(days=30):
                     self._has_new_editors = True
             elif not self.is_update:
                 editor.retained = True
