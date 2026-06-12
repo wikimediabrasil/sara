@@ -704,6 +704,7 @@ def get_done_for_report(reports, metric):
     )
 
     alternative_operation_aggregations = alternative_operation_reports.aggregate(
+        new_partnerships=Sum("number_of_new_partnerships"),
         resources=Sum("number_of_resources"),
         events=Sum("number_of_events"),
         new_followers=Sum("number_of_new_followers"),
@@ -767,7 +768,7 @@ def get_done_for_report(reports, metric):
         "Number of partnerships activated": Partner.objects.filter(partners__in=reports)
         .distinct()
         .count(),
-        "Number of new partnerships": operation_aggregations["new_partnerships"] or 0,
+        "Number of new partnerships": operation_aggregations["new_partnerships"] or alternative_operation_aggregations["new_partnerships"] or 0,
         "Number of resources": operation_aggregations["resources"]
         or alternative_operation_aggregations["resources"]
         or 0,

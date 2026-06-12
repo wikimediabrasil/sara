@@ -298,7 +298,7 @@ class NewReportForm(forms.ModelForm):
         }
 
         for field_set, field_names in obj_fields_names.items():
-            if self.cleaned_data.get(field_set) not in [None, [], ""]:
+            if self.cleaned_data.get(field_set):
                 query = Q()
                 for field_name in field_names:
                     query |= Q(**{f"{field_name}__gt": 0})
