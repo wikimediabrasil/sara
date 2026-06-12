@@ -171,17 +171,20 @@ class NewReportForm(forms.ModelForm):
         self._has_new_editors = False
         self._has_retained_editors = False
 
+        initial_date = self.cleaned_data["initial_date"]
+
         for username in self.cleaned_data["_parsed_editors"]:
             editor, created = Editor.objects.get_or_create(username=username)
 
             if created:
                 editor.account_creation_date = get_user_date_of_registration(username)
+                editor.first_seen_at = initial_date
                 self._has_editors = True
-                if editor.account_creation_date and editor.account_creation_date >= self.cleaned_data["initial_date"] - timedelta(days=30):
+                if editor.account_creation_date and editor.account_creation_date >= initial_date - timedelta(days=30):
                     self._has_new_editors = True
             elif not self.is_update:
                 editor.retained = True
-                editor.retained_at = self.cleaned_data["initial_date"]
+                editor.retained_at = initial_date
                 self._has_retained_editors = True
 
             editor.save()
