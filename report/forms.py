@@ -159,8 +159,12 @@ class NewReportForm(forms.ModelForm):
             )
             report.funding_associated.set(self.cleaned_data["funding_associated"])
 
-            metrics = self._metrics_related()
-            metrics = self._apply_implicit_metrics(report, metrics)
+            if self._contributes_to_main_funding(report):
+                metrics = self._metrics_related()
+                metrics = self._apply_implicit_metrics(report, metrics)
+            else:
+                metrics = self.cleaned_data.get("metrics_related") or Metric.objects.none()
+
             report.metrics_related.set(metrics)
 
         return report
@@ -321,9 +325,6 @@ class NewReportForm(forms.ModelForm):
         ).exists()
 
     def _apply_implicit_metrics(self, report, metrics):
-        if not self._contributes_to_main_funding(report):
-            return metrics
-
         main_funding = Project.objects.get(main_funding=True)
 
         if getattr(self, "_has_editors", False):
