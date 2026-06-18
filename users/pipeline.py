@@ -1,4 +1,6 @@
+import re
 from django.contrib.auth import get_user_model
+from social_core.pipeline.user import get_username as social_get_username
 
 from users.models import UserProfile
 
@@ -72,5 +74,6 @@ def get_username(strategy, details, user=None, *args, **kwargs):
     """
     if user:
         return {"username": user.username}
-    else:
-        return {"username": details["username"]}
+
+    details = {**details, "username": re.sub(r"[^\w@.+\-]", "_", details.get("username", ""))}
+    return social_get_username(strategy, details, user=user, *args, **kwargs)
