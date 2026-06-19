@@ -4,6 +4,22 @@
 {% get_current_language as LANGUAGE_CODE %}
 {% block title %}{{ title }}{% endblock %}
 {% block styles %}<link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">{% endblock %}
+{% block scripts %}
+    <script>
+      function copyReferenceText(button) {
+        const el = document.getElementById("reference-text");
+        if (!el) return;
+        
+        navigator.clipboard.writeText(el.innerText).then(() => {
+          const oldText = button.innerHTML;
+          button.innerHTML = '<i class="fa-solid fa-check"></i> ' + button.dataset.copiedLabel;
+          setTimeout(() => {
+            button.innerHTML = oldText;
+            }, 2000);
+        });
+      }
+    </script>
+{% endblock %}
 
 {% block banner %}{% endblock %}
 {% block footer %}{% endblock %}
@@ -112,6 +128,15 @@
                         {% if data.private_links %}<div class="w3-row field_title">{% translate "At least one of the links is not public and/or should not be published on Meta" %}</div>{% endif %}
                     </div>
                 </div>
+                {% if data.reference_text %}
+                    <div class="w3-row">
+                        <div class="w3-third field_title">{% trans "Reference text" %}</div>
+                        <div class="w3-twothird formfield">
+                            <div class="view_field scroll_field" id="reference-text">{{ data.reference_text|linebreaksbr }}</div>
+                            <a href="javascript:void(0)" onclick="copyReferenceText(this)" data-copied-label="{% trans 'Reference copied' %}" aria-label="{% trans 'Copy reference text' %}" style="font-size: small;"><i class="fa-solid fa-copy"></i> {% trans "Copy reference" %}</a>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
             {% if operations_with_value and operations %}
                 <div class="w3-container">

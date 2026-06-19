@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-14 01:10-0300\n"
+"POT-Creation-Date: 2026-06-19 02:46-0300\n"
 "PO-Revision-Date: 2024-02-09 16:44-0300\n"
 "Last-Translator: Éder Porto <eder.porto@wmnobrasil.org>\n"
 "Language-Team: PT_BR <LL@li.org>\n"
@@ -37,7 +37,7 @@ msgstr "Título do evento"
 #: .\agenda\templates\agenda\list_events.html:38
 #: .\agenda\templates\agenda\update_event.html:25 .\report\models.py:152
 #: .\report\templates\report\administrative.html:59
-#: .\report\templates\report\detail_report.html:91
+#: .\report\templates\report\detail_report.html:107
 #: .\report\templates\report\list_reports.html:46 .\report\tests_views.py:1206
 #: .\report\tests_views.py:1383 .\report\tests_views.py:1649
 #: .\report\views.py:308
@@ -49,7 +49,7 @@ msgstr "Data inicial"
 #: .\agenda\templates\agenda\list_events.html:39
 #: .\agenda\templates\agenda\update_event.html:34 .\report\models.py:155
 #: .\report\templates\report\administrative.html:66
-#: .\report\templates\report\detail_report.html:96
+#: .\report\templates\report\detail_report.html:112
 #: .\report\templates\report\list_reports.html:47 .\report\tests_views.py:1207
 #: .\report\tests_views.py:1384 .\report\tests_views.py:1650
 #: .\report\views.py:309 .\users\models.py:189
@@ -61,7 +61,7 @@ msgstr "Data final"
 #: .\agenda\templates\agenda\update_event.html:43 .\metrics\models.py:130
 #: .\metrics\templates\metrics\list_metrics_reports.html:40
 #: .\report\models.py:141 .\report\templates\report\administrative.html:32
-#: .\report\templates\report\detail_report.html:81
+#: .\report\templates\report\detail_report.html:97
 #: .\report\templates\report\list_reports.html:48 .\report\tests_views.py:1204
 #: .\report\tests_views.py:1381 .\report\tests_views.py:1647
 #: .\report\views.py:306
@@ -295,8 +295,8 @@ msgstr ""
 #: .\agenda\templates\agenda\detail_event.html:57
 #: .\agenda\templates\agenda\detail_event.html:58
 #: .\report\templates\report\delete_report.html:19
-#: .\report\templates\report\detail_report.html:61
-#: .\report\templates\report\detail_report.html:63
+#: .\report\templates\report\detail_report.html:77
+#: .\report\templates\report\detail_report.html:79
 #: .\report\templates\report\list_reports.html:64
 #: .\users\templates\users\detail_profile.html:174
 #: .\users\templates\users\detail_profile.html:175
@@ -317,10 +317,10 @@ msgstr "Ações"
 #: .\agenda\templates\agenda\detail_event.html:53
 #: .\bug\templates\bug\detail_bug.html:60
 #: .\bug\templates\bug\detail_bug.html:61
-#: .\report\templates\report\detail_report.html:38
-#: .\report\templates\report\detail_report.html:40
-#: .\report\templates\report\detail_report.html:46
-#: .\report\templates\report\detail_report.html:48
+#: .\report\templates\report\detail_report.html:54
+#: .\report\templates\report\detail_report.html:56
+#: .\report\templates\report\detail_report.html:62
+#: .\report\templates\report\detail_report.html:64
 #: .\report\templates\report\list_reports.html:59
 #: .\report\templates\report\list_reports.html:61
 #: .\users\templates\users\detail_profile.html:169
@@ -342,7 +342,8 @@ msgstr ""
 "<br><br>Por favor, confira:"
 
 #: .\agenda\templates\agenda\email_template.html:27
-msgid "Activities that might not have a report associated with them registered. "
+msgid ""
+"Activities that might not have a report associated with them registered. "
 "Please, verify"
 msgstr ""
 "Atividades que talvez não possuam um relatório associado a elas registrado. "
@@ -506,7 +507,7 @@ msgstr "Resumo curto e descritivo do problema"
 #: .\bug\models.py:40 .\bug\templates\bug\detail_bug.html:22 .\bug\views.py:74
 #: .\bug\views.py:114 .\report\models.py:161
 #: .\report\templates\report\administrative.html:73
-#: .\report\templates\report\detail_report.html:73
+#: .\report\templates\report\detail_report.html:89
 #: .\report\templates\report\list_reports.html:44 .\report\tests_views.py:1208
 #: .\report\tests_views.py:1385 .\report\tests_views.py:1651
 #: .\report\views.py:310
@@ -679,7 +680,7 @@ msgid "Answered successfully!"
 msgstr "Respondido com sucesso!"
 
 #: .\metrics\models.py:25 .\metrics\models.py:47 .\metrics\models.py:74
-#: .\metrics\models.py:205 .\report\templates\report\detail_report.html:244
+#: .\metrics\models.py:205 .\report\templates\report\detail_report.html:269
 #: .\report\tests_views.py:2645 .\report\tests_views.py:2677
 #: .\report\tests_views.py:2710 .\report\tests_views.py:2743
 #: .\report\views.py:781
@@ -775,9 +776,10 @@ msgstr "É uma atividade principal?"
 msgid "Is this the main activity?"
 msgstr "É uma atividade principal?"
 
-#: .\metrics\models.py:134 .\metrics\models.py:199 .\report\models.py:128
-#: .\report\tests_views.py:1780 .\report\tests_views.py:1875
-#: .\report\views.py:625
+#: .\metrics\models.py:134 .\metrics\models.py:199
+#: .\metrics\templates\metrics\list_empty_metric_associations.html:23
+#: .\report\models.py:128 .\report\tests_views.py:1780
+#: .\report\tests_views.py:1875 .\report\views.py:625
 msgid "Activity"
 msgstr "Atividade"
 
@@ -1070,7 +1072,7 @@ msgstr "Número de organizadores recentemente registrados"
 
 #: .\metrics\models.py:434 .\metrics\models.py:437
 #: .\metrics\templates\metrics\translations.html:34
-#: .\report\templates\report\detail_report.html:174
+#: .\report\templates\report\detail_report.html:199
 #: .\report\templates\report\quantitative.html:12 .\report\tests_views.py:1212
 #: .\report\tests_views.py:1389 .\report\tests_views.py:1655
 #: .\report\tests_views.py:1783 .\report\tests_views.py:1878
@@ -1080,7 +1082,7 @@ msgstr "Número de participantes"
 
 #: .\metrics\models.py:440 .\metrics\models.py:443
 #: .\metrics\templates\metrics\translations.html:35
-#: .\report\templates\report\detail_report.html:180
+#: .\report\templates\report\detail_report.html:205
 #: .\report\templates\report\quantitative.html:21 .\report\tests_views.py:1213
 #: .\report\tests_views.py:1390 .\report\tests_views.py:1656
 #: .\report\tests_views.py:1785 .\report\tests_views.py:1880
@@ -1090,7 +1092,7 @@ msgstr "Número de respostas"
 
 #: .\metrics\models.py:448 .\metrics\models.py:451
 #: .\metrics\templates\metrics\translations.html:42
-#: .\report\templates\report\detail_report.html:135
+#: .\report\templates\report\detail_report.html:160
 #: .\report\templates\report\operations.html:72
 #: .\report\templates\report\operations.html:155 .\report\tests_views.py:1784
 #: .\report\tests_views.py:1879 .\report\tests_views.py:2524
@@ -1100,7 +1102,7 @@ msgstr "Número de parcerias ativadas"
 
 #: .\metrics\models.py:454 .\metrics\models.py:457
 #: .\metrics\templates\metrics\translations.html:43
-#: .\report\templates\report\detail_report.html:139
+#: .\report\templates\report\detail_report.html:164
 #: .\report\templates\report\operations.html:81
 #: .\report\templates\report\operations.html:164 .\report\tests_views.py:2525
 #: .\report\tests_views.py:2578 .\report\views.py:581
@@ -1108,7 +1110,7 @@ msgid "Number of new partnerships"
 msgstr "Número de novas parcerias"
 
 #: .\metrics\models.py:464 .\metrics\templates\metrics\translations.html:49
-#: .\report\templates\report\detail_report.html:143
+#: .\report\templates\report\detail_report.html:168
 #: .\report\templates\report\operations.html:27
 #: .\report\templates\report\operations.html:110 .\report\tests_views.py:2519
 #: .\report\tests_views.py:2572 .\report\views.py:575
@@ -1120,7 +1122,7 @@ msgid "Number of new followers in social media"
 msgstr "Número de novos seguidores nas redes sociais"
 
 #: .\metrics\models.py:470 .\metrics\templates\metrics\translations.html:50
-#: .\report\templates\report\detail_report.html:147
+#: .\report\templates\report\detail_report.html:172
 #: .\report\templates\report\operations.html:36
 #: .\report\templates\report\operations.html:119 .\report\tests_views.py:2520
 #: .\report\tests_views.py:2573 .\report\views.py:576
@@ -1132,7 +1134,7 @@ msgid "Media clipping"
 msgstr "Recortes de mídia"
 
 #: .\metrics\models.py:473 .\metrics\templates\metrics\translations.html:51
-#: .\report\templates\report\detail_report.html:155
+#: .\report\templates\report\detail_report.html:180
 #: .\report\templates\report\operations.html:45
 #: .\report\templates\report\operations.html:128 .\report\tests_views.py:2521
 #: .\report\tests_views.py:2574 .\report\views.py:577
@@ -1145,7 +1147,7 @@ msgstr "Número de comunicações comunitárias e boletins"
 
 #: .\metrics\models.py:479 .\metrics\models.py:482
 #: .\metrics\templates\metrics\translations.html:52
-#: .\report\templates\report\detail_report.html:151
+#: .\report\templates\report\detail_report.html:176
 #: .\report\templates\report\operations.html:18
 #: .\report\templates\report\operations.html:101 .\report\tests_views.py:2518
 #: .\report\tests_views.py:2571 .\report\views.py:574
@@ -1165,7 +1167,7 @@ msgid "Number of grants submissions"
 msgstr "Número de submissões a editais"
 
 #: .\metrics\models.py:502 .\metrics\templates\metrics\translations.html:45
-#: .\report\templates\report\detail_report.html:131
+#: .\report\templates\report\detail_report.html:156
 #: .\report\templates\report\operations.html:63
 #: .\report\templates\report\operations.html:146 .\report\tests_views.py:2523
 #: .\report\tests_views.py:2576 .\report\views.py:579
@@ -1177,7 +1179,7 @@ msgid "Number of resources produced"
 msgstr "Número de recursos produzidos"
 
 #: .\metrics\models.py:508 .\metrics\templates\metrics\translations.html:46
-#: .\report\templates\report\detail_report.html:127
+#: .\report\templates\report\detail_report.html:152
 #: .\report\templates\report\operations.html:54
 #: .\report\templates\report\operations.html:137 .\report\tests_views.py:1786
 #: .\report\tests_views.py:1881 .\report\tests_views.py:2522
@@ -1206,6 +1208,7 @@ msgid "Is the metric an operation metric?"
 msgstr "Esta métrica é uma operação?"
 
 #: .\metrics\models.py:520
+#: .\metrics\templates\metrics\list_empty_metric_associations.html:22
 #: .\metrics\templates\metrics\list_metrics_per_project.html:68
 #: .\metrics\templates\metrics\list_metrics_per_project.html:118
 #: .\report\tests_views.py:1778 .\report\tests_views.py:1873
@@ -1333,6 +1336,45 @@ msgstr "Exportar relatório semestral por área"
 msgid "About S.A.R.A."
 msgstr "Sobre a S.A.R.A."
 
+#: .\metrics\templates\metrics\list_empty_metric_associations.html:8
+#, python-format
+msgid ""
+"%(counter)s report is associated to a metric but contributes nothing to it."
+msgid_plural ""
+"%(counter)s reports are associated to a metric but contribute nothing to it."
+msgstr[0] ""
+msgstr[1] ""
+
+#: .\metrics\templates\metrics\list_empty_metric_associations.html:12
+msgid "Strict view: only reports that contribute zero to the whole metric"
+msgstr ""
+
+#: .\metrics\templates\metrics\list_empty_metric_associations.html:14
+msgid "Partial view: also show reports missing at least one dimension"
+msgstr ""
+
+#: .\metrics\templates\metrics\list_empty_metric_associations.html:24
+#: .\metrics\templates\metrics\list_metrics_reports.html:39
+#: .\report\models.py:466 .\report\views.py:188
+msgid "Report"
+msgstr "Relatório"
+
+#: .\metrics\templates\metrics\list_empty_metric_associations.html:25
+msgid "Period"
+msgstr ""
+
+#: .\metrics\templates\metrics\list_empty_metric_associations.html:26
+msgid "Empty dimensions (goal / done)"
+msgstr ""
+
+#: .\metrics\templates\metrics\list_empty_metric_associations.html:36
+msgid "partial"
+msgstr "parcial"
+
+#: .\metrics\templates\metrics\list_empty_metric_associations.html:51
+msgid "No empty metric associations found."
+msgstr ""
+
 #: .\metrics\templates\metrics\list_metrics_per_project.html:45
 msgid "Print"
 msgstr "Imprimir"
@@ -1356,14 +1398,9 @@ msgstr "Meta"
 msgid "View"
 msgstr "Visualizar"
 
-#: .\metrics\templates\metrics\list_metrics_reports.html:39
-#: .\report\models.py:466 .\report\views.py:188
-msgid "Report"
-msgstr "Relatório"
-
 #: .\metrics\templates\metrics\list_metrics_reports.html:48
 #: .\report\templates\report\delete_report.html:11
-#: .\report\templates\report\detail_report.html:69
+#: .\report\templates\report\detail_report.html:85
 #: .\report\templates\report\list_reports.html:55
 msgid "(Partial)"
 msgstr "(Parcial)"
@@ -1524,17 +1561,21 @@ msgstr "Sim"
 msgid "Test"
 msgstr "Teste"
 
-#: .\metrics\views.py:50
+#: .\metrics\views.py:51
 msgid "Home"
 msgstr "Página inicial"
 
-#: .\metrics\views.py:55
+#: .\metrics\views.py:56
 msgid "About"
 msgstr "Sobre"
 
-#: .\metrics\views.py:148 .\metrics\views.py:209
+#: .\metrics\views.py:149 .\metrics\views.py:210
 msgid "Show metrics per project"
 msgstr "Acompanhar métricas por projeto"
+
+#: .\metrics\views.py:348
+msgid "Reports associated to a metric with zero contribution"
+msgstr ""
 
 #: .\report\models.py:18 .\report\tests_views.py:2642
 #: .\report\tests_views.py:2674 .\report\tests_views.py:2707
@@ -1551,7 +1592,7 @@ msgid "Editor"
 msgstr "Editor"
 
 #: .\report\models.py:34 .\report\models.py:375
-#: .\report\templates\report\detail_report.html:186
+#: .\report\templates\report\detail_report.html:211
 #: .\report\templates\report\quantitative.html:30 .\report\tests_views.py:1214
 #: .\report\tests_views.py:1391 .\report\tests_views.py:1657
 #: .\report\views.py:316
@@ -1572,7 +1613,7 @@ msgid "Organizer"
 msgstr "Organizador(a)"
 
 #: .\report\models.py:62 .\report\models.py:388
-#: .\report\templates\report\detail_report.html:197
+#: .\report\templates\report\detail_report.html:222
 #: .\report\templates\report\quantitative.html:40 .\report\tests_views.py:1216
 #: .\report\tests_views.py:1393 .\report\tests_views.py:1659
 #: .\report\views.py:318
@@ -1632,7 +1673,7 @@ msgstr "Trancado"
 msgid "Whether the report is locked"
 msgstr "Se o relatório está ou não trancado"
 
-#: .\report\models.py:111
+#: .\report\models.py:111 .\report\templates\report\detail_report.html:133
 msgid "Reference text"
 msgstr "Texto de referência"
 
@@ -1657,7 +1698,7 @@ msgid "The area responsible for the report"
 msgstr "A área de gestão responsável pelo relatório"
 
 #: .\report\models.py:148 .\report\templates\report\administrative.html:46
-#: .\report\templates\report\detail_report.html:86
+#: .\report\templates\report\detail_report.html:102
 msgid "Areas activated"
 msgstr "Gestões ativadas"
 
@@ -1678,7 +1719,7 @@ msgid "The description of the activity reported"
 msgstr "A descrição da atividade reportada"
 
 #: .\report\models.py:169 .\report\templates\report\administrative.html:80
-#: .\report\templates\report\detail_report.html:102
+#: .\report\templates\report\detail_report.html:118
 #: .\report\tests_views.py:1209 .\report\tests_views.py:1386
 #: .\report\tests_views.py:1652 .\report\views.py:311
 msgid "Funding associated"
@@ -1689,7 +1730,7 @@ msgid "The funding associated with the activity"
 msgstr "O financiamento associado à atividade"
 
 #: .\report\models.py:173 .\report\templates\report\administrative.html:93
-#: .\report\templates\report\detail_report.html:109
+#: .\report\templates\report\detail_report.html:125
 #: .\report\tests_views.py:1210 .\report\tests_views.py:1387
 #: .\report\tests_views.py:1653 .\report\views.py:312
 msgid "Links"
@@ -1731,7 +1772,7 @@ msgstr "Respostas"
 msgid "Number of people providing feedback on the activity reported."
 msgstr "Número de pessoas que dão respostas sobre a atividade reportada"
 
-#: .\report\models.py:401 .\report\templates\report\detail_report.html:208
+#: .\report\models.py:401 .\report\templates\report\detail_report.html:233
 #: .\report\templates\report\quantitative.html:50 .\report\tests_views.py:1218
 #: .\report\tests_views.py:1395 .\report\tests_views.py:1661
 #: .\report\views.py:320
@@ -1742,7 +1783,7 @@ msgstr "Parcerias ativadas"
 msgid "Formal partners (institutions) activated of the activity reported."
 msgstr "Parcerias formais (instituições) ativadas na atividade reportada."
 
-#: .\report\models.py:412 .\report\templates\report\detail_report.html:219
+#: .\report\models.py:412 .\report\templates\report\detail_report.html:244
 #: .\report\templates\report\quantitative.html:81 .\report\tests_views.py:1220
 #: .\report\tests_views.py:1397 .\report\tests_views.py:1663
 #: .\report\views.py:322
@@ -1777,8 +1818,8 @@ msgstr ""
 
 #: .\report\models.py:440 .\report\templates\report\add_report.html:35
 #: .\report\templates\report\add_report.html:59
-#: .\report\templates\report\detail_report.html:31
-#: .\report\templates\report\detail_report.html:370
+#: .\report\templates\report\detail_report.html:47
+#: .\report\templates\report\detail_report.html:395
 #: .\report\templates\report\learning.html:33
 #: .\report\templates\report\update_report.html:35
 #: .\report\templates\report\update_report.html:59 .\report\tests_views.py:1254
@@ -1791,7 +1832,7 @@ msgstr "Aprendizagem"
 msgid "Specific learning about the activity reported."
 msgstr "Aprendizado específico sobre a atividade reportada."
 
-#: .\report\models.py:455 .\report\templates\report\detail_report.html:168
+#: .\report\models.py:455 .\report\templates\report\detail_report.html:193
 #: .\report\tests_views.py:1256 .\report\tests_views.py:1433
 #: .\report\tests_views.py:1699 .\report\views.py:358
 msgid "Metrics related"
@@ -1822,8 +1863,8 @@ msgstr "Selecione ou digite a parceria formal ativada"
 
 #: .\report\templates\report\add_report.html:31
 #: .\report\templates\report\add_report.html:43
-#: .\report\templates\report\detail_report.html:15
-#: .\report\templates\report\detail_report.html:71
+#: .\report\templates\report\detail_report.html:31
+#: .\report\templates\report\detail_report.html:87
 #: .\report\templates\report\update_report.html:31
 #: .\report\templates\report\update_report.html:43
 msgid "Administrative"
@@ -1831,8 +1872,8 @@ msgstr "Administrativo"
 
 #: .\report\templates\report\add_report.html:32
 #: .\report\templates\report\add_report.html:47
-#: .\report\templates\report\detail_report.html:17
-#: .\report\templates\report\detail_report.html:118
+#: .\report\templates\report\detail_report.html:33
+#: .\report\templates\report\detail_report.html:143
 #: .\report\templates\report\update_report.html:32
 #: .\report\templates\report\update_report.html:47
 msgid "Operational"
@@ -1840,8 +1881,8 @@ msgstr "Operacional"
 
 #: .\report\templates\report\add_report.html:33
 #: .\report\templates\report\add_report.html:51
-#: .\report\templates\report\detail_report.html:21
-#: .\report\templates\report\detail_report.html:165
+#: .\report\templates\report\detail_report.html:37
+#: .\report\templates\report\detail_report.html:190
 #: .\report\templates\report\update_report.html:33
 #: .\report\templates\report\update_report.html:51
 msgid "Quantitative"
@@ -1849,15 +1890,15 @@ msgstr "Quantitativo"
 
 #: .\report\templates\report\add_report.html:34
 #: .\report\templates\report\add_report.html:55
-#: .\report\templates\report\detail_report.html:28
-#: .\report\templates\report\detail_report.html:359
+#: .\report\templates\report\detail_report.html:44
+#: .\report\templates\report\detail_report.html:384
 #: .\report\templates\report\update_report.html:34
 #: .\report\templates\report\update_report.html:55
 msgid "Strategic"
 msgstr "Estratégico"
 
 #: .\report\templates\report\administrative.html:5
-#: .\report\templates\report\detail_report.html:77 .\report\tests_views.py:1200
+#: .\report\templates\report\detail_report.html:93 .\report\tests_views.py:1200
 #: .\report\tests_views.py:1377 .\report\tests_views.py:1643
 #: .\report\views.py:302
 msgid "Activity associated"
@@ -1936,55 +1977,67 @@ msgstr ""
 "Você tem <b>CERTEZA ABSOLUTA</b> de que deseja excluir este relatório? "
 "<b>Isso não pode ser desfeito!</b>"
 
-#: .\report\templates\report\detail_report.html:23
-#: .\report\templates\report\detail_report.html:242
+#: .\report\templates\report\detail_report.html:39
+#: .\report\templates\report\detail_report.html:267
 #: .\report\templates\report\quantitative.html:93
 msgid "Wikimedia projects"
 msgstr "Projetos Wikimedia"
 
-#: .\report\templates\report\detail_report.html:54
-#: .\report\templates\report\detail_report.html:56
+#: .\report\templates\report\detail_report.html:70
+#: .\report\templates\report\detail_report.html:72
 #: .\report\templates\report\list_reports.html:65
 msgid "Export"
 msgstr "Exportar"
 
-#: .\report\templates\report\detail_report.html:69
+#: .\report\templates\report\detail_report.html:85
 #, python-format
 msgid "Report nº %(id_)s"
 msgstr "Relatório nº %(id_)s"
 
-#: .\report\templates\report\detail_report.html:112
+#: .\report\templates\report\detail_report.html:128
 msgid ""
 "At least one of the links is not public and/or should not be published on "
 "Meta"
 msgstr ""
 "Ao menos um dos links não é público e/ou não deve ser publicado no Meta"
 
-#: .\report\templates\report\detail_report.html:191
+#: .\report\templates\report\detail_report.html:136
+msgid "Reference copied"
+msgstr "Referência copiada"
+
+#: .\report\templates\report\detail_report.html:136
+msgid "Copy reference text"
+msgstr "Copiar texto de referência"
+
+#: .\report\templates\report\detail_report.html:136
+msgid "Copy reference"
+msgstr "Copiar texto de referência"
+
+#: .\report\templates\report\detail_report.html:216
 msgid "Number of editors:"
 msgstr "Número de editores(as):"
 
-#: .\report\templates\report\detail_report.html:202
+#: .\report\templates\report\detail_report.html:227
 msgid "Number of organizers:"
 msgstr "Número de organizadores(as):"
 
-#: .\report\templates\report\detail_report.html:213
+#: .\report\templates\report\detail_report.html:238
 msgid "Number of formal partnerships activated:"
 msgstr "Número de parcerias formais ativadas:"
 
-#: .\report\templates\report\detail_report.html:224
+#: .\report\templates\report\detail_report.html:249
 msgid "Number of technologies used:"
 msgstr "Número de tecnologias usadas:"
 
-#: .\report\templates\report\detail_report.html:230
+#: .\report\templates\report\detail_report.html:255
 msgid "Donors"
 msgstr "Doadores"
 
-#: .\report\templates\report\detail_report.html:236
+#: .\report\templates\report\detail_report.html:261
 msgid "Submissions"
 msgstr "Submissões"
 
-#: .\report\templates\report\detail_report.html:245
+#: .\report\templates\report\detail_report.html:270
 #: .\report\templates\report\quantitative.html:194
 #: .\report\templates\report\quantitative.html:205
 #: .\report\templates\report\quantitative.html:216
@@ -2003,7 +2056,7 @@ msgstr "Submissões"
 msgid "Created"
 msgstr "Criados(as)"
 
-#: .\report\templates\report\detail_report.html:246
+#: .\report\templates\report\detail_report.html:271
 #: .\report\templates\report\quantitative.html:198
 #: .\report\templates\report\quantitative.html:209
 #: .\report\templates\report\quantitative.html:220
@@ -2022,101 +2075,101 @@ msgstr "Criados(as)"
 msgid "Edited"
 msgstr "Editados(as)"
 
-#: .\report\templates\report\detail_report.html:251
+#: .\report\templates\report\detail_report.html:276
 #: .\report\templates\report\quantitative.html:103
 #: .\report\templates\report\quantitative.html:191
 msgid "Wikipedia"
 msgstr "Wikipédia"
 
-#: .\report\templates\report\detail_report.html:258
+#: .\report\templates\report\detail_report.html:283
 #: .\report\templates\report\quantitative.html:109
 #: .\report\templates\report\quantitative.html:202
 msgid "Wikimedia Commons"
 msgstr "Wikimedia Commons"
 
-#: .\report\templates\report\detail_report.html:265
+#: .\report\templates\report\detail_report.html:290
 #: .\report\templates\report\quantitative.html:115
 #: .\report\templates\report\quantitative.html:213
 msgid "Wikidata"
 msgstr "Wikidata"
 
-#: .\report\templates\report\detail_report.html:272
+#: .\report\templates\report\detail_report.html:297
 #: .\report\templates\report\quantitative.html:121
 #: .\report\templates\report\quantitative.html:224
 msgid "Wikiversity"
 msgstr "Wikiversidade"
 
-#: .\report\templates\report\detail_report.html:279
+#: .\report\templates\report\detail_report.html:304
 #: .\report\templates\report\quantitative.html:133
 #: .\report\templates\report\quantitative.html:246
 msgid "Wikibooks"
 msgstr "Wikilivros"
 
-#: .\report\templates\report\detail_report.html:286
+#: .\report\templates\report\detail_report.html:311
 #: .\report\templates\report\quantitative.html:127
 #: .\report\templates\report\quantitative.html:235
 msgid "Wikisource"
 msgstr "Wikisource"
 
-#: .\report\templates\report\detail_report.html:293
+#: .\report\templates\report\detail_report.html:318
 #: .\report\templates\report\quantitative.html:139
 #: .\report\templates\report\quantitative.html:257
 msgid "Wikinews"
 msgstr "Wikinotícias"
 
-#: .\report\templates\report\detail_report.html:300
+#: .\report\templates\report\detail_report.html:325
 #: .\report\templates\report\quantitative.html:145
 #: .\report\templates\report\quantitative.html:268
 msgid "Wikiquote"
 msgstr "Wikiquote"
 
-#: .\report\templates\report\detail_report.html:307
+#: .\report\templates\report\detail_report.html:332
 #: .\report\templates\report\quantitative.html:151
 #: .\report\templates\report\quantitative.html:279
 msgid "Wiktionary"
 msgstr "Wikcionário"
 
-#: .\report\templates\report\detail_report.html:314
+#: .\report\templates\report\detail_report.html:339
 #: .\report\templates\report\quantitative.html:157
 #: .\report\templates\report\quantitative.html:290
 msgid "Wikivoyage"
 msgstr "Wikivoyage"
 
-#: .\report\templates\report\detail_report.html:321
+#: .\report\templates\report\detail_report.html:346
 #: .\report\templates\report\quantitative.html:163
 #: .\report\templates\report\quantitative.html:301
 msgid "Wikispecies"
 msgstr "Wikispecies"
 
-#: .\report\templates\report\detail_report.html:328
+#: .\report\templates\report\detail_report.html:353
 msgid "Metawiki"
 msgstr "Metawiki"
 
-#: .\report\templates\report\detail_report.html:335
+#: .\report\templates\report\detail_report.html:360
 #: .\report\templates\report\quantitative.html:175
 #: .\report\templates\report\quantitative.html:323
 msgid "MediaWiki"
 msgstr "MediaWiki"
 
-#: .\report\templates\report\detail_report.html:342
+#: .\report\templates\report\detail_report.html:367
 #: .\report\templates\report\quantitative.html:181
 msgid "Wikifunctions"
 msgstr "Wikifunctions"
 
-#: .\report\templates\report\detail_report.html:349
+#: .\report\templates\report\detail_report.html:374
 #: .\report\templates\report\quantitative.html:187
 msgid "Incubator"
 msgstr "Incubator"
 
-#: .\report\templates\report\detail_report.html:360
+#: .\report\templates\report\detail_report.html:385
 msgid "Directions associated"
 msgstr "Direções associadas"
 
-#: .\report\templates\report\detail_report.html:373 .\strategy\models.py:165
+#: .\report\templates\report\detail_report.html:398 .\strategy\models.py:165
 msgid "Strategic learning questions"
 msgstr "Perguntas de aprendizado estratégico"
 
-#: .\report\templates\report\detail_report.html:382
+#: .\report\templates\report\detail_report.html:407
 msgid "Learning of the activity"
 msgstr "Aprendizagem da atividade"
 
@@ -3250,3 +3303,9 @@ msgstr "Nenhum(a) usuário(a) encontrado(a)"
 #: .\users\templates\users\list_profiles.html:82
 msgid "Inactive users"
 msgstr "Usuários(as) inativos(as)"
+
+#~ msgid "Copied"
+#~ msgstr "Copiada"
+
+#~ msgid "Copy"
+#~ msgstr "Copiar"
