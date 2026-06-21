@@ -8,7 +8,7 @@ from django import template
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import F, Q, Sum
+from django.db.models import F, Q, Sum, Min
 from django.shortcuts import HttpResponse, redirect, render, reverse
 from django.utils.translation import get_language
 from django.utils.translation import gettext as _
@@ -212,15 +212,21 @@ def show_detailed_metrics_per_project(request):
     return render(request, "metrics/list_metrics_per_project.html", context)
 
 
-def build_list_values(qs, name_field, reports, related_name):
+def build_list_values(qs, name_field, reports, related_name, filter_fn=None):
     result = []
     for obj in qs:
         obj_reports = reports.filter(**{related_name: obj})
+        if filter_fn and not filter_fn(obj, obj_reports):
+            continue
         result.append({
             "name": getattr(obj, name_field),
             "reports": list(obj_reports.values("id", "description")),
         })
     return result
+
+
+def is_new_organizer(organizer, organizer_reports):
+    return organizer_reports.filter(initial_date__lte=organizer.first_seen_at).exists()
 
 @login_required
 @permission_required("metrics.view_metric")
@@ -239,10 +245,10 @@ def metrics_reports(request, metric_id):
         LIST_METRICS = {
             "Number of editors": lambda: build_list_values(all_editors, "username", reports, "editors"),
             "Number of editors retained": lambda: build_list_values(all_editors.filter(retained=True), "username", reports, "editors"),
-            "Number of new editors": lambda: build_list_values(all_editors.filter(account_creation_date__gte=F("editors__initial_date")), "username", reports, "editors"),
+            "Number of new editors": lambda: build_list_values(all_editors, "username", reports, "editors", filter_fn=lambda ed, reps: (lambda earliest: earliest is not None and ed.account_creation_date <= earliest <= ed.account_creation_date + timedelta(days=30))(reps.aggregate(earliest=Min("initial_date"))["earliest"])),
             "Number of organizers": lambda: build_list_values(all_organizers, "name", reports, "organizers"),
             "Number of organizers retained": lambda: build_list_values(all_organizers.filter(retained=True), "name", reports, "organizers"),
-            "Number of new organizers": lambda: build_list_values(all_organizers.filter(first_seen_at__gte=F("organizers__initial_date")), "name", reports, "organizers"),
+            "Number of new organizers": lambda: build_list_values(all_organizers, "name", reports, "organizers", is_new_organizer),
             "Number of partnerships activated": lambda: build_list_values(all_partners, "name", reports, "partners"),
         }
 
@@ -758,13 +764,22 @@ def get_done_for_report(reports, metric):
         "Number of editors retained": editor_qs.filter(retained=True).count(),
         "Number of new editors": Editor.objects.filter(
             editors__in=reports,
-            account_creation_date__gte=F("editors__initial_date") - timedelta(days=30),
+        ).annotate(
+            earliest=Min("editors__initial_date")
+        ).filter(
+            account_creation_date__gte=F("earliest") - timedelta(days=30),
+            account_creation_date__lte=F("earliest"),
         ).distinct().count(),
         "Number of organizers": organizer_qs.count(),
         "Number of organizers retained": organizer_qs.filter(retained=True).count(),
-        "Number of new organizers": organizer_qs.filter(
-            first_seen_at__gte=F("organizers__initial_date")
-        ).count(),
+        "Number of new organizers": Organizer.objects.filter(
+            organizers__in=reports,
+        ).annotate(
+            earliest=Min("organizers__initial_date")
+        ).filter(
+            first_seen_at__gte=F("earliest") - timedelta(days=30),
+            first_seen_at__lte=F("earliest"),
+        ).distinct().count(),
         "Number of partnerships activated": Partner.objects.filter(partners__in=reports)
         .distinct()
         .count(),
