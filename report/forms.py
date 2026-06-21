@@ -179,11 +179,11 @@ class NewReportForm(forms.ModelForm):
 
         for username in self.cleaned_data["_parsed_editors"]:
             editor, created = Editor.objects.get_or_create(username=username)
+            self._has_editors = True
 
             if created:
                 editor.account_creation_date = get_user_date_of_registration(username)
                 editor.first_seen_at = initial_date
-                self._has_editors = True
                 if editor.account_creation_date and editor.account_creation_date >= initial_date - timedelta(days=30):
                     self._has_new_editors = True
             elif not self.is_update:
@@ -211,12 +211,12 @@ class NewReportForm(forms.ModelForm):
             key = name.lower()
 
             organizer, created = Organizer.objects.get_or_create(name=name)
+            self._has_organizers = True
 
             if created:
                 organizer.first_seen_at = timezone.now().date()
                 organizer.save()
                 created_in_this_save.add(organizer.id)
-                self._has_organizers = True
 
                 if organizer.first_seen_at >= report.initial_date:
                     self._has_new_organizers = True
