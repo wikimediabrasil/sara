@@ -225,9 +225,6 @@ def build_list_values(qs, name_field, reports, related_name, filter_fn=None):
     return result
 
 
-def is_new_organizer(organizer, organizer_reports):
-    return organizer_reports.filter(initial_date__lte=organizer.first_seen_at).exists()
-
 @login_required
 @permission_required("metrics.view_metric")
 def metrics_reports(request, metric_id):
@@ -245,12 +242,28 @@ def metrics_reports(request, metric_id):
         LIST_METRICS = {
             "Number of editors": lambda: build_list_values(all_editors, "username", reports, "editors"),
             "Number of editors retained": lambda: build_list_values(all_editors.filter(retained=True), "username", reports, "editors"),
-            "Number of new editors": lambda: build_list_values(all_editors, "username", reports, "editors", filter_fn=lambda ed, reps: (lambda earliest: earliest is not None and ed.account_creation_date is not None and earliest <= ed.account_creation_date.date() <= earliest + timedelta(days=30))(reps.aggregate(earliest=Min("initial_date"))["earliest"])),
+            "Number of new editors": lambda: build_list_values(
+                all_editors, "username", reports, "editors",
+                filter_fn=lambda ed, reps: (
+                    lambda earliest: earliest is not None and
+                    ed.account_creation_date is not None and
+                    ed.account_creation_date.date() >= earliest - timedelta(days=30)
+                )(reps.aggregate(earliest=Min("initial_date"))["earliest"])
+            ),
             "Number of organizers": lambda: build_list_values(all_organizers, "name", reports, "organizers"),
             "Number of organizers retained": lambda: build_list_values(all_organizers.filter(retained=True), "name", reports, "organizers"),
-            "Number of new organizers": lambda: build_list_values(all_organizers, "name", reports, "organizers", is_new_organizer),
+            "Number of new organizers": lambda: build_list_values(
+                all_organizers, "name", reports, "organizers",
+                filter_fn=lambda org, reps: (
+                    lambda earliest: earliest is not None and
+                    org.first_seen_at is not None and
+                    org.first_seen_at >= earliest
+                )(reps.aggregate(earliest=Min("initial_date"))["earliest"])
+            ),
             "Number of partnerships activated": lambda: build_list_values(all_partners, "name", reports, "partners"),
         }
+
+        AGGREGATE_OVER_ALL_REPORTS = {"Number of new editors", "Number of new organizers"}
 
         values = []
         for goal_key, goal_value in filtered_goals.items():
@@ -268,11 +281,17 @@ def metrics_reports(request, metric_id):
                         "area_responsible": report.area_responsible,
                     }
                 )
+
+            if goal_key in AGGREGATE_OVER_ALL_REPORTS:
+                total_done = get_done_for_report(reports, metric)[goal_key]
+            else:
+                total_done = sum([report_aux["done"] for report_aux in report_values])
+
             values.append(
                 {
                     "text": goal_key,
                     "goal": goal_value,
-                    "done": sum([report_aux["done"] for report_aux in report_values]),
+                    "done": total_done,
                     "reports": report_values,
                     "list_values": LIST_METRICS[goal_key]() if goal_key in LIST_METRICS else None,
                 }
@@ -764,22 +783,11 @@ def get_done_for_report(reports, metric):
         "Number of editors retained": editor_qs.filter(retained=True).count(),
         "Number of new editors": Editor.objects.filter(
             editors__in=reports,
-        ).annotate(
-            earliest=Min("editors__initial_date")
-        ).filter(
-            account_creation_date__gte=F("earliest") - timedelta(days=30),
-            account_creation_date__lte=F("earliest"),
+            account_creation_date__gte=F("editors__initial_date") - timedelta(days=30),
         ).distinct().count(),
         "Number of organizers": organizer_qs.count(),
         "Number of organizers retained": organizer_qs.filter(retained=True).count(),
-        "Number of new organizers": Organizer.objects.filter(
-            organizers__in=reports,
-        ).annotate(
-            earliest=Min("organizers__initial_date")
-        ).filter(
-            first_seen_at__gte=F("earliest") - timedelta(days=30),
-            first_seen_at__lte=F("earliest"),
-        ).distinct().count(),
+        "Number of new organizers": Organizer.objects.filter(organizers__in=reports, first_seen_at__gte=F("organizers__initial_date")).distinct().count(),
         "Number of partnerships activated": Partner.objects.filter(partners__in=reports)
         .distinct()
         .count(),
