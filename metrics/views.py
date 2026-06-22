@@ -293,12 +293,11 @@ def metrics_reports(request, metric_id):
                     "goal": goal_value,
                     "done": total_done,
                     "reports": report_values,
-                    "title": metric.text,
                     "list_values": LIST_METRICS[goal_key]() if goal_key in LIST_METRICS else None,
                 }
             )
 
-        context = {"metric": metric, "values": values}
+        context = {"metric": metric, "values": values, "title": metric.text}
 
         return render(request, "metrics/list_metrics_reports.html", context)
     except ObjectDoesNotExist:
