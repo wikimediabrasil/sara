@@ -260,7 +260,7 @@ def metrics_reports(request, metric_id):
                     org.first_seen_at >= earliest
                 )(reps.aggregate(earliest=Min("initial_date"))["earliest"])
             ),
-            "Number of partnerships activated": lambda: build_list_values(all_partners, "name", reports, "partners"),
+            "Number of partnerships activated": lambda: build_list_values(all_partners, "name", reports, "partners_activated"),
         }
 
         AGGREGATE_OVER_ALL_REPORTS = {"Number of new editors", "Number of new organizers"}
