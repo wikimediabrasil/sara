@@ -245,10 +245,10 @@ def metrics_reports(request, metric_id):
         LIST_METRICS = {
             "Number of editors": lambda: build_list_values(all_editors, "username", reports, "editors"),
             "Number of editors retained": lambda: build_list_values(all_editors.filter(retained=True), "username", reports, "editors"),
-            "Number of new editors": lambda: build_list_values(all_editors, "username", reports, "editors", filter_fn=lambda ed, reps: (lambda earliest: earliest is not None and earliest <= ed.account_creation_date.date() <= earliest + timedelta(days=30))(reps.aggregate(earliest=Min("initial_date"))["earliest"])),
+            "Number of new editors": lambda: build_list_values(all_editors, "username", reports, "editors", filter_fn=lambda ed, reps: (lambda earliest: earliest is not None and ed.account_creation_date is not None and earliest <= ed.account_creation_date.date() <= earliest + timedelta(days=30))(reps.aggregate(earliest=Min("initial_date"))["earliest"])),
             "Number of organizers": lambda: build_list_values(all_organizers, "name", reports, "organizers"),
             "Number of organizers retained": lambda: build_list_values(all_organizers.filter(retained=True), "name", reports, "organizers"),
-            "Number of new organizers": lambda: build_list_values(all_organizers, "name", reports, "organizers", filter_fn=lambda org, reps: (lambda earliest: earliest is not None and earliest <= org.first_seen_at.date() <= earliest + timedelta(days=30))(reps.aggregate(earliest=Min("initial_date"))["earliest"])),
+            "Number of new organizers": lambda: build_list_values(all_organizers, "name", reports, "organizers", is_new_organizer),
             "Number of partnerships activated": lambda: build_list_values(all_partners, "name", reports, "partners"),
         }
 
