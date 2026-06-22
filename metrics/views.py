@@ -293,6 +293,7 @@ def metrics_reports(request, metric_id):
                     "goal": goal_value,
                     "done": total_done,
                     "reports": report_values,
+                    "title": metric.text,
                     "list_values": LIST_METRICS[goal_key]() if goal_key in LIST_METRICS else None,
                 }
             )
