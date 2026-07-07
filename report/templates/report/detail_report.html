@@ -222,7 +222,7 @@
                             <div class="w3-third field_title">{% trans "Organizers" %}</div>
                             <div class="w3-twothird formfield">
                                 <div class="view_field scroll_field">
-                                    {% for organizer in data.organizers.all %}{{ organizer.name }}{% if not forloop.last %}; {% endif %}{% endfor %}
+                                    {% for organizer in data.organizers.all %}{{ organizer.name }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
                                 </div>
                                 <div class="w3-row" style="font-size: small;">{% trans "Number of organizers:" %} {{ data.organizers.count }}</div>
                             </div>
@@ -233,7 +233,7 @@
                             <div class="w3-third field_title">{% trans "Partnerships activated" %}</div>
                             <div class="w3-twothird formfield">
                                 <div class="view_field scroll_field">
-                                    {% for partners in data.partners_activated.all %}{{ partners.name }}{% if not forloop.last %}; {% endif %}{% endfor %}
+                                    {% for partners in data.partners_activated.all %}{{ partners.name }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
                                 </div>
                                 <div class="w3-row" style="font-size: small;">{% trans "Number of formal partnerships activated:" %} {{ data.partners_activated.count }}</div>
                             </div>
@@ -244,7 +244,7 @@
                             <div class="w3-third field_title">{% trans "Technologies used" %}</div>
                             <div class="w3-twothird formfield">
                                 <div class="view_field scroll_field">
-                                    {% for technology in data.technologies_used.all %}{{ technology.name }}{% if not forloop.last %}; {% endif %}{% endfor %}
+                                    {% for technology in data.technologies_used.all %}{{ technology.name }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
                                 </div>
                                 <div class="w3-row" style="font-size: small;">{% trans "Number of technologies used:" %} {{ data.technologies_used.count }}</div>
                             </div>
