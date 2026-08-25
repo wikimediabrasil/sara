@@ -11,32 +11,16 @@ from django.utils.translation import gettext as _
 
 from metrics.models import Activity, Area, Metric
 from report.forms import NewReportForm
-from report.models import (
-    Editor,
-    Funding,
-    OperationReport,
-    Organizer,
-    Partner,
-    Project,
-    Report,
-    StrategicLearningQuestion,
-    Technology,
-)
-from report.views import (
-    export_area_activated,
-    export_directions_related,
-    export_editors,
-    export_funding,
-    export_learning_questions_related,
-    export_metrics,
-    export_operation_report,
-    export_organizers,
-    export_partners_activated,
-    export_report_instance,
-    export_technologies_used,
-    export_user_profile,
-    get_localized_field,
-)
+from report.models import (Editor, Funding, OperationReport, Organizer,
+                           Partner, Project, Report, StrategicLearningQuestion,
+                           Technology)
+from report.views import (export_area_activated, export_directions_related,
+                          export_editors, export_funding,
+                          export_learning_questions_related, export_metrics,
+                          export_operation_report, export_organizers,
+                          export_partners_activated, export_report_instance,
+                          export_technologies_used, export_user_profile,
+                          get_localized_field)
 from strategy.models import Direction, LearningArea, StrategicAxis
 from users.models import Position, TeamArea, User, UserPosition, UserProfile
 
@@ -92,7 +76,7 @@ class ReportAddViewTest(TestCase):
         url = reverse("report:add_report")
 
         project = Project.objects.create(
-            text="Wikimedia Community Fund", main_funding=True
+            text="Wikimedia Community Fund", main_funding=True, counts_for_main_funding=True
         )
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
         direction = Direction.objects.create(
@@ -102,7 +86,9 @@ class ReportAddViewTest(TestCase):
         slq = StrategicLearningQuestion.objects.create(
             text="SLQ", learning_area=learning_area
         )
-        activity_associated = Activity.objects.create(text="Activity")
+        area = Area.objects.create(text="Area")
+        area.project.add(project)
+        activity_associated = Activity.objects.create(text="Activity", area=area)
         area_responsible = TeamArea.objects.create(text="Area")
         metric = Metric.objects.create(
             text="Metric", activity=activity_associated, number_of_editors=10

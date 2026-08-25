@@ -1,4 +1,5 @@
 import re
+
 from django.contrib.auth import get_user_model
 from social_core.pipeline.user import get_username as social_get_username
 

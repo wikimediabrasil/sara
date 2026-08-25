@@ -1,7 +1,9 @@
+from datetime import datetime
+
 from django.core.management.base import BaseCommand
 from django.utils.timezone import now
+
 from agenda.services import send_event_reports
-from datetime import datetime
 
 
 class Command(BaseCommand):

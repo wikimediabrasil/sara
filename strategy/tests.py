@@ -2,13 +2,8 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
-from strategy.models import (
-    Direction,
-    EvaluationObjective,
-    LearningArea,
-    StrategicAxis,
-    StrategicLearningQuestion,
-)
+from strategy.models import (Direction, EvaluationObjective, LearningArea,
+                             StrategicAxis, StrategicLearningQuestion)
 
 
 class DirectionModelTests(TestCase):

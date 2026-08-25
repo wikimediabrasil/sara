@@ -5,43 +5,26 @@ from unittest.mock import MagicMock, patch
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Min, Q
 from django.db.utils import IntegrityError
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils.translation import activate
 from django.utils.translation import gettext_lazy as _
 
-from metrics.link_utils import (
-    build_wiki_ref,
-    dewikify_url,
-    process_all_references,
-    replace_with_links,
-    unwikify_link,
-)
+from metrics.link_utils import (build_wiki_ref, dewikify_url,
+                                process_all_references, replace_with_links,
+                                unwikify_link)
 from metrics.models import Activity, Area, Metric, Project
-from metrics.templatetags.metricstags import (
-    bool_yesno,
-    bool_yesnopartial,
-    categorize,
-    is_yesno,
-    perc,
-)
+from metrics.templatetags.metricstags import (bool_yesno, bool_yesnopartial,
+                                              categorize, is_yesno, perc)
 from metrics.utils import render_to_pdf
-from metrics.views import (
-    build_wiki_ref_for_reports,
-    get_metrics_and_aggregate_per_project,
-    get_results_for_timespan,
-    get_timespan_array,
-    show_metrics_for_specific_project,
-)
-from report.models import (
-    Direction,
-    Editor,
-    OperationReport,
-    Report,
-    StrategicLearningQuestion,
-)
+from metrics.views import (build_list_values, build_wiki_ref_for_reports,
+                           get_metrics_and_aggregate_per_project,
+                           get_results_for_timespan, get_timespan_array,
+                           show_metrics_for_specific_project)
+from report.models import (Direction, Editor, OperationReport, Organizer,
+                           Report, StrategicLearningQuestion)
 from strategy.models import LearningArea, StrategicAxis
 from users.models import TeamArea, User, UserProfile
 
@@ -346,6 +329,59 @@ class MetricViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('metrics:per_project')}")
+
+    def test_show_reports_associated_to_a_metric_analyses_new_organizers_and_new_editors_over_all_reports(self):
+        self.client.login(username=self.username, password=self.password)
+
+        editor = Editor.objects.create(username="Editor 1", account_creation_date=datetime.now().date() - timedelta(days=1))
+        organizer = Organizer.objects.create(name="Organizer 1", first_seen_at=datetime.now().date() - timedelta(days=1))
+        area = Area.objects.create(text="Area")
+        activity = Activity.objects.create(text="Activity", area=area)
+        metric = Metric.objects.create(
+            text="Metric 1",
+            activity=activity,
+            number_of_new_editors=10,
+            number_of_editors=20,
+            number_of_new_organizers=30,
+            number_of_organizers=40
+        )
+        team_area = TeamArea.objects.create(text="Area")
+        report_1 = Report.objects.create(
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            activity_associated=activity,
+            area_responsible=team_area,
+            initial_date=datetime.now().date(),
+            end_date=datetime.now().date() + timedelta(days=1),
+            description="Report 1",
+            links="https://testlink.com",
+            learning="Learning" * 60,
+        )
+        report_1.metrics_related.add(metric)
+        report_1.editors.add(editor)
+        report_1.organizers.add(organizer)
+        report_1.save()
+        report_2 = Report.objects.create(
+            created_by=self.user_profile,
+            modified_by=self.user_profile,
+            activity_associated=activity,
+            area_responsible=team_area,
+            initial_date=datetime.now().date() + timedelta(days=2),
+            end_date=datetime.now().date() + timedelta(days=3),
+            description="Report 2",
+            links="https://testlink.com",
+            learning="Learning" * 60,
+        )
+        report_2.editors.add(editor)
+        report_2.organizers.add(organizer)
+        report_2.save()
+
+        url = reverse("metrics:metrics_reports", args=[metric.id])
+        response = self.client.get(url)
+
+        values_by_key = {v["text"]: v for v in response.context["values"]}
+        self.assertEqual(values_by_key["Number of new editors"]["done"], 1)
+        self.assertEqual(values_by_key["Number of new organizers"]["done"], 1)
 
 
 class ShowMetricsForProjectTests(TestCase):
@@ -947,6 +983,55 @@ class MetricFunctionsTests(TestCase):
 
         with self.assertRaisesMessage(ValueError, "Invalid timeframe"):
             get_timespan_array("does-not-exist")
+
+    def test_build_list_values_returns_empty_dict_list_if_no_object_exists_in_the_queryset(self):
+        qs = Organizer.objects.all()
+        reports = Report.objects.all()
+        organizer_list = build_list_values(qs, "name", reports, "organizers")
+        self.assertEqual([], organizer_list)
+
+    def test_build_list_values_returns_dict_list_of_empty_reports_if_object_is_not_associated_with_any_report(self):
+        qs = Editor.objects.all()
+        reports = Report.objects.all()
+        editor_list = build_list_values(qs, "username", reports, "editors")
+        self.assertEqual([
+            {'name': str(self.editor_1), 'reports': []},
+            {'name': str(self.editor_2), 'reports': []},
+            {'name': str(self.editor_3), 'reports': []}
+        ], editor_list)
+
+    def test_build_list_values_returns_dict_list_of_all_objects_and_reports_they_are_associated_to(self):
+        qs = Editor.objects.all()
+        self.report_1.editors.add(self.editor_2)
+        self.report_1.save()
+        reports = Report.objects.all()
+        editor_list = build_list_values(qs, "username", reports, "editors")
+        self.assertEqual([
+            {'name': str(self.editor_1), 'reports': []},
+            {'name': str(self.editor_2), 'reports': [{'description': str(self.report_1), 'id': self.report_1.pk}]},
+            {'name': str(self.editor_3), 'reports': []}
+        ], editor_list)
+
+    def test_build_list_values__with_filter_returns_dict_list_of_filtered_objects_and_reports_they_are_associated_to(self):
+        qs = Editor.objects.all()
+        filter_fn = lambda ed, reps: (
+            lambda earliest: earliest is not None and
+                             ed.account_creation_date is not None and
+                             ed.account_creation_date.date() >= earliest - timedelta(days=30)
+        )(reps.aggregate(earliest=Min("initial_date"))["earliest"])
+
+        self.editor_2.account_creation_date = datetime.now().date() - timedelta(days=10)
+        self.editor_2.save()
+
+        self.report_1.editors.add(self.editor_2)
+        self.report_1.save()
+
+        reports = Report.objects.all()
+        editor_list = build_list_values(qs, "username", reports, "editors", filter_fn)
+
+        self.assertEqual([
+            {'name': str(self.editor_2), 'reports': [{'description': str(self.report_1), 'id': self.report_1.pk}]},
+        ], editor_list)
 
 
 class ReferencesFunctionsTests(TestCase):

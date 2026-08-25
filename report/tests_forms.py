@@ -1,6 +1,6 @@
+from datetime import datetime
 from unittest.mock import patch
 
-from datetime import datetime
 from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.utils import timezone
@@ -9,18 +9,8 @@ from metrics.models import Area
 from users.models import Position, TeamArea, User, UserPosition
 
 from .forms import NewReportForm
-from .models import (
-    Activity,
-    Funding,
-    Metric,
-    Organizer,
-    Partner,
-    Project,
-    Report,
-    UserProfile,
-    Editor,
-
-)
+from .models import (Activity, Editor, Funding, Metric, Organizer, Partner,
+                     Project, Report, UserProfile)
 
 
 class NewReportFormTest(TestCase):

@@ -1,12 +1,7 @@
 from modeltranslation.translator import TranslationOptions, register
 
-from .models import (
-    Direction,
-    EvaluationObjective,
-    LearningArea,
-    StrategicAxis,
-    StrategicLearningQuestion,
-)
+from .models import (Direction, EvaluationObjective, LearningArea,
+                     StrategicAxis, StrategicLearningQuestion)
 
 
 @register(StrategicAxis)

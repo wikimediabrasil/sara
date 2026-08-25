@@ -13,21 +13,15 @@ from django.utils.timezone import now
 
 from agenda.models import Event
 from agenda.services import build_message_about_reports, send_event_reports
-from agenda.templatetags.calendar_tags import (
-    date_tag,
-    next_day_tag,
-    next_month_tag,
-    next_year_tag,
-    previous_day_tag,
-    previous_month_tag,
-    previous_year_tag,
-)
-from agenda.views import (
-    get_activities_about_to_kickoff,
-    get_activities_already_finished,
-    get_activities_soon_to_be_finished,
-    list_of_reports_of_area,
-)
+from agenda.templatetags.calendar_tags import (date_tag, next_day_tag,
+                                               next_month_tag, next_year_tag,
+                                               previous_day_tag,
+                                               previous_month_tag,
+                                               previous_year_tag)
+from agenda.views import (get_activities_about_to_kickoff,
+                          get_activities_already_finished,
+                          get_activities_soon_to_be_finished,
+                          list_of_reports_of_area)
 from users.models import Position, TeamArea, User, UserPosition, UserProfile
 
 
@@ -638,6 +632,25 @@ class SendEventReportsFullBranchTests(TestCase):
         Event.objects.all().delete()  # remove all events
         send_event_reports()
         self.assertEqual(len(mail.outbox), 0)
+
+    @patch("agenda.management.commands.send_event_reports.send_event_reports")
+    @patch("agenda.management.commands.send_event_reports.datetime")
+    def test_skips_sending_reports_when_we_are_on_even_week(self, mock_datetime, mock_send):
+        mock_datetime.now.return_value.isocalendar.return_value.week = 10
+        call_command("send_event_reports")
+        mock_send.assert_not_called()
+
+    @patch("agenda.management.commands.send_event_reports.now")
+    @patch("agenda.management.commands.send_event_reports.send_event_reports")
+    @patch("agenda.management.commands.send_event_reports.datetime")
+    def test_sends_reports_when_we_are_on_odd_week(self, mock_datetime, mock_send, mock_now):
+        mock_datetime.now.return_value.isocalendar.return_value.week = 11
+        mock_now.side_effect = [
+            datetime(2026, 8, 25, 10, 0, 0),
+            datetime(2026, 8, 25, 10, 0, 5),
+        ]
+        call_command("send_event_reports")
+        mock_send.assert_called_once()
 
 
 class ListReportsTests(TestCase):

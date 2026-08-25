@@ -12,15 +12,8 @@ from django.utils import timezone
 
 from metrics.link_utils import build_wiki_ref
 from metrics.models import Area, Metric, Project
-from report.models import (
-    Editor,
-    Funding,
-    OperationReport,
-    Organizer,
-    Partner,
-    Report,
-    Technology,
-)
+from report.models import (Editor, Funding, OperationReport, Organizer,
+                           Partner, Report, Technology)
 from strategy.models import LearningArea, StrategicAxis
 from users.models import TeamArea, UserProfile
 
@@ -295,12 +288,12 @@ class NewReportForm(forms.ModelForm):
                 )
 
         obj_fields_names = {
-            "editors": [
+            "_parsed_editors": [
                 "number_of_editors",
                 "number_of_editors_retained",
                 "number_of_new_editors",
             ],
-            "organizers": ["number_of_organizers", "number_of_organizers_retained"],
+            "_parsed_organizers": ["number_of_organizers", "number_of_organizers_retained"],
             "partners_activated": ["number_of_partnerships_activated"],
         }
 

@@ -34,8 +34,8 @@
 
 ## Tech Stack
 
-- **Python**: 3.9.2
-- **Django**: 4.2.27
+- **Python**: 3.11.2
+- **Django**: 5.2.15
 - **Database**: MariaDB / SQLite
 - **Frontend**: Django Templates
 - **Other**:
@@ -47,9 +47,14 @@
   - django_select2
   - requests
   - xhtml2pdf
-  - pdfkit
+  - svglib
   - social-auth-app-django
   - django-modeltranslation
+  - sshtunnel
+  - pymysql
+  - isort
+  - black
+  - ruff
 
 ---
 
@@ -188,7 +193,7 @@ All the instructions about requesting the OAuth consumer on Wikimedia is availab
 - `EMAIL_HOST_PASSWORD` — SMTP password
 - `EMAIL_USE_TLS` — TLS enable flag
 - `EMAIL_USE_SSL` — SSL enable flag
-- `EMAIL_COORDINATOR` — Coordinator contact email
+- `EMAIL_COORDINATORS` — Coordinator contact email
 
 #### Database & Filesystem
 
@@ -349,8 +354,6 @@ python manage.py makemigrations --check
 Follow existing code style and include tests.
 
 ---
-
-## License
 
 ## License
 

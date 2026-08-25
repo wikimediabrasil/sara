@@ -1,5 +1,5 @@
 import datetime
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.admin import User
@@ -794,9 +794,30 @@ class GetUsernameTests(TestCase):
         self.assertEqual(result, {"username": "keepme"})
 
     def test_new_user_uses_details_username(self):
+        backend = Mock(name="mock_backend")
+
+        def backend_setting(name, default=None):
+            settings = {
+                "USER_FIELDS": ("username", "email"),
+                "USERNAME_IS_FULL_EMAIL": False,
+                "UUID_LENGTH": 16,
+                "SLUGIFY_USERNAMES": False,
+                "CLEAN_USERNAMES": True,
+                "CLEAN_USERNAME_FUNCTION": None,
+            }
+            return settings.get(name, default)
+
+        backend.setting.side_effect = backend_setting
+
+        strategy = Mock()
+        strategy.storage.user.username_max_length.return_value = 150
+        strategy.storage.user.user_exists.return_value = False
+        strategy.storage.user.clean_username.side_effect = lambda v: v
+
         result = get_username(
-            strategy=None,
+            strategy=strategy,
             details={"username": "wikiname"},
             user=None,
+            backend=backend,
         )
         self.assertEqual(result, {"username": "wikiname"})

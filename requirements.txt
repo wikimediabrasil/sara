@@ -9,7 +9,8 @@ xhtml2pdf>=0.2.16
 svglib>=1.2.1,<1.6
 social-auth-app-django
 django-modeltranslation
-isort
-ruff
 sshtunnel
 pymysql
+isort
+black
+ruff
