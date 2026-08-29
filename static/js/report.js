@@ -203,7 +203,7 @@ function show_metrics_options() {
               let button_type = "checkbox";
               let check_style = "";
 
-              if (metrics_related.indexOf(metric.id) >= 0) {
+              if (metrics_related.includes(metric.id)) {
                 checked = "checked";
               }
               if (projectEl["main"]) {
