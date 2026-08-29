@@ -4,6 +4,8 @@ from django.utils.translation import gettext as _
 
 from users.models import TeamArea
 
+DATE_FORMAT = "%d/%b"
+
 
 # CALENDAR OF EVENTS
 class Event(models.Model):
@@ -55,14 +57,14 @@ class Event(models.Model):
 
     def __str__(self):
         if self.end_date == self.initial_date:
-            return self.name + " (" + self.initial_date.strftime("%d/%b") + ")"
+            return self.name + " (" + self.initial_date.strftime(DATE_FORMAT) + ")"
         else:
             return (
                 self.name
                 + " ("
-                + self.initial_date.strftime("%d/%b")
+                + self.initial_date.strftime(DATE_FORMAT)
                 + " - "
-                + self.end_date.strftime("%d/%b")
+                + self.end_date.strftime(DATE_FORMAT)
                 + ")"
             )
 

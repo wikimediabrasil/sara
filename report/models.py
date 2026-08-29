@@ -111,7 +111,6 @@ class Report(models.Model):
         _("Reference text"),
         max_length=10000,
         blank=True,
-        null=True,
         default="",
         help_text=_("The reference text of the report, in wikitext"),
     )
@@ -439,7 +438,6 @@ class Report(models.Model):
     learning = models.TextField(
         _("Learning"),
         max_length=5000,
-        null=True,
         blank=True,
         default="",
         help_text=_("Specific learning about the activity reported."),

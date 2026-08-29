@@ -4,6 +4,8 @@ from django.utils.translation import gettext as _
 
 from users.models import TeamArea
 
+FILLING_NEEDED = _("You need to fill the text field")
+
 
 class Project(models.Model):
     """
@@ -52,7 +54,7 @@ class Project(models.Model):
 
     def clean(self):
         if not self.text:
-            raise ValidationError(_("You need to fill the text field"))
+            raise ValidationError(FILLING_NEEDED)
 
 
 class Area(models.Model):
@@ -88,7 +90,7 @@ class Area(models.Model):
 
     def clean(self):
         if not self.text:
-            raise ValidationError(_("You need to fill the text field"))
+            raise ValidationError(FILLING_NEEDED)
 
 
 class Activity(models.Model):
@@ -109,7 +111,7 @@ class Activity(models.Model):
 
     text = models.CharField(_("Title"), max_length=420, help_text=_("Activity title"))
     code = models.CharField(
-        _("Code"), max_length=20, null=True, blank=True, help_text=_("Activity code")
+        _("Code"), max_length=20, blank=True, help_text=_("Activity code")
     )
     area = models.ForeignKey(
         Area,
@@ -139,7 +141,7 @@ class Activity(models.Model):
 
     def clean(self):
         if not self.text:
-            raise ValidationError(_("You need to fill the text field"))
+            raise ValidationError(FILLING_NEEDED)
 
 
 class Metric(models.Model):
@@ -525,4 +527,4 @@ class Metric(models.Model):
 
     def clean(self):
         if not self.text:
-            raise ValidationError(_("You need to fill the text field"))
+            raise ValidationError(FILLING_NEEDED)

@@ -3,6 +3,10 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
+LEARNING_AREA = _("Learning area")
+FILLING_NEEDED = _("You need to fill the text field")
+
+
 # ======================================================================================================================
 # STRATEGIC PROCESS
 # ======================================================================================================================
@@ -31,7 +35,6 @@ class StrategicAxis(models.Model):
     intentionality = models.CharField(
         _("Intentionality"),
         max_length=420,
-        null=True,
         blank=True,
         help_text=_("Explanation of the intentionality behind this axis."),
     )
@@ -121,7 +124,7 @@ class LearningArea(models.Model):
     )
 
     class Meta:
-        verbose_name = _("Learning area")
+        verbose_name = LEARNING_AREA
         verbose_name_plural = _("Learning areas")
 
     def __str__(self):
@@ -129,7 +132,7 @@ class LearningArea(models.Model):
 
     def clean(self):
         if not self.text:
-            raise ValidationError(_("You need to fill the text field"))
+            raise ValidationError(FILLING_NEEDED)
 
 
 class StrategicLearningQuestion(models.Model):
@@ -157,7 +160,7 @@ class StrategicLearningQuestion(models.Model):
         LearningArea,
         on_delete=models.CASCADE,
         related_name="strategic_question",
-        verbose_name=_("Learning area"),
+        verbose_name=LEARNING_AREA,
     )
 
     class Meta:
@@ -169,7 +172,7 @@ class StrategicLearningQuestion(models.Model):
 
     def clean(self):
         if not self.text:
-            raise ValidationError(_("You need to fill the text field"))
+            raise ValidationError(FILLING_NEEDED)
 
 
 class EvaluationObjective(models.Model):
@@ -198,7 +201,7 @@ class EvaluationObjective(models.Model):
         on_delete=models.CASCADE,
         null=True,
         related_name="evaluation_objective",
-        verbose_name=_("Learning area"),
+        verbose_name=LEARNING_AREA,
     )
 
     class Meta:
@@ -210,4 +213,4 @@ class EvaluationObjective(models.Model):
 
     def clean(self):
         if not self.text:
-            raise ValidationError(_("You need to fill the text field"))
+            raise ValidationError(FILLING_NEEDED)
