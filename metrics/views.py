@@ -25,11 +25,22 @@ calendar.setfirstweekday(calendar.SUNDAY)
 # UTILS
 # ======================================================================================================================
 LIST_METRICS_PER_PROJECT_TEMPLATE = "metrics/list_metrics_per_project.html"
-from metrics.utils import (EDITORS, EDITORS_RETAINED, EDITORS_NEW, ORGANIZERS,
-                           ORGANIZERS_RETAINED, ORGANIZERS_NEW, PARTNERSHIPS_ACTIVATED,
-                           get_results_divided_by_timespan, get_results_for_timespan, get_done_for_report,
-                           get_metrics_and_aggregate_per_project, get_goal_for_metric, render_to_pdf,
-                           _build_list_values)
+from metrics.utils import (
+    EDITORS,
+    EDITORS_RETAINED,
+    EDITORS_NEW,
+    ORGANIZERS,
+    ORGANIZERS_RETAINED,
+    ORGANIZERS_NEW,
+    PARTNERSHIPS_ACTIVATED,
+    get_results_divided_by_timespan,
+    get_results_for_timespan,
+    get_done_for_report,
+    get_metrics_and_aggregate_per_project,
+    get_goal_for_metric,
+    render_to_pdf,
+    _build_list_values,
+)
 
 
 # ======================================================================================================================

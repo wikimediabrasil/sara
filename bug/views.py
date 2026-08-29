@@ -15,8 +15,8 @@ from .models import Bug, Observation
 # ======================================================================================================================
 # UTILS
 # ======================================================================================================================
-DATE_OF_REPORT = _("Date of report"),
-UPDATE_DATE = _("Update date"),
+DATE_OF_REPORT = (_("Date of report"),)
+UPDATE_DATE = (_("Update date"),)
 ANSWER_DATE = _("Answer date")
 ERROR_MESSAGE = _("Something went wrong!")
 DATETIME64 = "datetime64[ns]"

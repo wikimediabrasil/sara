@@ -6,14 +6,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('metrics', '0004_alter_metric_commons_created_and_more'),
+        ("metrics", "0004_alter_metric_commons_created_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='activity',
-            name='code',
-            field=models.CharField(blank=True, default='', help_text='Activity code', max_length=20, verbose_name='Code'),
+            model_name="activity",
+            name="code",
+            field=models.CharField(
+                blank=True,
+                default="",
+                help_text="Activity code",
+                max_length=20,
+                verbose_name="Code",
+            ),
             preserve_default=False,
         ),
     ]

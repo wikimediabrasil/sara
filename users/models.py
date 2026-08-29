@@ -162,9 +162,9 @@ class UserProfile(models.Model):
     @property
     def latest_position(self):
         return self.position_history.order_by(
-            models.F("end_date").desc(nulls_first=True),
-            "-start_date"
+            models.F("end_date").desc(nulls_first=True), "-start_date"
         ).first()
+
 
 class UserPosition(models.Model):
     user_profile = models.ForeignKey(

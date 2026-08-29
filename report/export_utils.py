@@ -7,7 +7,6 @@ from metrics.models import Metric
 from report.models import Funding, OperationReport, Report
 from report.utils import _get_localized_field, _joined_ids_and_count, _joined_ids
 
-
 CREATED_AT = _("Created at")
 MODIFIED_AT = _("Modified at")
 
@@ -135,66 +134,88 @@ def export_report_instance(report_id=None, custom_query=Q()):
     else:
         reports = Report.objects.filter(custom_query)
 
-    reports = (reports.select_related("created_by",
-                                     "modified_by",
-                                     "activity_associated",
-                                     "area_responsible")
-               .prefetch_related("area_activated", "funding_associated", "editors", "organizers", "partners_activated",
-                                 "technologies_used", "directions_related", "learning_questions_related",
-                                 "metrics_related", ))
+    reports = reports.select_related(
+        "created_by", "modified_by", "activity_associated", "area_responsible"
+    ).prefetch_related(
+        "area_activated",
+        "funding_associated",
+        "editors",
+        "organizers",
+        "partners_activated",
+        "technologies_used",
+        "directions_related",
+        "learning_questions_related",
+        "metrics_related",
+    )
 
     wiki_fields = [
-        "wikipedia", "commons", "wikidata", "wikiversity", "wikibooks",
-        "wikisource", "wikinews", "wikiquote", "wiktionary", "wikivoyage",
-        "wikispecies", "metawiki", "mediawiki", "wikifunctions", "incubator",
+        "wikipedia",
+        "commons",
+        "wikidata",
+        "wikiversity",
+        "wikibooks",
+        "wikisource",
+        "wikinews",
+        "wikiquote",
+        "wiktionary",
+        "wikivoyage",
+        "wikispecies",
+        "metawiki",
+        "mediawiki",
+        "wikifunctions",
+        "incubator",
     ]
 
     rows = []
     for report in reports:
         editors, num_editors = _joined_ids_and_count(report.editors)
         organizers, num_organizers = _joined_ids_and_count(report.organizers)
-        partners_activated, num_partners_activated = _joined_ids_and_count(report.partners_activated)
+        partners_activated, num_partners_activated = _joined_ids_and_count(
+            report.partners_activated
+        )
 
         wiki_values = []
         for wiki in wiki_fields:
             wiki_values.append(getattr(report, f"{wiki}_created"))
             wiki_values.append(getattr(report, f"{wiki}_edited"))
 
-        rows.append([
-            report.id,
-            report.created_by.id,
-            report.created_at,
-            report.modified_by.id,
-            report.modified_at,
-            report.activity_associated.id,
-            report.partial_report,
-            report.activity_associated.text or "",
-            report.reference_text,
-            report.area_responsible.id,
-            _joined_ids(report.area_activated),
-            report.initial_date,
-            report.end_date,
-            report.description,
-            _joined_ids(report.funding_associated),
-            report.links.replace("\r\n", "; "),
-            report.private_links,
-            report.participants,
-            report.feedbacks,
-            editors,
-            num_editors,
-            organizers,
-            num_organizers,
-            partners_activated,
-            num_partners_activated,
-            _joined_ids(report.technologies_used),
-            report.donors,
-            report.submissions,
-            *wiki_values,
-            _joined_ids(report.directions_related),
-            report.learning.replace("\r\n", "\n"),
-            _joined_ids(report.learning_questions_related),
-            _joined_ids(report.metrics_related)
-            ])
+        rows.append(
+            [
+                report.id,
+                report.created_by.id,
+                report.created_at,
+                report.modified_by.id,
+                report.modified_at,
+                report.activity_associated.id,
+                report.partial_report,
+                report.activity_associated.text or "",
+                report.reference_text,
+                report.area_responsible.id,
+                _joined_ids(report.area_activated),
+                report.initial_date,
+                report.end_date,
+                report.description,
+                _joined_ids(report.funding_associated),
+                report.links.replace("\r\n", "; "),
+                report.private_links,
+                report.participants,
+                report.feedbacks,
+                editors,
+                num_editors,
+                organizers,
+                num_organizers,
+                partners_activated,
+                num_partners_activated,
+                _joined_ids(report.technologies_used),
+                report.donors,
+                report.submissions,
+                *wiki_values,
+                _joined_ids(report.directions_related),
+                report.learning.replace("\r\n", "\n"),
+                _joined_ids(report.learning_questions_related),
+                _joined_ids(report.metrics_related),
+            ]
+        )
 
     df = pd.DataFrame(rows, columns=header).drop_duplicates().reset_index(drop=True)
     df[CREATED_AT] = df[CREATED_AT].dt.tz_localize(None)
@@ -299,9 +320,13 @@ def export_metrics(report_id=None, custom_query=Q()):
     ]
 
     if report_id:
-        reports = Report.objects.filter(pk=report_id).prefetch_related("metrics_related")
+        reports = Report.objects.filter(pk=report_id).prefetch_related(
+            "metrics_related"
+        )
     else:
-        reports = Report.objects.filter(custom_query).prefetch_related("metrics_related")
+        reports = Report.objects.filter(custom_query).prefetch_related(
+            "metrics_related"
+        )
 
     rows = []
     for report in reports:
@@ -357,24 +382,55 @@ def export_metrics(report_id=None, custom_query=Q()):
 
 
 def export_user_profile(report_id=None, custom_query=Q()):
-    header = [_("ID"), _("First name"), _("Last Name"), _("Username on Wiki (WMB)"), _("Username on Wiki"),
-              _("Photograph"), _("Position"), _("Twitter"), _("Facebook"), _("Instagram"), _("Email"),
-              _("Wikidata item"), _("LinkedIn"), _("Lattes"), _("Orcid"), _("Google_scholar"), ]
+    header = [
+        _("ID"),
+        _("First name"),
+        _("Last Name"),
+        _("Username on Wiki (WMB)"),
+        _("Username on Wiki"),
+        _("Photograph"),
+        _("Position"),
+        _("Twitter"),
+        _("Facebook"),
+        _("Instagram"),
+        _("Email"),
+        _("Wikidata item"),
+        _("LinkedIn"),
+        _("Lattes"),
+        _("Orcid"),
+        _("Google_scholar"),
+    ]
 
     if report_id:
         reports = Report.objects.filter(pk=report_id)
     else:
         reports = Report.objects.filter(custom_query)
 
-    reports = reports.select_related("created_by__user__profile","modified_by__user__profile")
+    reports = reports.select_related(
+        "created_by__user__profile", "modified_by__user__profile"
+    )
 
     rows = []
     for report in reports:
         for instance in [report.created_by, report.modified_by]:
-            values = [instance.id, instance.user.first_name, instance.user.last_name, instance.professional_wiki_handle,
-                      instance.personal_wiki_handle, instance.photograph, instance.user.profile.current_position,
-                      instance.twitter, instance.facebook, instance.instagram, instance.user.email, instance.wikidata_item,
-                      instance.linkedin, instance.lattes, instance.orcid, instance.google_scholar]
+            values = [
+                instance.id,
+                instance.user.first_name,
+                instance.user.last_name,
+                instance.professional_wiki_handle,
+                instance.personal_wiki_handle,
+                instance.photograph,
+                instance.user.profile.current_position,
+                instance.twitter,
+                instance.facebook,
+                instance.instagram,
+                instance.user.email,
+                instance.wikidata_item,
+                instance.linkedin,
+                instance.lattes,
+                instance.orcid,
+                instance.google_scholar,
+            ]
             rows.append([v or "" for v in values])
 
     df = pd.DataFrame(rows, columns=header).drop_duplicates().reset_index(drop=True)
@@ -393,11 +449,14 @@ def export_funding(report_id=None, custom_query=Q()):
     ]
 
     if report_id:
-        fundings = Funding.objects.filter(funding_associated=report_id).select_related("project")
+        fundings = Funding.objects.filter(funding_associated=report_id).select_related(
+            "project"
+        )
     else:
         reports = Report.objects.filter(custom_query)
-        fundings = Funding.objects.filter(funding_associated__in=reports.values_list("id", flat=True)).select_related(
-            "project")
+        fundings = Funding.objects.filter(
+            funding_associated__in=reports.values_list("id", flat=True)
+        ).select_related("project")
 
     rows = []
     for funding in fundings:
@@ -449,9 +508,13 @@ def export_directions_related(report_id=None, custom_query=Q()):
     ]
 
     if report_id:
-        reports = Report.objects.filter(pk=report_id).prefetch_related("directions_related")
+        reports = Report.objects.filter(pk=report_id).prefetch_related(
+            "directions_related"
+        )
     else:
-        reports = Report.objects.filter(custom_query).prefetch_related("directions_related")
+        reports = Report.objects.filter(custom_query).prefetch_related(
+            "directions_related"
+        )
 
     rows = []
     for report in reports:
@@ -495,9 +558,13 @@ def export_learning_questions_related(report_id=None, custom_query=Q()):
     ]
 
     if report_id:
-        reports = Report.objects.filter(pk=report_id).prefetch_related("learning_questions_related")
+        reports = Report.objects.filter(pk=report_id).prefetch_related(
+            "learning_questions_related"
+        )
     else:
-        reports = Report.objects.filter(custom_query).prefetch_related("learning_questions_related")
+        reports = Report.objects.filter(custom_query).prefetch_related(
+            "learning_questions_related"
+        )
 
     rows = []
     for report in reports:
@@ -559,9 +626,13 @@ def export_partners_activated(report_id=None, custom_query=Q()):
     ]
 
     if report_id:
-        reports = Report.objects.filter(pk=report_id).prefetch_related("partners_activated")
+        reports = Report.objects.filter(pk=report_id).prefetch_related(
+            "partners_activated"
+        )
     else:
-        reports = Report.objects.filter(custom_query).prefetch_related("partners_activated")
+        reports = Report.objects.filter(custom_query).prefetch_related(
+            "partners_activated"
+        )
 
     rows = []
     for report in reports:
@@ -587,9 +658,13 @@ def export_technologies_used(report_id=None, custom_query=Q()):
     ]
 
     if report_id:
-        reports = Report.objects.filter(pk=report_id).prefetch_related("technologies_used")
+        reports = Report.objects.filter(pk=report_id).prefetch_related(
+            "technologies_used"
+        )
     else:
-        reports = Report.objects.filter(custom_query).prefetch_related("technologies_used")
+        reports = Report.objects.filter(custom_query).prefetch_related(
+            "technologies_used"
+        )
 
     rows = []
     for report in reports:

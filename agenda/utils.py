@@ -8,6 +8,7 @@ from agenda.models import Event
 from agenda.services import build_message_about_reports, send_event_reports
 from users.models import TeamArea, UserProfile
 
+
 def days_of_the_month(year, month):
     """
     Creates an array with the days of the month.

@@ -520,14 +520,20 @@ class NewReportFormTest(TestCase):
             report.reference_text, '<ref name="sara-1">[https://example.com Test]</ref>'
         )
 
-    def test_query_for_named_fields_returns_empty_query_if_metric_field_names_parsed_are_empty(self):
+    def test_query_for_named_fields_returns_empty_query_if_metric_field_names_parsed_are_empty(
+        self,
+    ):
         query = _query_for_named_fields([])
         self.assertEqual(query, Q())
 
-    def test_query_for_named_fields_returns_concatenation_of_queries_with_the_metric_field_names_parsed(self):
-            query = _query_for_named_fields(["test1", "test2"])
-            self.assertEqual(query, Q(test1__gt=0) | Q(test2__gt=0))
+    def test_query_for_named_fields_returns_concatenation_of_queries_with_the_metric_field_names_parsed(
+        self,
+    ):
+        query = _query_for_named_fields(["test1", "test2"])
+        self.assertEqual(query, Q(test1__gt=0) | Q(test2__gt=0))
 
-    def test_query_for_named_fields_returns_query_field_with_the_metric_field_name_parsed(self):
-            query = _query_for_named_fields(["test1"])
-            self.assertEqual(query, Q(test1__gt=0))
+    def test_query_for_named_fields_returns_query_field_with_the_metric_field_name_parsed(
+        self,
+    ):
+        query = _query_for_named_fields(["test1"])
+        self.assertEqual(query, Q(test1__gt=0))

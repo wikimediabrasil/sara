@@ -2,7 +2,6 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-
 LEARNING_AREA = _("Learning area")
 FILLING_NEEDED = _("You need to fill the text field")
 

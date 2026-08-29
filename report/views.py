@@ -17,17 +17,28 @@ from metrics.models import Metric
 from report.forms import NewReportForm, OperationUpdateFormSet
 from report.models import OperationReport, Report, Project, Activity
 
-
 # ======================================================================================================================
 # UTILS
 # ======================================================================================================================
-from report.export_utils import (add_csv_file, add_excel_file, export_report_instance, export_operation_report,
-                                 export_metrics, export_user_profile, export_funding, export_area_activated,
-                                 export_directions_related, export_editors, export_learning_questions_related,
-                                 export_organizers, export_partners_activated, export_technologies_used)
+from report.export_utils import (
+    add_csv_file,
+    add_excel_file,
+    export_report_instance,
+    export_operation_report,
+    export_metrics,
+    export_user_profile,
+    export_funding,
+    export_area_activated,
+    export_directions_related,
+    export_editors,
+    export_learning_questions_related,
+    export_organizers,
+    export_partners_activated,
+    export_technologies_used,
+)
 from report.utils import get_operation_formset, create_report
-DETAIL_REPORT_URL = "report:detail_report"
 
+DETAIL_REPORT_URL = "report:detail_report"
 
 
 @login_required
@@ -42,9 +53,7 @@ def add_report(request):
         if report_form.is_valid() and operation_metrics.is_valid():
             report = create_report(report_form, operation_metrics, request.user)
             messages.success(request, _("Report registered successfully!"))
-            return redirect(
-                reverse(DETAIL_REPORT_URL, kwargs={"report_id": report.id})
-            )
+            return redirect(reverse(DETAIL_REPORT_URL, kwargs={"report_id": report.id}))
 
         messages.error(request, _("Something went wrong!"))
         for field, error in report_form.errors.items():
@@ -202,9 +211,7 @@ def update_report(request, report_id):
                 "You do not have permission to edit this report. Please, share the link with the Products and Technology team for any questions."
             ),
         )
-        return redirect(
-            reverse(DETAIL_REPORT_URL, kwargs={"report_id": report_id})
-        )
+        return redirect(reverse(DETAIL_REPORT_URL, kwargs={"report_id": report_id}))
 
     if request.method == "POST":
         report_form = NewReportForm(
@@ -220,9 +227,7 @@ def update_report(request, report_id):
                 operation_metrics.save()
 
             messages.success(request, _("Report updated successfully!"))
-            return redirect(
-                reverse(DETAIL_REPORT_URL, kwargs={"report_id": report.id})
-            )
+            return redirect(reverse(DETAIL_REPORT_URL, kwargs={"report_id": report.id}))
     else:
         report_form = NewReportForm(instance=report, user=request.user, is_update=True)
         operation_metrics = OperationUpdateFormSet(prefix="Operation", instance=report)

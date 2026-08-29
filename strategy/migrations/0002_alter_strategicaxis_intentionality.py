@@ -6,14 +6,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('strategy', '0001_initial'),
+        ("strategy", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='strategicaxis',
-            name='intentionality',
-            field=models.CharField(blank=True, default='', help_text='Explanation of the intentionality behind this axis.', max_length=420, verbose_name='Intentionality'),
+            model_name="strategicaxis",
+            name="intentionality",
+            field=models.CharField(
+                blank=True,
+                default="",
+                help_text="Explanation of the intentionality behind this axis.",
+                max_length=420,
+                verbose_name="Intentionality",
+            ),
             preserve_default=False,
         ),
     ]

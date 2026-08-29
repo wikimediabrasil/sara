@@ -27,7 +27,12 @@ from metrics.templatetags.metricstags import (
     is_yesno,
     perc,
 )
-from metrics.utils import render_to_pdf, _build_wiki_ref_for_reports, _get_timespan_array, _q_filter_for_activity
+from metrics.utils import (
+    render_to_pdf,
+    _build_wiki_ref_for_reports,
+    _get_timespan_array,
+    _q_filter_for_activity,
+)
 from metrics.views import (
     _build_list_values,
     get_metrics_and_aggregate_per_project,
@@ -1088,20 +1093,31 @@ class MetricFunctionsTests(TestCase):
             editor_list,
         )
 
-    def test_q_filter_for_activity_return_query_filter_for_project_if_activity_id_is_1(self):
+    def test_q_filter_for_activity_return_query_filter_for_project_if_activity_id_is_1(
+        self,
+    ):
         project = Project.objects.create(text="Project")
-        q_filter = _q_filter_for_activity(project,self.activity_1, Q())
+        q_filter = _q_filter_for_activity(project, self.activity_1, Q())
         self.assertEqual(q_filter, Q(project=project))
 
-    def test_q_filter_for_activity_return_query_filter_for_project_and_activity_if_activity_id_is_not_1(self):
+    def test_q_filter_for_activity_return_query_filter_for_project_and_activity_if_activity_id_is_not_1(
+        self,
+    ):
         project = Project.objects.create(text="Project")
-        q_filter = _q_filter_for_activity(project,self.activity_2, Q())
+        q_filter = _q_filter_for_activity(project, self.activity_2, Q())
         self.assertEqual(q_filter, Q(project=project, activity=self.activity_2))
 
-    def test_q_filter_for_activity_return_query_filter_for_project_and_activity_concatenated_if_activity_id_is_not_1(self):
+    def test_q_filter_for_activity_return_query_filter_for_project_and_activity_concatenated_if_activity_id_is_not_1(
+        self,
+    ):
         project = Project.objects.create(text="Project")
-        q_filter = _q_filter_for_activity(project,self.activity_2, Q(anything="anything"))
-        self.assertEqual(q_filter, Q(project=project, activity=self.activity_2) & Q(anything="anything"))
+        q_filter = _q_filter_for_activity(
+            project, self.activity_2, Q(anything="anything")
+        )
+        self.assertEqual(
+            q_filter,
+            Q(project=project, activity=self.activity_2) & Q(anything="anything"),
+        )
 
 
 class ReferencesFunctionsTests(TestCase):

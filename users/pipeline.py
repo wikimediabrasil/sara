@@ -76,5 +76,8 @@ def get_username(strategy, details, user=None, *args, **kwargs):
     if user:
         return {"username": user.username}
 
-    details = {**details, "username": re.sub(r"[^\w@.+\-]", "_", details.get("username", ""))}
+    details = {
+        **details,
+        "username": re.sub(r"[^\w@.+\-]", "_", details.get("username", "")),
+    }
     return social_get_username(strategy, details, user=user, *args, **kwargs)

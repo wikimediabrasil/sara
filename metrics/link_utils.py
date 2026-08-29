@@ -288,7 +288,17 @@ INVERTED_PATTERNS = (
     | INVERTED_TOOLFORGE
 )
 
-META_PREFIXES = ["Media:", "Special:", "User:", "Project:", "File:", "MediaWiki:", "Template:", "Help:", "Category:"]
+META_PREFIXES = [
+    "Media:",
+    "Special:",
+    "User:",
+    "Project:",
+    "File:",
+    "MediaWiki:",
+    "Template:",
+    "Help:",
+    "Category:",
+]
 
 
 def process_all_references(input_string):
@@ -322,7 +332,9 @@ def unwikify_link(match, updated_references):
             ref_content
         )  # Process the ref tag inner part
         if "bulleted list" in updated_content:
-            bl_match = re.match(r"([^{]*)\{\{bulleted list\|([^}]*)\}\}(.*)", updated_content)
+            bl_match = re.match(
+                r"([^{]*)\{\{bulleted list\|([^}]*)\}\}(.*)", updated_content
+            )
             if bl_match:
                 bullet_items = bl_match.group(2).split("|")
                 # Make the concatenation of the bulleted list as an HTML element

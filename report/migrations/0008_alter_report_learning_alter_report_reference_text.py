@@ -6,18 +6,30 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('report', '0007_alter_editor_first_seen_at_and_more'),
+        ("report", "0007_alter_editor_first_seen_at_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='report',
-            name='learning',
-            field=models.TextField(blank=True, default='', help_text='Specific learning about the activity reported.', max_length=5000, verbose_name='Learning'),
+            model_name="report",
+            name="learning",
+            field=models.TextField(
+                blank=True,
+                default="",
+                help_text="Specific learning about the activity reported.",
+                max_length=5000,
+                verbose_name="Learning",
+            ),
         ),
         migrations.AlterField(
-            model_name='report',
-            name='reference_text',
-            field=models.TextField(blank=True, default='', help_text='The reference text of the report, in wikitext', max_length=10000, verbose_name='Reference text'),
+            model_name="report",
+            name="reference_text",
+            field=models.TextField(
+                blank=True,
+                default="",
+                help_text="The reference text of the report, in wikitext",
+                max_length=10000,
+                verbose_name="Reference text",
+            ),
         ),
     ]

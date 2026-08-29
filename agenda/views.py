@@ -15,7 +15,6 @@ from agenda.models import Event
 from agenda.services import send_event_reports
 from agenda.utils import days_of_the_month, list_of_reports_of_area
 
-
 # ======================================================================================================================
 # UTILS
 # ======================================================================================================================
