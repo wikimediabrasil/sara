@@ -97,91 +97,121 @@ Username 2 or name{% endblocktrans %}">{% if report_form.instance.id %}{% for or
         </div>
         <div class="w3-twothird">
             <label class="w3-third formfield toggle" for="wikipedia">
-                <input class="toggle__input wiki" type="checkbox" id="wikipedia" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="wikipedia" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.wikipedia_created or report_form.instance.wikipedia_edited %}true{% else %}false{% endif %}"
+                       aria-controls="wikipedia_fields"
                        {% if report_form.instance.wikipedia_created or report_form.instance.wikipedia_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "Wikipedia" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="commons">
-                <input class="toggle__input wiki" type="checkbox" id="commons" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="commons" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.commons_created or report_form.instance.commons_edited %}true{% else %}false{% endif %}"
+                       aria-controls="commons_fields"
                        {% if report_form.instance.commons_created or report_form.instance.commons_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "Wikimedia Commons" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="wikidata">
-                <input class="toggle__input wiki" type="checkbox" id="wikidata" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="wikidata" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.wikidata_created or report_form.instance.wikidata_edited %}true{% else %}false{% endif %}"
+                       aria-controls="wikidata_fields"
                        {% if report_form.instance.wikidata_created or report_form.instance.wikidata_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "Wikidata" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="wikiversity">
-                <input class="toggle__input wiki" type="checkbox" id="wikiversity" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="wikiversity" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.wikiversity_created or report_form.instance.wikiversity_edited %}true{% else %}false{% endif %}"
+                       aria-controls="wikiversity_fields"
                        {% if report_form.instance.wikiversity_created or report_form.instance.wikiversity_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "Wikiversity" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="wikisource">
-                <input class="toggle__input wiki" type="checkbox" id="wikisource" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="wikisource" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.wikisource_created or report_form.instance.wikisource_edited %}true{% else %}false{% endif %}"
+                       aria-controls="wikisource_fields"
                        {% if report_form.instance.wikisource_created or report_form.instance.wikisource_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "Wikisource" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="wikibooks">
-                <input class="toggle__input wiki" type="checkbox" id="wikibooks" onclick="toggle_field(this.id)"
-                       {% if report_form.instance.wikibooks_created or report_form.instance.wikibooks_edited %}checked{% endif %}/>
+                <input class="toggle__input wiki" type="checkbox" id="wikibooks" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.wikibooks_created or report_form.instance.wikibooks_edited %}true{% else %}false{% endif %}"
+                       aria-controls="wikibooks_fields"
+                       {% if report_form.instance.wikibooks_created or report_form.instance.wikibooks_edited %}checked{% endif %}/><!-- NOSONAR: native checkbox, Space triggers click natively -->
                 <span class="toggle__fill"></span>
                 <span>{% translate "Wikibooks" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="wikinews">
-                <input class="toggle__input wiki" type="checkbox" id="wikinews" onclick="toggle_field(this.id)"
-                       {% if report_form.instance.wikinews_created or report_form.instance.wikinews_edited %}checked{% endif %}/>
+                <input class="toggle__input wiki" type="checkbox" id="wikinews" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.wikinews_created or report_form.instance.wikinews_edited %}true{% else %}false{% endif %}"
+                       aria-controls="wikinews_fields"
+                       {% if report_form.instance.wikinews_created or report_form.instance.wikinews_edited %}checked{% endif %}/><!-- NOSONAR: native checkbox, Space triggers click natively -->
                 <span class="toggle__fill"></span>
                 <span>{% translate "Wikinews" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="wikiquote">
-                <input class="toggle__input wiki" type="checkbox" id="wikiquote" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="wikiquote" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.wikiquote_created or report_form.instance.wikiquote_edited %}true{% else %}false{% endif %}"
+                       aria-controls="wikiquote_fields"
                        {% if report_form.instance.wikiquote_created or report_form.instance.wikiquote_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "Wikiquote" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="wiktionary">
-                <input class="toggle__input wiki" type="checkbox" id="wiktionary" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="wiktionary" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.wiktionary_created or report_form.instance.wiktionary_edited %}true{% else %}false{% endif %}"
+                       aria-controls="wiktionary_fields"
                        {% if report_form.instance.wiktionary_created or report_form.instance.wiktionary_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "Wiktionary" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="wikivoyage">
-                <input class="toggle__input wiki" type="checkbox" id="wikivoyage" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="wikivoyage" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.wikivoyage_created or report_form.instance.wikivoyage_edited %}true{% else %}false{% endif %}"
+                       aria-controls="wikivoyage_fields"
                        {% if report_form.instance.wikivoyage_created or report_form.instance.wikivoyage_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "Wikivoyage" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="wikispecies">
-                <input class="toggle__input wiki" type="checkbox" id="wikispecies" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="wikispecies" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.wikispecies_created or report_form.instance.wikispecies_edited %}true{% else %}false{% endif %}"
+                       aria-controls="wikispecies_fields"
                        {% if report_form.instance.wikispecies_created or report_form.instance.wikispecies_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "Wikispecies" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="metawiki">
-                <input class="toggle__input wiki" type="checkbox" id="metawiki" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="metawiki" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.metawiki_created or report_form.instance.metawiki_edited %}true{% else %}false{% endif %}"
+                       aria-controls="metawiki_fields"
                        {% if report_form.instance.metawiki_created or report_form.instance.metawiki_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "MetaWiki" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="mediawiki">
-                <input class="toggle__input wiki" type="checkbox" id="mediawiki" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="mediawiki" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.mediawiki_created or report_form.instance.mediawiki_edited %}true{% else %}false{% endif %}"
+                       aria-controls="mediawiki_fields"
                        {% if report_form.instance.mediawiki_created or report_form.instance.mediawiki_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "MediaWiki" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="wikifunctions">
-                <input class="toggle__input wiki" type="checkbox" id="wikifunctions" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="wikifunctions" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.wikifunctions_created or report_form.instance.wikifunctions_edited %}true{% else %}false{% endif %}"
+                       aria-controls="wikifunctions_fields"
                        {% if report_form.instance.wikifunctions_created or report_form.instance.wikifunctions_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "Wikifunctions" %}</span>
             </label>
             <label class="w3-third formfield toggle" for="incubator">
-                <input class="toggle__input wiki" type="checkbox" id="incubator" onclick="toggle_field(this.id)"
+                <input class="toggle__input wiki" type="checkbox" id="incubator" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.incubator_created or report_form.instance.incubator_edited %}true{% else %}false{% endif %}"
+                       aria-controls="incubator_fields"
                        {% if report_form.instance.incubator_created or report_form.instance.incubator_edited %}checked{% endif %}/>
                 <span class="toggle__fill"></span>
                 <span>{% translate "Incubator" %}</span>

@@ -1,7 +1,12 @@
 from django.contrib import admin
 
-from .models import (Direction, EvaluationObjective, LearningArea,
-                     StrategicAxis, StrategicLearningQuestion)
+from .models import (
+    Direction,
+    EvaluationObjective,
+    LearningArea,
+    StrategicAxis,
+    StrategicLearningQuestion,
+)
 
 admin.site.register(StrategicAxis)
 admin.site.register(Direction)

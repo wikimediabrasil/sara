@@ -18,7 +18,15 @@ ENABLE_BUG_APP = False
 ENABLE_AGENDA_APP = False
 
 # SECURITY WARNING: keep the secret key used in production secret!
-from .settings_local import *  # noqa: E402, F401, F403
+try:
+    from . import settings_local
+except ImportError:
+    settings_local = None
+
+if settings_local:
+    for name in dir(settings_local):
+        if name.isupper():
+            globals()[name] = getattr(settings_local, name)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -145,7 +153,6 @@ LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "static/"
-# STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'))
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Default primary key field type

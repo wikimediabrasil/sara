@@ -8,9 +8,7 @@
             <p class="form-legend">{% translate "Which are the directions that guided this activity?" %}</p>
         </div>
         <fieldset class="sub_container" id="directions_fieldset">
-            <div class="w3-row">
-                <legend>{% translate "Directions related to the activity being reported" %}</legend>
-            </div>
+            <legend class="w3-row">{% translate "Directions related to the activity being reported" %}</legend>
             {% for strategic_axis in report_form.fields.directions_related.choices %}
                 <div class="w3-container field_title" style="color:var(--main-color);">{{ strategic_axis.0 }}</div>
                 {% for direction in strategic_axis.1 %}

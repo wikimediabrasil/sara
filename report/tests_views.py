@@ -20,7 +20,7 @@ from report.views import (export_area_activated, export_directions_related,
                           export_operation_report, export_organizers,
                           export_partners_activated, export_report_instance,
                           export_technologies_used, export_user_profile,
-                          get_localized_field)
+                          _get_localized_field)
 from strategy.models import Direction, LearningArea, StrategicAxis
 from users.models import Position, TeamArea, User, UserPosition, UserProfile
 
@@ -47,8 +47,10 @@ class ReportAddViewTest(TestCase):
         )
 
         self.add_permission = Permission.objects.get(codename="add_report")
+        self.view_permission = Permission.objects.get(codename="view_report")
         self.delete_permission = Permission.objects.get(codename="delete_report")
         self.user.user_permissions.add(self.add_permission)
+        self.user.user_permissions.add(self.view_permission)
         self.user.user_permissions.add(self.delete_permission)
 
     def test_add_report_view_fails_if_user_doesnt_have_permission(self):
@@ -76,7 +78,9 @@ class ReportAddViewTest(TestCase):
         url = reverse("report:add_report")
 
         project = Project.objects.create(
-            text="Wikimedia Community Fund", main_funding=True, counts_for_main_funding=True
+            text="Wikimedia Community Fund",
+            main_funding=True,
+            counts_for_main_funding=True,
         )
         strategic_axis = StrategicAxis.objects.create(text="Strategic Axis")
         direction = Direction.objects.create(
@@ -263,7 +267,6 @@ class ReportAddViewTest(TestCase):
         self.assertRedirects(
             response,
             reverse("report:detail_report", kwargs={"report_id": report.id}),
-            target_status_code=302,
         )
 
         report = Report.objects.get(id=1)
@@ -467,65 +470,7 @@ class ReportAddViewTest(TestCase):
 
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(
-            response, reverse("report:list_reports"), target_status_code=302
-        )
-
-    # def test_get_or_create_editors_with_empty_string(self):
-    #     editors_string = ""
-    #     result = get_or_create_editors(editors_string)
-    #     self.assertFalse(result)
-    #
-    # def test_get_or_create_editors_with_usernames_of_new_editors_creates_editors(self):
-    #     editors_string = "New editor 1\r\nNew editor 2"
-    #     result = get_or_create_editors(editors_string)
-    #     for editor in result:
-    #         self.assertTrue(Editor.objects.filter(username=editor.username).exists())
-    #
-    # def test_get_or_create_editors_with_usernames_of_existing_editors_do_not_duplicate_editors(self):
-    #     Editor.objects.create(username="New editor 1")
-    #     editors_string = "New editor 1\r\nNew editor 2"
-    #     self.assertEqual(Editor.objects.count(), 1)
-    #     result = get_or_create_editors(editors_string)
-    #
-    #     for editor in result:
-    #         self.assertTrue(Editor.objects.filter(username=editor.username).exists())
-    #
-    #     self.assertEqual(Editor.objects.count(), 2)
-
-    # def test_get_or_create_organizers_with_empty_string(self):
-    #     organizers_string = ""
-    #     result = get_or_create_organizers(organizers_string)
-    #     self.assertFalse(result)
-    #
-    # def test_get_or_create_organizers_creates_organizers(self):
-    #     organizers_string = "New organizer 1\r\nNew organizer 2"
-    #     result = get_or_create_organizers(organizers_string)
-    #     for organizer in result:
-    #         self.assertTrue(Organizer.objects.filter(name=organizer.name).exists())
-    #
-    # def test_get_or_create_organizers_do_not_duplicate_organizers(self):
-    #     institution = Partner.objects.create(name="Partner")
-    #     organizer_1 = Organizer.objects.create(name="New organizer 1")
-    #     organizer_1.institution.add(institution)
-    #     organizers_string = "New organizer 1\r\nNew organizer 2"
-    #     result = get_or_create_organizers(organizers_string)
-    #     for organizer in result:
-    #         self.assertTrue(Organizer.objects.filter(name=organizer.name).exists())
-    #
-    # def test_get_or_create_organizers_do_not_duplicate_organizers_and_create_institutions(self):
-    #     organizers_string = "New organizer 1;Institution 1;Institution 2\r\nNew organizer 2;Institution 3"
-    #     result = get_or_create_organizers(organizers_string)
-    #
-    #     expected_result = {
-    #         "New organizer 1": ["Institution 1", "Institution 2"],
-    #         "New organizer 2": ["Institution 3"],
-    #     }
-    #
-    #     for organizer in result:
-    #         expected_partners = expected_result.get(organizer.name)
-    #         expected_queryset = Partner.objects.filter(name__in=expected_partners)
-    #         self.assertQuerySetEqual(organizer.institution.all(), expected_queryset, ordered=False)
+        self.assertRedirects(response, reverse("report:list_reports"))
 
     def test_get_metrics_with_activities_plan_activity(self):
         project = Project.objects.create(text="Activities plan")
@@ -2788,7 +2733,7 @@ class GetLocalizedFieldTests(TestCase):
         """
         if a language is not available, the first fallback language is returned
         """
-        field = get_localized_field(lang="fr", available_fields=self.available_fields)
+        field = _get_localized_field(lang="fr", available_fields=self.available_fields)
         self.assertEqual(field, "text_en")
 
     @override_settings(LANGUAGE_FALLBACKS={"fr": ["es", "en"]})
@@ -2796,7 +2741,7 @@ class GetLocalizedFieldTests(TestCase):
         """
         if a language is not available, the first fallback language is returned
         """
-        field = get_localized_field(lang="fr", available_fields=self.available_fields)
+        field = _get_localized_field(lang="fr", available_fields=self.available_fields)
         self.assertEqual(field, "text_es")
 
     @override_settings(LANGUAGE_FALLBACKS={"fr": ["de", "it"]})
@@ -2804,7 +2749,7 @@ class GetLocalizedFieldTests(TestCase):
         """
         If no fallback exists, use it default
         """
-        field = get_localized_field(lang="fr", available_fields=self.available_fields)
+        field = _get_localized_field(lang="fr", available_fields=self.available_fields)
         self.assertEqual(field, "text")
 
     @override_settings(LANGUAGE_FALLBACKS={"fr": ["de", "it"]})
@@ -2812,7 +2757,7 @@ class GetLocalizedFieldTests(TestCase):
         """
         No fallback and text is not available
         """
-        field = get_localized_field(lang="fr", available_fields=["text_en"])
+        field = _get_localized_field(lang="fr", available_fields=["text_en"])
         self.assertIsNone(field)
 
     @override_settings(LANGUAGE_FALLBACKS={"pt_br": ["pt", "en"]})
@@ -2820,7 +2765,7 @@ class GetLocalizedFieldTests(TestCase):
         """
         If exact field exists, use it
         """
-        field = get_localized_field(
+        field = _get_localized_field(
             lang="pt-BR", available_fields=["text_pt_br", "text_en"]
         )
         self.assertEqual(field, "text_pt_br")

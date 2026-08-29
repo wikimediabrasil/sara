@@ -1,6 +1,6 @@
 from datetime import datetime
 from unittest.mock import patch
-
+from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.utils import timezone
@@ -8,9 +8,18 @@ from django.utils import timezone
 from metrics.models import Area
 from users.models import Position, TeamArea, User, UserPosition
 
-from .forms import NewReportForm
-from .models import (Activity, Editor, Funding, Metric, Organizer, Partner,
-                     Project, Report, UserProfile)
+from .forms import NewReportForm, _query_for_named_fields
+from .models import (
+    Activity,
+    Editor,
+    Funding,
+    Metric,
+    Organizer,
+    Partner,
+    Project,
+    Report,
+    UserProfile,
+)
 
 
 class NewReportFormTest(TestCase):
@@ -85,7 +94,9 @@ class NewReportFormTest(TestCase):
             "incubator_edited": 0,
         }
 
-    def test_form_initialization_sets_area_responsible__if_user_has_current_position(self):
+    def test_form_initialization_sets_area_responsible__if_user_has_current_position(
+        self,
+    ):
         group = Group.objects.create(name="Test Group")
         position = Position.objects.create(
             text="Test Position", type=group, area_associated=self.team_area
@@ -93,7 +104,11 @@ class NewReportFormTest(TestCase):
         self.user.profile.position = position
         self.user.profile.save()
         self.user.save()
-        UserPosition.objects.create(user_profile=self.user.profile, position=position, start_date=datetime.today())
+        UserPosition.objects.create(
+            user_profile=self.user.profile,
+            position=position,
+            start_date=datetime.today(),
+        )
 
         form = NewReportForm(user=self.user, data={}, is_update=False)
         self.assertEqual(form.fields["area_responsible"].initial, self.team_area.id)
@@ -120,11 +135,15 @@ class NewReportFormTest(TestCase):
         form = NewReportForm(user=self.user, data=data)
         form.is_valid()
         from datetime import date
+
         self.assertEqual(form.cleaned_data["end_date"], date(2026, 2, 15))
 
     def test_clean_partners_activated_with_querydict(self):
         from django.http import QueryDict
-        qd = QueryDict(f"partners_activated={self.partner.id}&partners_activated=New+Partner")
+
+        qd = QueryDict(
+            f"partners_activated={self.partner.id}&partners_activated=New+Partner"
+        )
         form = NewReportForm(data=qd, user=self.user)
         form.is_valid()
         self.assertIn(str(self.partner.id), form.cleaned_data["partners_activated"])
@@ -237,7 +256,9 @@ class NewReportFormTest(TestCase):
         self.assertEqual(report.organizers.count(), 0)
 
     @patch("report.forms.get_user_date_of_registration")
-    def test_save_editors_does_not_mark_new_editor_if_created_before_initial_date(self, mock_reg):
+    def test_save_editors_does_not_mark_new_editor_if_created_before_initial_date(
+        self, mock_reg
+    ):
         mock_reg.return_value = None
         editor = Editor.objects.create(username="OldEditor")
         editor.first_seen_at = timezone.datetime(2020, 1, 1)
@@ -348,7 +369,10 @@ class NewReportFormTest(TestCase):
 
         form = NewReportForm(user=self.user, data=self.form_data)
         form.is_valid()
-        form.cleaned_data["partners_activated"] = [str(self.partner.id), "Brand New Partner"]
+        form.cleaned_data["partners_activated"] = [
+            str(self.partner.id),
+            "Brand New Partner",
+        ]
         form._save_partners(report)
 
         partner_names = list(report.partners_activated.values_list("name", flat=True))
@@ -388,7 +412,9 @@ class NewReportFormTest(TestCase):
 
         form = NewReportForm(user=self.user, data=self.form_data)
         form.is_valid()
-        form.cleaned_data["partners_activated"] = ["Partner Test"]  # already exists in setUp
+        form.cleaned_data["partners_activated"] = [
+            "Partner Test"
+        ]  # already exists in setUp
         form._save_partners(report)
 
         self.assertEqual(Partner.objects.filter(name="Partner Test").count(), 1)
@@ -412,22 +438,34 @@ class NewReportFormTest(TestCase):
 
     @patch("report.forms.get_user_date_of_registration")
     @patch("report.forms.build_wiki_ref")
-    def test_save_builds_reference_text_on_first_save(self, mock_build_wiki_ref, mock_reg):
+    def test_save_builds_reference_text_on_first_save(
+        self, mock_build_wiki_ref, mock_reg
+    ):
         mock_reg.return_value = None
-        mock_build_wiki_ref.return_value = "<ref name=\"sara-1\">[https://example.com Test]</ref>"
+        mock_build_wiki_ref.return_value = (
+            '<ref name="sara-1">[https://example.com Test]</ref>'
+        )
 
         form = NewReportForm(user=self.user, data=self.form_data)
         self.assertTrue(form.is_valid())
         report = form.save(commit=True, user=self.user)
 
-        mock_build_wiki_ref.assert_called_with(report.links, report.pk, report.description)
-        self.assertEqual(report.reference_text, "<ref name=\"sara-1\">[https://example.com Test]</ref>")
+        mock_build_wiki_ref.assert_called_with(
+            report.links, report.pk, report.description
+        )
+        self.assertEqual(
+            report.reference_text, '<ref name="sara-1">[https://example.com Test]</ref>'
+        )
 
     @patch("report.forms.get_user_date_of_registration")
     @patch("report.forms.build_wiki_ref")
-    def test_save_fills_reference_text_if_empty_on_update(self, mock_build_wiki_ref, mock_reg):
+    def test_save_fills_reference_text_if_empty_on_update(
+        self, mock_build_wiki_ref, mock_reg
+    ):
         mock_reg.return_value = None
-        mock_build_wiki_ref.return_value = "<ref name=\"sara-1\">[https://example.com Test]</ref>"
+        mock_build_wiki_ref.return_value = (
+            '<ref name="sara-1">[https://example.com Test]</ref>'
+        )
 
         existing_report = Report.objects.create(
             created_by=self.user_profile,
@@ -440,16 +478,24 @@ class NewReportFormTest(TestCase):
             reference_text="",
         )
 
-        form = NewReportForm(user=self.user, data=self.form_data, instance=existing_report)
+        form = NewReportForm(
+            user=self.user, data=self.form_data, instance=existing_report
+        )
         self.assertTrue(form.is_valid())
         report = form.save(commit=True, user=self.user)
 
-        mock_build_wiki_ref.assert_called_with(report.links, report.pk, report.description)
-        self.assertEqual(report.reference_text, "<ref name=\"sara-1\">[https://example.com Test]</ref>")
+        mock_build_wiki_ref.assert_called_with(
+            report.links, report.pk, report.description
+        )
+        self.assertEqual(
+            report.reference_text, '<ref name="sara-1">[https://example.com Test]</ref>'
+        )
 
     @patch("report.forms.get_user_date_of_registration")
     @patch("report.forms.build_wiki_ref")
-    def test_save_does_not_overwrite_existing_reference_text_on_update(self, mock_build_wiki_ref, mock_reg):
+    def test_save_does_not_overwrite_existing_reference_text_on_update(
+        self, mock_build_wiki_ref, mock_reg
+    ):
         mock_reg.return_value = None
 
         existing_report = Report.objects.create(
@@ -460,12 +506,28 @@ class NewReportFormTest(TestCase):
             initial_date="2026-01-01",
             description="Test",
             links="https://example.com",
-            reference_text="<ref name=\"sara-1\">[https://example.com Test]</ref>",
+            reference_text='<ref name="sara-1">[https://example.com Test]</ref>',
         )
 
-        form = NewReportForm(user=self.user, data=self.form_data, instance=existing_report)
+        form = NewReportForm(
+            user=self.user, data=self.form_data, instance=existing_report
+        )
         self.assertTrue(form.is_valid())
         report = form.save(commit=True, user=self.user)
 
         mock_build_wiki_ref.assert_not_called()
-        self.assertEqual(report.reference_text, "<ref name=\"sara-1\">[https://example.com Test]</ref>")
+        self.assertEqual(
+            report.reference_text, '<ref name="sara-1">[https://example.com Test]</ref>'
+        )
+
+    def test_query_for_named_fields_returns_empty_query_if_metric_field_names_parsed_are_empty(self):
+        query = _query_for_named_fields([])
+        self.assertEqual(query, Q())
+
+    def test_query_for_named_fields_returns_concatenation_of_queries_with_the_metric_field_names_parsed(self):
+            query = _query_for_named_fields(["test1", "test2"])
+            self.assertEqual(query, Q(test1__gt=0) | Q(test2__gt=0))
+
+    def test_query_for_named_fields_returns_query_field_with_the_metric_field_name_parsed(self):
+            query = _query_for_named_fields(["test1"])
+            self.assertEqual(query, Q(test1__gt=0))

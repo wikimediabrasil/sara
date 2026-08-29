@@ -27,7 +27,6 @@
         a {
             color: #007cae;
             word-wrap: break-word;
-            word-break: break-word;
             hyphens: auto;
             overflow-wrap: break-word;
         }
@@ -75,7 +74,7 @@
         <h2>References</h2>
         <ul style="max-width: 100%;">
             {% for ref in references %}
-                {{ ref|safe }}
+                {{ ref }}
             {% endfor %}
         </ul>
     </div>

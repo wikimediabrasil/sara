@@ -7,16 +7,17 @@
 {% block footer %}{% endblock %}
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/forms.css' %}">
-    <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/select2/4.0.13/css/select2.min.css">
+    <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/select2/4.0.13/css/select2.min.css" integrity="sha384-KZO2FRYNmIHerhfYMjCIUaJeGBRXP7CN24SiNSG+wdDzgwvxWbl16wMVtWiJTcMt" crossorigin="anonymous">
 {% endblock %}
 {% block scripts %}
-    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
-    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/select2/4.0.13/js/select2.min.js" integrity="sha384-JnbsSLBmv2/R0fUmF2XYIcAEMPHEAO51Gitn9IjL4l89uFTIgtLF1+jqIqqd9FSk" crossorigin="anonymous"></script>
+    {{ metrics_set|default:"[]"|json_script:"metrics-set" }}
     <script>
         let submitText = "{% trans 'Submit' %}";
         let nextStrategic = "{% trans 'Fill strategic report' %}";
-        let metrics_set = {{ metrics_set|default:"[]"|safe }};
+        let metrics_set = JSON.parse(document.getElementById('metrics-set').textContent);
         let get_metrics_url = "{% url 'report:get_metrics' %}";
         let report_id = "{{ report_id|default:'' }}";
         let select_partners = "{% trans 'Select or type formal partnerships activated' %}";

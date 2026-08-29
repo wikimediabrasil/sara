@@ -51,7 +51,7 @@ fieldset input { background-color: var(--main-lighter-color) !important }
 .form-right { padding-left: 1em; }
 
 /* BUTTONS */
-.closebtn {
+.close_btn {
     margin-left: 1em;
     color: var(--dark-color);
     float: right;
@@ -103,12 +103,24 @@ fieldset input { background-color: var(--main-lighter-color) !important }
     --width: 3em;
     --height: calc(var(--width) / 2);
     --border-radius: calc(var(--height) / 2);
-
+    position: relative;
     display: inline-block;
     cursor: pointer;
 }
 .toggle__input {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+.toggle__input:focus-visible ~ .toggle__fill {
+    outline: 2px solid var(--main-color);
+    outline-offset: 2px;
 }
 .toggle__fill::after {
     content: "";

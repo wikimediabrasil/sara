@@ -12,8 +12,15 @@ from django.utils import timezone
 
 from metrics.link_utils import build_wiki_ref
 from metrics.models import Area, Metric, Project
-from report.models import (Editor, Funding, OperationReport, Organizer,
-                           Partner, Report, Technology)
+from report.models import (
+    Editor,
+    Funding,
+    OperationReport,
+    Organizer,
+    Partner,
+    Report,
+    Technology,
+)
 from strategy.models import LearningArea, StrategicAxis
 from users.models import TeamArea, UserProfile
 
@@ -24,8 +31,31 @@ class PartnerField(forms.Field):
             return []
         return value if isinstance(value, list) else [value]
 
-    def validate(self, value):
-        pass
+
+def _metric_field_name(field_name):
+    """Map a report field name to its corresponding Metric field name."""
+    try:
+        Metric._meta.get_field(field_name)
+        return field_name
+    except FieldDoesNotExist:
+        return f"number_of_{field_name}"
+
+
+def _query_for_int_fields(field_names):
+    """Build an OR query across the Metric fields matching these report fields."""
+    query = Q()
+    for field_name in field_names:
+        metric_field = _metric_field_name(field_name)
+        query |= Q(**{f"{metric_field}__gt": 0})
+    return query
+
+
+def _query_for_named_fields(metric_field_names):
+    """Build an OR query across an explicit list of Metric fields."""
+    query = Q()
+    for field_name in metric_field_names:
+        query |= Q(**{f"{field_name}__gt": 0})
+    return query
 
 
 class NewReportForm(forms.ModelForm):
@@ -41,8 +71,17 @@ class NewReportForm(forms.ModelForm):
 
     class Meta:
         model = Report
-        fields = "__all__"
-        exclude = ["created_by", "created_at", "modified_by", "modified_at"]
+        fields = ["locked", "reference_text", "activity_associated", "partial_report", "area_responsible",
+                  "area_activated", "initial_date", "end_date", "description", "funding_associated", "links",
+                  "private_links", "wikipedia_created", "wikipedia_edited", "commons_created", "commons_edited",
+                  "wikidata_created", "wikidata_edited", "wikiversity_created", "wikiversity_edited",
+                  "wikibooks_created", "wikibooks_edited", "wikisource_created", "wikisource_edited",
+                  "wikinews_created", "wikinews_edited", "wikiquote_created", "wikiquote_edited", "wiktionary_created",
+                  "wiktionary_edited", "wikivoyage_created", "wikivoyage_edited", "wikispecies_created",
+                  "wikispecies_edited", "metawiki_created", "metawiki_edited", "mediawiki_created", "mediawiki_edited",
+                  "wikifunctions_created", "wikifunctions_edited", "incubator_created", "incubator_edited", "editors",
+                  "participants", "organizers", "feedbacks", "partners_activated", "technologies_used",
+                  "directions_related", "learning_questions_related", "learning"]
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
@@ -80,7 +119,7 @@ class NewReportForm(forms.ModelForm):
             )
 
     def clean_partners_activated(self):
-        if hasattr(self.data, 'getlist'):
+        if hasattr(self.data, "getlist"):
             return self.data.getlist("partners_activated")
         return self.data.get("partners_activated", [])
 
@@ -137,7 +176,9 @@ class NewReportForm(forms.ModelForm):
 
             # Save references
             if not report.reference_text:
-                report.reference_text = build_wiki_ref(report.links, report.pk, report.description)
+                report.reference_text = build_wiki_ref(
+                    report.links, report.pk, report.description
+                )
                 report.save(update_fields=["reference_text"])
 
             self._save_editors(report)
@@ -156,7 +197,9 @@ class NewReportForm(forms.ModelForm):
                 metrics = self._metrics_related()
                 metrics = self._apply_implicit_metrics(report, metrics)
             else:
-                metrics = self.cleaned_data.get("metrics_related") or Metric.objects.none()
+                metrics = (
+                    self.cleaned_data.get("metrics_related") or Metric.objects.none()
+                )
 
             report.metrics_related.set(metrics)
 
@@ -177,7 +220,11 @@ class NewReportForm(forms.ModelForm):
             if created:
                 editor.account_creation_date = get_user_date_of_registration(username)
                 editor.first_seen_at = initial_date
-                if editor.account_creation_date and editor.account_creation_date >= initial_date - timedelta(days=30):
+                if (
+                    editor.account_creation_date
+                    and editor.account_creation_date
+                    >= initial_date - timedelta(days=30)
+                ):
                     self._has_new_editors = True
             elif not self.is_update:
                 editor.retained = True
@@ -230,7 +277,11 @@ class NewReportForm(forms.ModelForm):
         report.organizers.set(organizers.values())
 
     def _save_partners(self, report):
-        values = [str(v).strip() for v in self.cleaned_data.get("partners_activated", []) if str(v).strip()]
+        values = [
+            str(v).strip()
+            for v in self.cleaned_data.get("partners_activated", [])
+            if str(v).strip()
+        ]
 
         ids = [int(v) for v in values if v.isdigit()]
         names = [v for v in values if not v.isdigit()]
@@ -244,8 +295,16 @@ class NewReportForm(forms.ModelForm):
 
         report.partners_activated.set(partners_by_id + partners_by_name)
 
+    def _fields_active(self, field_names):
+        """It returns true if the user reported a nonzero value in any of these fields."""
+        return any(
+            self.cleaned_data.get(field_name, 0) > 0 for field_name in field_names
+        )
+
     def _metrics_related(self):
-        metrics_related = self.cleaned_data.get("metrics_related") or Metric.objects.none()
+        metrics_related = (
+            self.cleaned_data.get("metrics_related") or Metric.objects.none()
+        )
         main_funding = Project.objects.get(main_funding=True)
         metrics_main_funding = Metric.objects.filter(project=main_funding)
 
@@ -270,19 +329,8 @@ class NewReportForm(forms.ModelForm):
         ]
 
         for field_set in int_fields_names:
-            if any(
-                self.cleaned_data.get(field_name, 0) > 0 for field_name in field_set
-            ):
-                query = Q()
-                for field in field_set:
-                    try:
-                        Metric._meta.get_field(field)
-                        metric_field = field
-                    except FieldDoesNotExist:
-                        metric_field = f"number_of_{field}"
-
-                    query |= Q(**{f"{metric_field}__gt": 0})
-
+            if self._fields_active(field_set):
+                query = _query_for_int_fields(field_set)
                 metrics_related = metrics_related.union(
                     metrics_main_funding.filter(query)
                 )
@@ -293,16 +341,16 @@ class NewReportForm(forms.ModelForm):
                 "number_of_editors_retained",
                 "number_of_new_editors",
             ],
-            "_parsed_organizers": ["number_of_organizers", "number_of_organizers_retained"],
+            "_parsed_organizers": [
+                "number_of_organizers",
+                "number_of_organizers_retained",
+            ],
             "partners_activated": ["number_of_partnerships_activated"],
         }
 
         for field_set, field_names in obj_fields_names.items():
             if self.cleaned_data.get(field_set):
-                query = Q()
-                for field_name in field_names:
-                    query |= Q(**{f"{field_name}__gt": 0})
-
+                query = _query_for_int_fields(field_names)
                 metrics_related = metrics_related.union(
                     metrics_main_funding.filter(query)
                 )
@@ -447,7 +495,18 @@ def get_user_date_of_registration(user):
 class OperationForm(forms.ModelForm):
     class Meta:
         model = OperationReport
-        fields = "__all__"
+        fields = [
+            "metric",
+            "report",
+            "number_of_people_reached_through_social_media",
+            "number_of_new_followers",
+            "number_of_mentions",
+            "number_of_community_communications",
+            "number_of_events",
+            "number_of_resources",
+            "number_of_partnerships_activated",
+            "number_of_new_partnerships",
+        ]
 
     def clean_number_of_people_reached_through_social_media(self):
         number_of_people_reached_through_social_media = self.cleaned_data.get(

@@ -9,17 +9,16 @@
     <meta content="width=device-width, initial-scale=1" name="viewport">
     <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.ico' %}"/>
     <link rel="preconnect" href="https://tools-static.wmflabs.org/">
-    <link rel="stylesheet" type="text/css" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/w3-css/4.1.0/3/w3.css">
-    <link rel='stylesheet' type='text/css' href='https://tools-static.wmflabs.org/fontcdn/css?family=Poppins:400,700,800,900'>
-    <link rel='stylesheet' type='text/css' href='https://tools-static.wmflabs.org/fontcdn/css?family=Montserrat'>
-    <link rel='stylesheet' type='text/css' href='https://tools-static.wmflabs.org/fontcdn/css?family=Railway'>
-    <link rel="stylesheet" type="text/css" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/w3-css/4.1.0/3/w3.css" integrity="sha384-zpQzwZF+OVRAxiWJkCQZW1UDlFH8BLPIGgoUpGnOOpZ2anNSIam44l1uk0CkfD+5" crossorigin="anonymous">
+    <link rel='stylesheet' type='text/css' href='https://tools-static.wmflabs.org/fontcdn/css?family=Poppins:400,700,800,900' integrity="sha384-D64a4l9gZUoYZltzc8ZVI4wHr+suppOM34MfZUNGpElK5Kiz1/ZvKyymBiGSbtl4" crossorigin="anonymous">
+    <link rel='stylesheet' type='text/css' href='https://tools-static.wmflabs.org/fontcdn/css?family=Montserrat' integrity="sha384-o6O+z2fRKPqkzbKXVdov+vhSx01t7Zr4owXzQqMWIdj1/UwGvaQdbxMTwxD3YMtk" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha384-SOnAn/m2fVJCwnbEYgD4xzrPtvsXdElhOVvR8ND1YjB5nhGNwwf7nBQlhfAwHAZC" crossorigin="anonymous">
     {% block styles %}{% endblock %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/navbar.css' %}">
-    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
-    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/popper.js/2.11.6/umd/popper.js"></script>
-    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"></script>
+    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/jquery/3.6.3/jquery.min.js" integrity="sha384-Ft/vb48LwsAEtgltj7o+6vtS2esTU9PCpDqcXs4OCVQFZu5BqprHtUCZ4kjK+bpE" crossorigin="anonymous"></script>
+    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/popper.js/2.11.6/umd/popper.js" integrity="sha384-VQo0vWAZ18Sqo1Alu/vX3/9h02S6fyWFzsl04LHApi5zmn8ZTmjmqTn0WqxmlPPm" crossorigin="anonymous"></script>
+    <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js" integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
     <script>
       function toggleMenu(iconElement) {
         const section = document.querySelector('.nav_section');
@@ -51,7 +50,12 @@
             {% block banner %}
                 <div class="w3-row">
                     <div class="w3-third disappear">&nbsp;</div>
-                    <div class="w3-third logo"><h1><img src="{% static 'images/sara-logo.svg' %}" alt="{% translate "Logo of the Apprenticeships and Results Evaluation System" %}"></h1></div>
+                    <div class="w3-third logo">
+                        <h1>
+                            <img src="{% static 'images/sara-logo.svg' %}" alt="{% translate "Logo of the Apprenticeships and Results Evaluation System" %}">
+                            <span class="visually-hidden">{% translate "S.A.R.A." %}</span>
+                        </h1>
+                    </div>
                 </div>
             {% endblock %}
             {% block content %}{% endblock %}

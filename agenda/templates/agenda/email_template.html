@@ -9,7 +9,7 @@
 </head>
 <body style="margin: 0; padding: 0;">
 <!-- Wrapper -->
-<table style="width: 100%; font:medium/1.5 Montserrat, sans-serif">
+<table role="presentation" style="width: 100%; font:medium/1.5 Montserrat, sans-serif">
     <tr>
         <td style="text-align: center; padding: 1em; background-color: #3267FF; border-radius: 2em;">
             <h1 style="color: #f8f8f8;">S.A.R.A.</h1>
@@ -19,13 +19,13 @@
     <tr>
         <td style="padding: 2em; background-color: #f8f8f8; border-radius: 2em; ">
             {% blocktrans with manager=manager %}Dear {{ manager }},<br><br>This is a reminder of the reports and activities under your responsibility that must be reported into SARA.<br><br>Please, look into the following activities:{% endblocktrans %}
-            <table style="width: 100%;">
+            <table role="presentation"  style="width: 100%;">
                 {% if late_reports %}
                     <tr>
                         <td>
                             <h2 style="color: #FF3333; ">{% trans "◂ Past activities" %}</h2>
                             <div style="font-size: small; font-style: italic; ">{% trans "Activities that might not have a report associated with them registered. Please, verify" %}</div>
-                            {% autoescape off %}{{ late_reports }}{% endautoescape %}
+                            {{ late_reports }}
                         </td>
                     </tr>
                 {% endif %}
@@ -34,7 +34,7 @@
                         <td>
                             <h2 style="color: #E07800; ">{% trans "◂ Upcoming activities" %}</h2>
                             <div style="font-size: small; font-style: italic; ">{% trans "Activities that will end in the next two weeks." %}</div>
-                            {% autoescape off %}{{ upcoming_reports }}{% endautoescape %}
+                            {{ upcoming_reports }}
                         </td>
                     </tr>
                 {% endif %}
@@ -43,7 +43,7 @@
                         <td>
                             <h2 style="color: #3267FF; ">{% trans "◂ Activities about to kickoff" %}</h2>
                             <div style="font-size: small; font-style: italic; ">{% trans "Activities that will start in the next two weeks." %}</div>
-                            {% autoescape off %}{{ about_to_kickoff }}{% endautoescape %}
+                            {{ about_to_kickoff }}
                         </td>
                     </tr>
                 {% endif %}
@@ -51,7 +51,7 @@
         </td>
     </tr>
     <tr>
-        <td style="text-align: center; padding: 2em; background-color: #3267FF; color: #f8f8f8; font-size: 85%; border-radius: 1em">{% blocktranslate %}The information in this message is based on the <a href="https://sara-wmb.toolforge.org/calendar" title="WMB calendar" style="color:#FFFFFF;">Wikimedia Brasil activity calendar</a>.<br>In case of a change in the activity planning, contact the Executive Director with a justification.<br>Revisions to the calendar are the sole responsibility of the Products and Technology team, under the supervision of the Executive Director.<br><br>For any other inquiries or assistance, please do not hesitate to reach out to our Products and Technology team.{% endblocktranslate %}</td>
+        <td style="text-align: center; padding: 2em; background-color: #3267FF; color: #FFFFFF; font-size: 85%; border-radius: 1em">{% blocktranslate %}The information in this message is based on the <a href="https://sara-wmb.toolforge.org/calendar" title="WMB calendar" style="color:#FFFFFF;">Wikimedia Brasil activity calendar</a>.<br>In case of a change in the activity planning, contact the Executive Director with a justification.<br>Revisions to the calendar are the sole responsibility of the Products and Technology team, under the supervision of the Executive Director.<br><br>For any other inquiries or assistance, please do not hesitate to reach out to our Products and Technology team.{% endblocktranslate %}</td>
     </tr>
 </table>
 </body>

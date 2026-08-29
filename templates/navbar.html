@@ -13,7 +13,9 @@
                 </svg>
             </a>
         </div>
-        <a href="javascript:void(0);" class="menu_icon" onclick="toggleMenu(this)"><i class="nav_icon fa fa-bars"></i></a>
+        <button type="button" class="menu_icon" onclick="toggleMenu(this)" aria-label="{% translate 'Toggle menu' %}">
+            <i class="nav_icon fa fa-bars" aria-hidden="true"></i>
+        </button>
     </div>
     <div class="nav_section">
         <div class="nav_middle">

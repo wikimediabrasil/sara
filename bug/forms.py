@@ -28,7 +28,7 @@ class BugForm(forms.ModelForm):
 
     class Meta:
         model = Bug
-        exclude = ["status", "reporter"]
+        fields = ["title", "description", "bug_type"]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),
         }
@@ -48,11 +48,11 @@ class BugUpdateForm(forms.ModelForm):
 
     class Meta:
         model = Bug
-        fields = "__all__"
+        fields = ["title", "description", "bug_type", "status"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in ("title", "description", "bug_type", "reporter"):
+        for field in ("title", "description", "bug_type"):
             if field in self.fields:
                 self.fields[field].disabled = True
 
@@ -68,7 +68,7 @@ class ObservationForm(forms.ModelForm):
 
     class Meta:
         model = Observation
-        exclude = ["bug_report"]
+        fields = ["observation"]
         widgets = {
             "observation": forms.Textarea(attrs={"rows": 4}),
         }

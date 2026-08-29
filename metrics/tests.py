@@ -12,19 +12,36 @@ from django.urls import reverse
 from django.utils.translation import activate
 from django.utils.translation import gettext_lazy as _
 
-from metrics.link_utils import (build_wiki_ref, dewikify_url,
-                                process_all_references, replace_with_links,
-                                unwikify_link)
+from metrics.link_utils import (
+    build_wiki_ref,
+    dewikify_url,
+    process_all_references,
+    replace_with_links,
+    unwikify_link,
+)
 from metrics.models import Activity, Area, Metric, Project
-from metrics.templatetags.metricstags import (bool_yesno, bool_yesnopartial,
-                                              categorize, is_yesno, perc)
-from metrics.utils import render_to_pdf
-from metrics.views import (build_list_values, build_wiki_ref_for_reports,
-                           get_metrics_and_aggregate_per_project,
-                           get_results_for_timespan, get_timespan_array,
-                           show_metrics_for_specific_project)
-from report.models import (Direction, Editor, OperationReport, Organizer,
-                           Report, StrategicLearningQuestion)
+from metrics.templatetags.metricstags import (
+    bool_yesno,
+    bool_yesnopartial,
+    categorize,
+    is_yesno,
+    perc,
+)
+from metrics.utils import render_to_pdf, _build_wiki_ref_for_reports, _get_timespan_array, _q_filter_for_activity
+from metrics.views import (
+    _build_list_values,
+    get_metrics_and_aggregate_per_project,
+    get_results_for_timespan,
+    show_metrics_for_specific_project,
+)
+from report.models import (
+    Direction,
+    Editor,
+    OperationReport,
+    Organizer,
+    Report,
+    StrategicLearningQuestion,
+)
 from strategy.models import LearningArea, StrategicAxis
 from users.models import TeamArea, User, UserProfile
 
@@ -330,11 +347,18 @@ class MetricViewsTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('metrics:per_project')}")
 
-    def test_show_reports_associated_to_a_metric_analyses_new_organizers_and_new_editors_over_all_reports(self):
+    def test_show_reports_associated_to_a_metric_analyses_new_organizers_and_new_editors_over_all_reports(
+        self,
+    ):
         self.client.login(username=self.username, password=self.password)
 
-        editor = Editor.objects.create(username="Editor 1", account_creation_date=datetime.now().date() - timedelta(days=1))
-        organizer = Organizer.objects.create(name="Organizer 1", first_seen_at=datetime.now().date() - timedelta(days=1))
+        editor = Editor.objects.create(
+            username="Editor 1",
+            account_creation_date=datetime.now().date() - timedelta(days=1),
+        )
+        organizer = Organizer.objects.create(
+            name="Organizer 1", first_seen_at=datetime.now().date() - timedelta(days=1)
+        )
         area = Area.objects.create(text="Area")
         activity = Activity.objects.create(text="Activity", area=area)
         metric = Metric.objects.create(
@@ -343,7 +367,7 @@ class MetricViewsTests(TestCase):
             number_of_new_editors=10,
             number_of_editors=20,
             number_of_new_organizers=30,
-            number_of_organizers=40
+            number_of_organizers=40,
         )
         team_area = TeamArea.objects.create(text="Area")
         report_1 = Report.objects.create(
@@ -520,7 +544,9 @@ class MetricFunctionsTests(TestCase):
     def setUp(self):
         self.username = "testuser"
         self.password = "testpass"
-        self.user = User.objects.create_user(username=self.username, password=self.password)
+        self.user = User.objects.create_user(
+            username=self.username, password=self.password
+        )
         self.user_profile = UserProfile.objects.get(user=self.user)
         self.team_area = TeamArea.objects.create(text="Area")
         self.area = Area.objects.create(text="Area")
@@ -612,18 +638,18 @@ class MetricFunctionsTests(TestCase):
                     "metrics"
                 ].keys()
             )[0],
-            "Other metric",
+            "Other metrics",
         )
         self.assertEqual(
             aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3][
                 "metrics"
-            ]["Other metric"]["goal"],
+            ]["Other metrics"]["goal"],
             "-",
         )
         self.assertEqual(
             aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3][
                 "metrics"
-            ]["Other metric"]["done"],
+            ]["Other metrics"]["done"],
             "-",
         )
 
@@ -663,18 +689,18 @@ class MetricFunctionsTests(TestCase):
                     "metrics"
                 ].keys()
             )[0],
-            "Other metric",
+            "Other metrics",
         )
         self.assertEqual(
             aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3][
                 "metrics"
-            ]["Other metric"]["goal"],
+            ]["Other metrics"]["goal"],
             "-",
         )
         self.assertEqual(
             aggregated_metrics[1]["project_metrics"][0]["activity_metrics"][3][
                 "metrics"
-            ]["Other metric"]["done"],
+            ]["Other metrics"]["done"],
             "-",
         )
 
@@ -806,11 +832,11 @@ class MetricFunctionsTests(TestCase):
         metric.project.add(project)
         metric.save()
 
-        aggregated_metrics = get_metrics_and_aggregate_per_project(
-            field="Occurrence"
-        )
+        aggregated_metrics = get_metrics_and_aggregate_per_project(field="Occurrence")
 
-        activity_metrics = aggregated_metrics[project.id]["project_metrics"][0]["activity_metrics"]
+        activity_metrics = aggregated_metrics[project.id]["project_metrics"][0][
+            "activity_metrics"
+        ]
         self.assertIn(metric.id, activity_metrics)
         self.assertIn("Occurrence", activity_metrics[metric.id]["metrics"])
         self.assertEqual(
@@ -818,13 +844,15 @@ class MetricFunctionsTests(TestCase):
             True,
         )
 
-    def test_show_metrics_per_project_adds_non_poa_project_to_other_projects_dataset(self):
+    def test_show_metrics_per_project_adds_non_poa_project_to_other_projects_dataset(
+        self,
+    ):
         self.client.login(username=self.username, password=self.password)
-        self.user.user_permissions.add(
-            Permission.objects.get(codename="view_metric")
-        )
+        self.user.user_permissions.add(Permission.objects.get(codename="view_metric"))
 
-        project = Project.objects.create(text="Other Project", current_poa=False, active_status=True)
+        project = Project.objects.create(
+            text="Other Project", current_poa=False, active_status=True
+        )
         area = Area.objects.create(text="Area")
         area.project.add(project)
         area.save()
@@ -845,7 +873,7 @@ class MetricFunctionsTests(TestCase):
         self.report_1.metrics_related.add(self.metric_1)
         self.report_1.save()
 
-        response = build_wiki_ref_for_reports(self.metric_1)
+        response = _build_wiki_ref_for_reports(self.metric_1)
         self.assertEqual(
             response,
             '<ref name="sara-'
@@ -860,7 +888,7 @@ class MetricFunctionsTests(TestCase):
         self.report_1.reference_text = ""
         self.report_1.save()
 
-        response = build_wiki_ref_for_reports(self.metric_1)
+        response = _build_wiki_ref_for_reports(self.metric_1)
         self.assertEqual(
             response,
             '<ref name="sara-'
@@ -874,7 +902,7 @@ class MetricFunctionsTests(TestCase):
         self.report_1.reference_text = reference_text
         self.report_1.save()
 
-        response = build_wiki_ref_for_reports(self.metric_1)
+        response = _build_wiki_ref_for_reports(self.metric_1)
         self.assertEqual(response, reference_text)
 
     def test_get_results_for_timespan_with_metrics_goals(self):
@@ -982,42 +1010,61 @@ class MetricFunctionsTests(TestCase):
         settings.REPORT_TIMESPANS = {}
 
         with self.assertRaisesMessage(ValueError, "Invalid timeframe"):
-            get_timespan_array("does-not-exist")
+            _get_timespan_array("does-not-exist")
 
-    def test_build_list_values_returns_empty_dict_list_if_no_object_exists_in_the_queryset(self):
+    def test_build_list_values_returns_empty_dict_list_if_no_object_exists_in_the_queryset(
+        self,
+    ):
         qs = Organizer.objects.all()
         reports = Report.objects.all()
-        organizer_list = build_list_values(qs, "name", reports, "organizers")
+        organizer_list = _build_list_values(qs, "name", reports, "organizers")
         self.assertEqual([], organizer_list)
 
-    def test_build_list_values_returns_dict_list_of_empty_reports_if_object_is_not_associated_with_any_report(self):
+    def test_build_list_values_returns_dict_list_of_empty_reports_if_object_is_not_associated_with_any_report(
+        self,
+    ):
         qs = Editor.objects.all()
         reports = Report.objects.all()
-        editor_list = build_list_values(qs, "username", reports, "editors")
-        self.assertEqual([
-            {'name': str(self.editor_1), 'reports': []},
-            {'name': str(self.editor_2), 'reports': []},
-            {'name': str(self.editor_3), 'reports': []}
-        ], editor_list)
+        editor_list = _build_list_values(qs, "username", reports, "editors")
+        self.assertEqual(
+            [
+                {"name": str(self.editor_1), "reports": []},
+                {"name": str(self.editor_2), "reports": []},
+                {"name": str(self.editor_3), "reports": []},
+            ],
+            editor_list,
+        )
 
-    def test_build_list_values_returns_dict_list_of_all_objects_and_reports_they_are_associated_to(self):
+    def test_build_list_values_returns_dict_list_of_all_objects_and_reports_they_are_associated_to(
+        self,
+    ):
         qs = Editor.objects.all()
         self.report_1.editors.add(self.editor_2)
         self.report_1.save()
         reports = Report.objects.all()
-        editor_list = build_list_values(qs, "username", reports, "editors")
-        self.assertEqual([
-            {'name': str(self.editor_1), 'reports': []},
-            {'name': str(self.editor_2), 'reports': [{'description': str(self.report_1), 'id': self.report_1.pk}]},
-            {'name': str(self.editor_3), 'reports': []}
-        ], editor_list)
+        editor_list = _build_list_values(qs, "username", reports, "editors")
+        self.assertEqual(
+            [
+                {"name": str(self.editor_1), "reports": []},
+                {
+                    "name": str(self.editor_2),
+                    "reports": [
+                        {"description": str(self.report_1), "id": self.report_1.pk}
+                    ],
+                },
+                {"name": str(self.editor_3), "reports": []},
+            ],
+            editor_list,
+        )
 
-    def test_build_list_values__with_filter_returns_dict_list_of_filtered_objects_and_reports_they_are_associated_to(self):
+    def test_build_list_values__with_filter_returns_dict_list_of_filtered_objects_and_reports_they_are_associated_to(
+        self,
+    ):
         qs = Editor.objects.all()
         filter_fn = lambda ed, reps: (
-            lambda earliest: earliest is not None and
-                             ed.account_creation_date is not None and
-                             ed.account_creation_date.date() >= earliest - timedelta(days=30)
+            lambda earliest: earliest is not None
+            and ed.account_creation_date is not None
+            and ed.account_creation_date.date() >= earliest - timedelta(days=30)
         )(reps.aggregate(earliest=Min("initial_date"))["earliest"])
 
         self.editor_2.account_creation_date = datetime.now().date() - timedelta(days=10)
@@ -1027,11 +1074,34 @@ class MetricFunctionsTests(TestCase):
         self.report_1.save()
 
         reports = Report.objects.all()
-        editor_list = build_list_values(qs, "username", reports, "editors", filter_fn)
+        editor_list = _build_list_values(qs, "username", reports, "editors", filter_fn)
 
-        self.assertEqual([
-            {'name': str(self.editor_2), 'reports': [{'description': str(self.report_1), 'id': self.report_1.pk}]},
-        ], editor_list)
+        self.assertEqual(
+            [
+                {
+                    "name": str(self.editor_2),
+                    "reports": [
+                        {"description": str(self.report_1), "id": self.report_1.pk}
+                    ],
+                },
+            ],
+            editor_list,
+        )
+
+    def test_q_filter_for_activity_return_query_filter_for_project_if_activity_id_is_1(self):
+        project = Project.objects.create(text="Project")
+        q_filter = _q_filter_for_activity(project,self.activity_1, Q())
+        self.assertEqual(q_filter, Q(project=project))
+
+    def test_q_filter_for_activity_return_query_filter_for_project_and_activity_if_activity_id_is_not_1(self):
+        project = Project.objects.create(text="Project")
+        q_filter = _q_filter_for_activity(project,self.activity_2, Q())
+        self.assertEqual(q_filter, Q(project=project, activity=self.activity_2))
+
+    def test_q_filter_for_activity_return_query_filter_for_project_and_activity_concatenated_if_activity_id_is_not_1(self):
+        project = Project.objects.create(text="Project")
+        q_filter = _q_filter_for_activity(project,self.activity_2, Q(anything="anything"))
+        self.assertEqual(q_filter, Q(project=project, activity=self.activity_2) & Q(anything="anything"))
 
 
 class ReferencesFunctionsTests(TestCase):
@@ -1232,36 +1302,38 @@ class ReferencesFunctionsTests(TestCase):
 
     def test_wikify_link_uses_friendly_name_when_provided(self):
         from metrics.link_utils import wikify_link
+
         result = wikify_link(
-            "https://pt.wikipedia.org/wiki/Página_inicial",
-            friendly_name="My event"
+            "https://pt.wikipedia.org/wiki/Página_inicial", friendly_name="My event"
         )
         self.assertEqual(result, "[[w:pt:Página_inicial|My event]]")
 
     def test_wikify_link_uses_page_name_when_no_friendly_name(self):
         from metrics.link_utils import wikify_link
+
         result = wikify_link("https://pt.wikipedia.org/wiki/Página_inicial")
         self.assertEqual(result, "[[w:pt:Página_inicial|Página inicial]]")
 
     def test_build_wiki_ref_uses_description_as_friendly_name(self):
         from metrics.link_utils import build_wiki_ref
+
         result = build_wiki_ref(
             "https://pt.wikipedia.org/wiki/Página_inicial",
             report_id=1,
-            friendly_name="My edit-a-thon"
+            friendly_name="My edit-a-thon",
         )
         self.assertEqual(
-            result,
-            '<ref name="sara-1">[[w:pt:Página_inicial|My edit-a-thon]]</ref>'
+            result, '<ref name="sara-1">[[w:pt:Página_inicial|My edit-a-thon]]</ref>'
         )
 
     def test_build_wiki_ref_with_multiple_links_uses_friendly_name_for_all(self):
         from metrics.link_utils import build_wiki_ref
+
         links = "https://pt.wikipedia.org/wiki/Página_inicial\nhttps://commons.wikimedia.org/wiki/Main_Page"
         result = build_wiki_ref(links, report_id=1, friendly_name="My event")
         self.assertEqual(
             result,
-            '<ref name="sara-1">[[w:pt:Página_inicial|My event]], [[c:Main_Page|My event]]</ref>'
+            '<ref name="sara-1">[[w:pt:Página_inicial|My event]], [[c:Main_Page|My event]]</ref>',
         )
 
 

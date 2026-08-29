@@ -13,7 +13,7 @@ $(document).ready(function () {
     tags: true,
     placeholder: select_partners,
     createTag: function (params) {
-      var term = $.trim(params.term);
+      let term = params.term.trim();
       if (term === '') return null;
       return {
         id: term,
@@ -83,10 +83,50 @@ function focus_is_empty(input_) {
   return input_.val() === "";
 }
 
+function focus_and_switch(tab, focus_selector_or_fn) {
+  tab.click();
+  setTimeout(function () {
+    let target = typeof focus_selector_or_fn === "function"
+      ? focus_selector_or_fn()
+      : $(focus_selector_or_fn);
+    target.focus();
+  }, 50);
+}
+
+function admin_field_missing(form, admin_fields) {
+  for (const field of admin_fields) {
+    if (focus_is_empty(form.find(field))) {
+      return field;
+    }
+  }
+  return null;
+}
+
+function no_metric_selected() {
+  return $("#metrics_fieldset input[type='checkbox']:checked").length === 0
+    && $("#metrics_fieldset input[type='radio']:checked").length === 0;
+}
+
+function no_direction_selected() {
+  return $("#directions_fieldset input[type='checkbox']:checked").length === 0;
+}
+
+function no_strategic_question_selected() {
+  return $("#strategic_questions_fieldset input[type='checkbox']:checked").length === 0;
+}
+
+function learning_field_missing(form, learning_fields) {
+  for (const field of learning_fields) {
+    if (focus_is_empty(form.find(field))) {
+      return field;
+    }
+  }
+  return null;
+}
+
 function validateForm() {
   let form = $("#report");
   let admin_tab = $("#nav_Administrative");
-  let operations_tab = $("#nav_Operational");
   let quantitative_tab = $("#nav_Quantitative");
   let strategy_tab = $("#nav_Strategic");
   let learning_tab = $("#nav_Learning");
@@ -94,57 +134,45 @@ function validateForm() {
   let learning_fields = ["#learning"];
   let activity_associated = form.find("#activity_associated option:selected").data("poa_area");
 
-  for (let i = 0; i < admin_fields.length; i++) {
-    if (focus_is_empty(form.find(admin_fields[i]), admin_tab)) {
-      admin_tab.click();
-      setTimeout(function () {
-        form.find(admin_fields[i])[0].focus();
-      }, 50);
-      return;
-    }
-  }
-
-  if ($("#metrics_fieldset input[type='checkbox']:checked").length === 0 && $("#metrics_fieldset input[type='radio']:checked").length === 0) {
-    quantitative_tab.click();
-    setTimeout(function () {
-      $("#metrics_fieldset input").first()[0].focus();
-    }, 50);
+  let missing_admin_field = admin_field_missing(form, admin_fields);
+  if (missing_admin_field) {
+    focus_and_switch(admin_tab, () => form.find(missing_admin_field));
     return;
   }
 
-  if (activity_associated === 1) {
-    if ($("#directions_fieldset input[type='checkbox']:checked").length === 0) {
-      strategy_tab.click();
-      setTimeout(function () {
-        $("#directions_fieldset input[value=1]").focus();
-      }, 50);
-      return;
-    }
+  if (no_metric_selected()) {
+    focus_and_switch(quantitative_tab, () => $("#metrics_fieldset input").first());
+    return;
+  }
 
-    if ($("#strategic_questions_fieldset input[type='checkbox']:checked").length === 0) {
+  if (activity_associated !== 1) {
+    form.submit();
+    return;
+  }
+
+  if (no_direction_selected()) {
+    focus_and_switch(strategy_tab, () => $("#directions_fieldset input[value=1]"));
+    return;
+  }
+
+  if (no_strategic_question_selected()) {
+    focus_and_switch(learning_tab, () => $("#strategic_questions_fieldset input[value=1]"));
+    return;
+  }
+
+  let learning = $("#learning");
+  if (learning.data("has_learning")) {
+    if (learning.val() === 0 || learning.val().length < 500) {
       learning_tab.click();
-      setTimeout(function () {
-        $("#strategic_questions_fieldset input[value=1]").focus();
-      }, 50);
+      learning.focus();
       return;
     }
 
-    let learning = $("#learning");
-    let has_learning = learning.data("has_learning");
-    if (has_learning) {
-      if (learning.val() === 0 || learning.val().length < 500) {
-        learning_tab.click();
-        learning.focus();
-        return;
-      }
-
-      for (let i = 0; i < learning_fields.length; i++) {
-        if (focus_is_empty(form.find(learning_fields[i]))) {
-          learning_tab.click();
-          form.find(learning_fields[i]).focus();
-          return;
-        }
-      }
+    let missing_learning_field = learning_field_missing(form, learning_fields);
+    if (missing_learning_field) {
+      learning_tab.click();
+      form.find(missing_learning_field).focus();
+      return;
     }
   }
 
@@ -175,7 +203,7 @@ function show_metrics_options() {
               let button_type = "checkbox";
               let check_style = "";
 
-              if (jQuery.inArray(metric.id, metrics_related) >= 0) {
+              if (metrics_related.indexOf(metric.id) >= 0) {
                 checked = "checked";
               }
               if (projectEl["main"]) {

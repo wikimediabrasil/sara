@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('report', '0005_alter_report_commons_created_and_more'),
+        ("report", "0005_alter_report_commons_created_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='report',
-            name='modified_at',
-            field=models.DateTimeField(auto_now=True, help_text='Date the report was modified', verbose_name='Date of modification'),
+            model_name="report",
+            name="modified_at",
+            field=models.DateTimeField(
+                auto_now=True,
+                help_text="Date the report was modified",
+                verbose_name="Date of modification",
+            ),
         ),
     ]

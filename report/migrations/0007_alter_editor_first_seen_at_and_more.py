@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('report', '0006_alter_report_modified_at'),
+        ("report", "0006_alter_report_modified_at"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='editor',
-            name='first_seen_at',
+            model_name="editor",
+            name="first_seen_at",
             field=models.DateTimeField(auto_now_add=True, null=True),
         ),
         migrations.AlterField(
-            model_name='organizer',
-            name='first_seen_at',
+            model_name="organizer",
+            name="first_seen_at",
             field=models.DateField(auto_now_add=True, null=True),
         ),
     ]

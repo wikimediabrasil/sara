@@ -4,10 +4,22 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from metrics.models import Activity, Metric
-from report.models import (Editor, Funding, OperationReport, Organizer,
-                           Partner, Project, Report, Technology)
-from strategy.models import (Direction, LearningArea, StrategicAxis,
-                             StrategicLearningQuestion)
+from report.models import (
+    Editor,
+    Funding,
+    OperationReport,
+    Organizer,
+    Partner,
+    Project,
+    Report,
+    Technology,
+)
+from strategy.models import (
+    Direction,
+    LearningArea,
+    StrategicAxis,
+    StrategicLearningQuestion,
+)
 from users.models import TeamArea, User, UserProfile
 
 

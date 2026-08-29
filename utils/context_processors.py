@@ -14,5 +14,5 @@ def global_settings(request):
     return {
         "DEBUG_MODE": settings.DEBUG,
         "ENABLE_BUG_APP": getattr(settings, "ENABLE_BUG_APP", True),
-        "ENABLE_AGENDA_APP": getattr(settings, "ENABLE_BUG_APP", True),
+        "ENABLE_AGENDA_APP": getattr(settings, "ENABLE_AGENDA_APP", True),
     }

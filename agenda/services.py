@@ -7,9 +7,12 @@ from django.db.models import Case, CharField, Value, When
 from django.template.loader import get_template
 from django.utils.timezone import now
 from django.utils.translation import gettext as _
+from django.utils.html import format_html, format_html_join
 
 from agenda.models import Event
 from users.models import UserPosition
+
+DATE_FORMAT = "%d/%m"
 
 
 def send_event_reports():
@@ -105,29 +108,35 @@ def send_event_reports():
 
 
 def build_message_about_reports(events):
-    message = ""
-
+    items = []
     for event in events:
         if event.end_date == event.initial_date:
-            date_string = event.initial_date.strftime("%d/%m")
+            date_string = event.initial_date.strftime(DATE_FORMAT)
         else:
             date_string = (
-                event.initial_date.strftime("%d/%m")
+                event.initial_date.strftime(DATE_FORMAT)
                 + " - "
-                + event.end_date.strftime("%d/%m")
+                + event.end_date.strftime(DATE_FORMAT)
             )
 
-        message += _(
-            "<li><a href='https://sara-wmb.toolforge.org/calendar/%(year)s/%(month)s/%(day)s'>%(name)s (%(date_string)s)</a></li>"
-        ) % {
-            "year": event.initial_date.year,
-            "month": event.initial_date.month,
-            "day": event.initial_date.day,
-            "name": event.name,
-            "date_string": date_string,
-        }
+        url = "https://sara-wmb.toolforge.org/calendar/%s/%s/%s" % (
+            event.initial_date.year,
+            event.initial_date.month,
+            event.initial_date.day,
+        )
 
-    if message:
-        message = "<ul>\n" + message + "</ul>"
+        items.append(
+            format_html(
+                "<li><a href='{url}'>{name} ({date_string})</a></li>",
+                url=url,
+                name=event.name,
+                date_string=date_string,
+            )
+        )
 
-    return message
+    if not items:
+        return ""
+
+    return format_html(
+        "<ul>\n{}</ul>", format_html_join("", "{}", ((item,) for item in items))
+    )

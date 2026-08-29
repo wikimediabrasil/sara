@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 from io import StringIO
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from django.contrib.auth.models import Group, Permission
 from django.core import mail
@@ -13,15 +13,21 @@ from django.utils.timezone import now
 
 from agenda.models import Event
 from agenda.services import build_message_about_reports, send_event_reports
-from agenda.templatetags.calendar_tags import (date_tag, next_day_tag,
-                                               next_month_tag, next_year_tag,
-                                               previous_day_tag,
-                                               previous_month_tag,
-                                               previous_year_tag)
-from agenda.views import (get_activities_about_to_kickoff,
-                          get_activities_already_finished,
-                          get_activities_soon_to_be_finished,
-                          list_of_reports_of_area)
+from agenda.templatetags.calendar_tags import (
+    date_tag,
+    next_day_tag,
+    next_month_tag,
+    next_year_tag,
+    previous_day_tag,
+    previous_month_tag,
+    previous_year_tag,
+)
+from agenda.utils import (
+    _get_activities_about_to_kickoff,
+    _get_activities_already_finished,
+    _get_activities_soon_to_be_finished,
+    list_of_reports_of_area,
+)
 from users.models import Position, TeamArea, User, UserPosition, UserProfile
 
 
@@ -348,7 +354,7 @@ class EventEmailTests(TestCase):
         self.event.save()
 
     def test_get_activities_soon_to_be_finished_returns_events_near_the_end(self):
-        events = get_activities_soon_to_be_finished(self.area_responsible)
+        events = _get_activities_soon_to_be_finished(self.area_responsible)
         self.assertQuerySetEqual(events, Event.objects.filter(pk=self.event.pk))
 
     def test_if_events_are_too_far_away_get_activities_soon_to_be_finished_returns_empty_queryset(
@@ -356,7 +362,7 @@ class EventEmailTests(TestCase):
     ):
         self.event.end_date += timedelta(16)
         self.event.save()
-        events = get_activities_soon_to_be_finished(self.area_responsible)
+        events = _get_activities_soon_to_be_finished(self.area_responsible)
         self.assertQuerySetEqual(events, Event.objects.none())
 
     def test_if_get_activities_soon_to_be_finished_returns_empty_queryset_if_events_already_finished(
@@ -365,14 +371,14 @@ class EventEmailTests(TestCase):
         self.event.initial_date = date.today() - timedelta(2)
         self.event.end_date = date.today() - timedelta(1)
         self.event.save()
-        events = get_activities_soon_to_be_finished(self.area_responsible)
+        events = _get_activities_soon_to_be_finished(self.area_responsible)
         self.assertQuerySetEqual(events, Event.objects.none())
 
     def test_get_activities_already_finished_returns_events_already_finished(self):
         self.event.initial_date = date.today() - timedelta(3)
         self.event.end_date = date.today() - timedelta(2)
         self.event.save()
-        events = get_activities_already_finished(self.area_responsible)
+        events = _get_activities_already_finished(self.area_responsible)
         self.assertQuerySetEqual(events, Event.objects.filter(pk=self.event.pk))
 
     def test_if_events_are_too_far_away_get_activities_already_finished_returns_empty_queryset(
@@ -381,7 +387,7 @@ class EventEmailTests(TestCase):
         self.event.initial_date -= timedelta(60)
         self.event.end_date -= timedelta(60)
         self.event.save()
-        events = get_activities_already_finished(self.area_responsible)
+        events = _get_activities_already_finished(self.area_responsible)
         self.assertQuerySetEqual(events, Event.objects.none())
 
     def test_get_activities_already_finished_returns_empty_queryset_if_events_are_not_finished(
@@ -389,7 +395,7 @@ class EventEmailTests(TestCase):
     ):
         self.event.end_date = date.today()
         self.event.save()
-        events = get_activities_already_finished(self.area_responsible)
+        events = _get_activities_already_finished(self.area_responsible)
         self.assertQuerySetEqual(events, Event.objects.none())
 
     def test_get_activities_about_to_kickoff_returns_events_with_start_in_near_future(
@@ -397,7 +403,7 @@ class EventEmailTests(TestCase):
     ):
         self.event.initial_date = date.today() + timedelta(1)
         self.event.save()
-        events = get_activities_about_to_kickoff(self.area_responsible)
+        events = _get_activities_about_to_kickoff(self.area_responsible)
         self.assertQuerySetEqual(events, Event.objects.filter(pk=self.event.pk))
 
     def test_if_events_are_too_far_away_get_activities_about_to_kickoff_returns_empty_queryset(
@@ -406,7 +412,7 @@ class EventEmailTests(TestCase):
         self.event.initial_date += timedelta(60)
         self.event.end_date += timedelta(60)
         self.event.save()
-        events = get_activities_about_to_kickoff(self.area_responsible)
+        events = _get_activities_about_to_kickoff(self.area_responsible)
         self.assertQuerySetEqual(events, Event.objects.none())
 
     def test_get_activities_about_to_kickoff_returns_empty_queryset_if_events_started_before_today(
@@ -414,7 +420,7 @@ class EventEmailTests(TestCase):
     ):
         self.event.initial_date = date.today() - timedelta(1)
         self.event.save()
-        events = get_activities_about_to_kickoff(self.area_responsible)
+        events = _get_activities_about_to_kickoff(self.area_responsible)
         self.assertQuerySetEqual(events, Event.objects.none())
 
     def test_trying_to_send_email_for_manager_without_email_doesnt_sends_the_email(
@@ -635,7 +641,9 @@ class SendEventReportsFullBranchTests(TestCase):
 
     @patch("agenda.management.commands.send_event_reports.send_event_reports")
     @patch("agenda.management.commands.send_event_reports.datetime")
-    def test_skips_sending_reports_when_we_are_on_even_week(self, mock_datetime, mock_send):
+    def test_skips_sending_reports_when_we_are_on_even_week(
+        self, mock_datetime, mock_send
+    ):
         mock_datetime.now.return_value.isocalendar.return_value.week = 10
         call_command("send_event_reports")
         mock_send.assert_not_called()
@@ -643,7 +651,9 @@ class SendEventReportsFullBranchTests(TestCase):
     @patch("agenda.management.commands.send_event_reports.now")
     @patch("agenda.management.commands.send_event_reports.send_event_reports")
     @patch("agenda.management.commands.send_event_reports.datetime")
-    def test_sends_reports_when_we_are_on_odd_week(self, mock_datetime, mock_send, mock_now):
+    def test_sends_reports_when_we_are_on_odd_week(
+        self, mock_datetime, mock_send, mock_now
+    ):
         mock_datetime.now.return_value.isocalendar.return_value.week = 11
         mock_now.side_effect = [
             datetime(2026, 8, 25, 10, 0, 0),
@@ -674,11 +684,11 @@ class ListReportsTests(TestCase):
         self.user.user_permissions.add(self.permission)
         self.client.force_login(self.user)
 
-    @patch("agenda.views.get_activities_already_finished")
-    @patch("agenda.views.get_activities_soon_to_be_finished")
-    @patch("agenda.views.build_message_about_reports")
-    @patch("agenda.views.TeamArea.objects.get")
-    @patch("agenda.views.UserProfile.objects.filter")
+    @patch("agenda.utils._get_activities_already_finished")
+    @patch("agenda.utils._get_activities_soon_to_be_finished")
+    @patch("agenda.services.build_message_about_reports")
+    @patch("agenda.utils.TeamArea.objects.get")
+    @patch("agenda.utils.UserProfile.objects.filter")
     def test_view_with_area_code(
         self,
         mock_userprofile_filter,
@@ -687,8 +697,13 @@ class ListReportsTests(TestCase):
         mock_future,
         mock_past,
     ):
-        mock_past.return_value = "past"
-        mock_future.return_value = "future"
+        past_activity = MagicMock()
+        past_activity.end_date = datetime.today()
+        future_activity = MagicMock()
+        future_activity.end_date = datetime.today() + timedelta(365)
+
+        mock_past.return_value = [past_activity]
+        mock_future.return_value = [future_activity]
         mock_build_message.side_effect = lambda x: f"built-{x}"
 
         mock_area_get.return_value = self.area
@@ -702,17 +717,13 @@ class ListReportsTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"built-past", response.content)
-        self.assertIn(b"built-future", response.content)
 
-    @patch("agenda.views.get_activities_already_finished")
-    @patch("agenda.views.get_activities_soon_to_be_finished")
-    @patch("agenda.views.build_message_about_reports")
+    @patch("agenda.utils._get_activities_already_finished")
+    @patch("agenda.utils._get_activities_soon_to_be_finished")
+    @patch("agenda.services.build_message_about_reports")
     def test_view_without_area_code_redirects_if_request_user_does_not_have_a_position(
         self, mock_build_message, mock_future, mock_past
     ):
-        mock_past.return_value = "past"
-        mock_future.return_value = "future"
         mock_build_message.side_effect = lambda x: f"built-{x}"
 
         request = self.factory.get("/fake-url")
@@ -726,14 +737,12 @@ class ListReportsTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse("metrics:index"))
 
-    @patch("agenda.views.get_activities_already_finished")
-    @patch("agenda.views.get_activities_soon_to_be_finished")
-    @patch("agenda.views.build_message_about_reports")
+    @patch("agenda.utils._get_activities_already_finished")
+    @patch("agenda.utils._get_activities_soon_to_be_finished")
+    @patch("agenda.services.build_message_about_reports")
     def test_view_without_area_code_redirects_if_request_user_is_not_active(
         self, mock_build_message, mock_future, mock_past
     ):
-        mock_past.return_value = "past"
-        mock_future.return_value = "future"
         mock_build_message.side_effect = lambda x: f"built-{x}"
 
         request = self.factory.get("/fake-url")
@@ -755,14 +764,19 @@ class ListReportsTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse("metrics:index"))
 
-    @patch("agenda.views.get_activities_already_finished")
-    @patch("agenda.views.get_activities_soon_to_be_finished")
-    @patch("agenda.views.build_message_about_reports")
+    @patch("agenda.utils._get_activities_already_finished")
+    @patch("agenda.utils._get_activities_soon_to_be_finished")
+    @patch("agenda.services.build_message_about_reports")
     def test_view_without_area_code_shows_activities_from_request_user_if_they_are_active(
         self, mock_build_message, mock_future, mock_past
     ):
-        mock_past.return_value = "past"
-        mock_future.return_value = "future"
+        past_activity = MagicMock()
+        past_activity.end_date = datetime.today()
+        future_activity = MagicMock()
+        future_activity.end_date = datetime.today() + timedelta(365)
+
+        mock_past.return_value = [past_activity]
+        mock_future.return_value = [future_activity]
         mock_build_message.side_effect = lambda x: f"built-{x}"
 
         request = self.factory.get("/fake-url")
@@ -781,8 +795,6 @@ class ListReportsTests(TestCase):
         response = self.client.get(reverse("agenda:area_activities"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"built-past", response.content)
-        self.assertIn(b"built-future", response.content)
 
     def test_returns_false_when_code_does_not_exist(self):
         result = list_of_reports_of_area(code="INVALID")

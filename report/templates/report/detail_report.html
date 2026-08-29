@@ -28,25 +28,24 @@
         <div class="w3-quarter index">
             <div class="index-box">
                 <ul>
-                    <li><a href="#Administrative" aria-label="{% trans 'Administrative' %}">{% trans "Administrative" %}</a></li>
+                    <li><a href="#Administrative">{% trans "Administrative" %}</a></li>
                     {% if operations_with_value %}
-                        <li><a href="#Operational" aria-label="{% trans 'Operational' %}">{% trans "Operational" %}</a></li>
+                        <li><a href="#Operational">{% trans "Operational" %}</a></li>
                     {% endif %}
                     {% if data.participants or data.feedbacks or data.editors.count or data.organizers.count or data.technologies_used.count or data.wikipedia_created or data.wikipedia_edited or data.commons_created or data.commons_edited or data.wikidata_created or data.wikidata_edited or data.wikiversity_created or data.wikiversity_edited or data.wikibooks_created or data.wikibooks_edited or data.wikisource_created or data.wikisource_edited or data.wikinews_created or data.wikinews_edited or data.wikiquote_created or data.wikiquote_edited or data.wiktionary_created or data.wiktionary_edited or data.wikivoyage_created or data.wikivoyage_edited or data.wikispecies_created or data.wikispecies_edited or data.metawiki_created or data.metawiki_edited or data.mediawiki_created or data.mediawiki_edited %}
                         <li>
-                            <a href="#Quantitative" aria-label="{% trans 'Quantitative' %}">{% trans "Quantitative" %}</a>
+                            <a href="#Quantitative">{% trans "Quantitative" %}</a>
                             {% if data.wikipedia_created or data.wikipedia_edited or data.commons_created or data.commons_edited or data.wikidata_created or data.wikidata_edited or data.wikiversity_created or data.wikiversity_edited or data.wikibooks_created or data.wikibooks_edited or data.wikisource_created or data.wikisource_edited or data.wikinews_created or data.wikinews_edited or data.wikiquote_created or data.wikiquote_edited or data.wiktionary_created or data.wiktionary_edited or data.wikivoyage_created or data.wikivoyage_edited or data.wikispecies_created or data.wikispecies_edited or data.metawiki_created or data.metawiki_edited or data.mediawiki_created or data.mediawiki_edited %}
-                                <ul><li><a href="#Wikimedia_projects" aria-label="{% trans 'Wikimedia projects' %}">{% trans "Wikimedia projects" %}</a></li></ul>
+                                <ul><li><a href="#Wikimedia_projects">{% trans "Wikimedia projects" %}</a></li></ul>
                             {% endif %}
                         </li>
                     {% endif %}
                     {% if data.directions_related.count %}
-                        <li><a href="#Strategic" aria-label="{% trans 'Strategic' %}">{% trans "Strategic" %}</a></li>
+                        <li><a href="#Strategic">{% trans "Strategic" %}</a></li>
                     {% endif %}
                     {% if data.learning_questions_related.count or data.learning %}
-                        <li><a href="#Learning" aria-label="{% trans 'Learning' %}">{% trans "Learning" %}</a></li>
+                        <li><a href="#Learning">{% trans "Learning" %}</a></li>
                     {% endif %}
-
                 </ul>
             </div>
             {% if data.locked and not perms.report.can_edit_locked_report %}
@@ -133,7 +132,9 @@
                         <div class="w3-third field_title">{% trans "Reference text" %}</div>
                         <div class="w3-twothird formfield">
                             <div class="view_field scroll_field" id="reference-text">{{ data.reference_text|linebreaksbr }}</div>
-                            <a href="javascript:void(0)" onclick="copyReferenceText(this)" data-copied-label="{% trans 'Reference copied' %}" aria-label="{% trans 'Copy reference text' %}" style="font-size: small;"><i class="fa-solid fa-copy"></i> {% trans "Copy reference" %}</a>
+                            <button type="button" onclick="copyReferenceText(this)" data-copied-label="{% trans 'Reference copied' %}" class="link-style-button" style="font-size: small;">
+                                <i class="fa-solid fa-copy"></i> {% trans "Copy reference" %}
+                            </button>
                         </div>
                     </div>
                 {% endif %}

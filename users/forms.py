@@ -28,8 +28,8 @@ class UserProfileForm(forms.ModelForm):
 
     class Meta:
         model = UserProfile
-        fields = "__all__"
-        exclude = ["user"]
+        fields = ["gender", "professional_wiki_handle", "personal_wiki_handle", "photograph", "twitter", "facebook",
+                  "instagram", "wikidata_item", "linkedin", "lattes", "orcid", "google_scholar"]
         required_css_class = "required"
 
     def __init__(self, *args, **kwargs):
