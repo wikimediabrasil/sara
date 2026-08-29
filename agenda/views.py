@@ -4,19 +4,29 @@ from datetime import date, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods
 
 from agenda.forms import EventForm
 from agenda.models import Event
-from agenda.services import build_message_about_reports, send_event_reports
-from users.models import TeamArea, UserProfile
+from agenda.services import send_event_reports
+from agenda.utils import days_of_the_month, list_of_reports_of_area
 
 
+# ======================================================================================================================
+# UTILS
+# ======================================================================================================================
+URL_INDEX = "metrics:index"
+
+
+# ======================================================================================================================
+# CALENDAR
+# ======================================================================================================================
 # YEAR CALENDAR
+@require_http_methods(["GET"])
 def show_calendar_year(request):
     """
     Redirects to the calendar view for the current year.
@@ -29,6 +39,7 @@ def show_calendar_year(request):
     return redirect("agenda:show_specific_calendar_year", year=year)
 
 
+@require_http_methods(["GET"])
 def show_specific_calendar_year(request, year):
     """
     Shows calendar for specific year.
@@ -93,6 +104,7 @@ def show_specific_calendar_year(request, year):
 
 
 # MONTH CALENDAR
+@require_http_methods(["GET"])
 def show_calendar(request):
     """
     Redirects to the calendar view for the current month and year.
@@ -106,6 +118,7 @@ def show_calendar(request):
     return redirect("agenda:show_specific_calendar", year=year, month=month)
 
 
+@require_http_methods(["GET"])
 def show_specific_calendar(request, year, month):
     """
     Shows calendar for specific month and year.
@@ -165,6 +178,7 @@ def show_specific_calendar(request, year, month):
 
 
 # DAY CALENDAR
+@require_http_methods(["GET"])
 def show_calendar_day(request):
     """
     Shows calendar for specific month and year.
@@ -181,6 +195,7 @@ def show_calendar_day(request):
     )
 
 
+@require_http_methods(["GET"])
 def show_specific_calendar_day(request, year, month, day):
     """
     Shows calendar for specific day, month and year.
@@ -219,18 +234,9 @@ def show_specific_calendar_day(request, year, month, day):
     return render(request, "agenda/calendar_day.html", context)
 
 
-def days_of_the_month(year, month):
-    """
-    Creates an array with the days of the month.
-
-    :param year: Year of the calendar.
-    :param month: Month of the calendar.
-    :return: Array: The days of the month as an array, divided into weeks.
-    """
-    return calendar.monthcalendar(int(year), int(month))
-
-
-# CREATE
+# ======================================================================================================================
+# EVENTS
+# ======================================================================================================================
 @permission_required("agenda.add_event")
 @transaction.atomic
 def add_event(request):
@@ -253,35 +259,6 @@ def add_event(request):
 
     context = {"event_form": event_form, "title": _("Add event")}
     return render(request, "agenda/add_event.html", context)
-
-
-# READ
-def list_events(request):
-    events = Event.objects.all().order_by("-initial_date__year")
-    context = {"dataset": events, "title": _("List events")}
-    return render(request, "agenda/list_events.html", context)
-
-
-def detail_event(request, event_id):
-    event = get_object_or_404(Event, pk=event_id)
-    context = {"event": event}
-    return render(request, "agenda/detail_event.html", context)
-
-
-@permission_required("agenda.delete_event")
-@transaction.atomic
-def delete_event(request, event_id):
-    event = Event.objects.get(pk=event_id)
-    context = {
-        "event": event,
-        "title": _("Delete event %(event)s") % {"event": event.name},
-    }
-
-    if request.method == "POST":
-        event.delete()
-        return redirect(reverse("agenda:list_events"))
-
-    return render(request, "agenda/delete_event.html", context)
 
 
 @permission_required("agenda.change_event")
@@ -316,114 +293,61 @@ def update_event(request, event_id):
     return render(request, "agenda/update_event.html", context)
 
 
-def send_email(request):
-    if send_event_reports:
-        send_event_reports()
-    return redirect(reverse("metrics:index"))
+@require_http_methods(["GET"])
+def list_events(request):
+    events = Event.objects.all().order_by("-initial_date__year")
+    context = {"dataset": events, "title": _("List events")}
+    return render(request, "agenda/list_events.html", context)
 
 
-def list_of_reports_of_area(code="", user=None):
-    try:
-        if code:
-            area = TeamArea.objects.get(code=code)
-        else:
-            if not user:
-                return False
+@require_http_methods(["GET"])
+def detail_event(request, event_id):
+    event = get_object_or_404(Event, pk=event_id)
+    context = {"event": event}
+    return render(request, "agenda/detail_event.html", context)
 
-            current_position = (
-                user.profile.position_history.filter(end_date__isnull=True)
-                .order_by("-start_date")
-                .first()
-            )
-            if not current_position:
-                return False
 
-            area = current_position.position.area_associated
-    except (ObjectDoesNotExist, AttributeError):
-        return False
-
-    manager = (
-        UserProfile.objects.filter(
-            user__is_active=True,
-            user__email__isnull=False,
-            position_history__position__area_associated=area,
-            position_history__position__type__name="Manager",
-            position_history__end_date__isnull=True,
-        )
-        .order_by("-position_history__start_date")
-        .select_related("user")
-        .distinct()
-        .first()
-    )
-
-    today = datetime.date.today()
-    days_since_jan_01 = (today - datetime.date(today.year, 1, 1)).days
-    days_until_dec_31 = (datetime.date(today.year, 12, 31) - today).days
-
+@permission_required("agenda.delete_event")
+@transaction.atomic
+def delete_event(request, event_id):
+    event = Event.objects.get(pk=event_id)
     context = {
-        "past_activities": build_message_about_reports(
-            get_activities_already_finished(area, delta=days_since_jan_01)
-        ),
-        "future_activities": build_message_about_reports(
-            get_activities_soon_to_be_finished(area, delta=days_until_dec_31)
-        ),
-        "manager": manager,
-        "area": area,
+        "event": event,
+        "title": _("Delete event %(event)s") % {"event": event.name},
     }
 
-    return context
+    if request.method == "POST":
+        event.delete()
+        return redirect(reverse("agenda:list_events"))
+
+    return render(request, "agenda/delete_event.html", context)
+
+
+# ======================================================================================================================
+# REPORT
+# ======================================================================================================================
+@require_http_methods(["GET"])
+def send_email(request):
+    send_event_reports()
+    return redirect(reverse(URL_INDEX))
 
 
 @permission_required("report.add_report")
+@require_http_methods(["GET"])
 def show_list_of_reports_of_area(request):
     user = request.user
     context = list_of_reports_of_area("", user)
     if context:
         return render(request, "agenda/area_activities.html", context)
     else:
-        return redirect(reverse("metrics:index"))
+        return redirect(reverse(URL_INDEX))
 
 
 @permission_required("report.add_report")
+@require_http_methods(["GET"])
 def show_list_of_reports_of_specific_area(request, code=""):
     context = list_of_reports_of_area(code)
     if context:
         return render(request, "agenda/area_activities.html", context)
     else:
-        return redirect(reverse("metrics:index"))
-
-
-def get_activities_soon_to_be_finished(area, delta=14):
-    today = datetime.date.today()
-    interval = min(today + timedelta(delta), datetime.date(today.year, 12, 31))
-    query = Q(
-        end_date__lte=interval,  # Before the interval
-        end_date__gte=today,  # After today
-        area_responsible=area,  # Under a specific manager responsibility
-    )
-    events = Event.objects.filter(query)
-    return events
-
-
-def get_activities_already_finished(area, delta=28):
-    today = datetime.date.today()
-    interval = max(today - timedelta(delta), datetime.date(today.year, 1, 1))
-    query = Q(
-        end_date__lte=today - timedelta(1),  # Before today
-        end_date__gte=interval,  # After the interval
-        area_responsible=area,  # Under a specific manager responsibility
-    )
-    events = Event.objects.filter(query).distinct()
-    return events
-
-
-def get_activities_about_to_kickoff(area, delta=14):
-    today = datetime.date.today()
-    interval = min(today + timedelta(delta), datetime.date(today.year, 12, 31))
-    query = Q(
-        initial_date__gte=today,  # Beginning after today
-        initial_date__lte=interval,  # Beginning before interval
-        area_responsible=area,  # Under a specific manager responsibility
-    )
-    events = Event.objects.filter(query)
-    return events
+        return redirect(reverse(URL_INDEX))

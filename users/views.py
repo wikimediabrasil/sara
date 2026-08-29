@@ -1,14 +1,14 @@
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.contrib.auth.decorators import (permission_required,
-                                            user_passes_test)
+from django.contrib.auth.decorators import permission_required, user_passes_test
 from django.db import transaction
 from django.db.models import Case, IntegerField, OuterRef, Subquery, When
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.utils.translation import get_language
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods
 
-from report.views import get_localized_field
+from report.utils import _get_localized_field
 
 from .forms import UserForm, UserPositionForm, UserProfileForm
 from .models import Position, User, UserPosition
@@ -138,6 +138,7 @@ def update_user_position(*, profile, position, start_date, end_date):
 
 @permission_required("auth.view_user")
 @permission_required("users.view_userprofile")
+@require_http_methods(["GET"])
 def detail_profile(request, username):
     """
     Display a user's profile details.
@@ -202,6 +203,7 @@ def detail_profile(request, username):
 
 
 @user_passes_test(lambda u: u.is_superuser)
+@require_http_methods(["GET"])
 def list_profiles(request):
     can_edit = request.user.is_superuser
     current_language = get_language()
@@ -209,7 +211,7 @@ def list_profiles(request):
     available_fields = [
         f.name for f in Position._meta.get_fields() if f.name.startswith("text")
     ]
-    current_field = get_localized_field(current_language, available_fields)
+    current_field = _get_localized_field(current_language, available_fields)
 
     latest_position = UserPosition.objects.filter(
         user_profile=OuterRef("profile")
@@ -250,6 +252,7 @@ def list_profiles(request):
     return render(request, "users/list_profiles.html", context)
 
 
+@require_http_methods(["GET"])
 def login_oauth(request):
     """
     Initiate OAuth login using the MediaWiki backend.
@@ -266,6 +269,7 @@ def login_oauth(request):
     return redirect(reverse("users:social:begin", kwargs={"backend": "mediawiki"}))
 
 
+@require_http_methods(["GET"])
 def logout_oauth(request):
     """
     Log out the current user and redirect to the metrics index page.

@@ -5,14 +5,28 @@ from io import BytesIO
 import pandas as pd
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.shortcuts import (HttpResponse, get_object_or_404, redirect,
-                              render, reverse)
+from django.shortcuts import HttpResponse, get_object_or_404, redirect, render, reverse
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods
 
 from .forms import BugForm, BugUpdateForm, ObservationForm
 from .models import Bug, Observation
 
+# ======================================================================================================================
+# UTILS
+# ======================================================================================================================
+DATE_OF_REPORT = _("Date of report"),
+UPDATE_DATE = _("Update date"),
+ANSWER_DATE = _("Answer date")
+ERROR_MESSAGE = _("Something went wrong!")
+DATETIME64 = "datetime64[ns]"
 
+URL_DETAIL_BUG = "bug:detail_bug"
+
+
+# ======================================================================================================================
+# BUGS
+# ======================================================================================================================
 @permission_required("bug.add_bug")
 def add_bug(request):
     """
@@ -32,10 +46,10 @@ def add_bug(request):
             bug.save()
 
             messages.success(request, _("Reported successfully!"))
-            return redirect(reverse("bug:detail_bug", kwargs={"bug_id": bug.pk}))
+            return redirect(reverse(URL_DETAIL_BUG, kwargs={"bug_id": bug.pk}))
         else:
             bug_form = BugForm(request.POST)
-            messages.error(request, _("Something went wrong!"))
+            messages.error(request, ERROR_MESSAGE)
     else:
         bug_form = BugForm()
 
@@ -43,6 +57,7 @@ def add_bug(request):
 
 
 @permission_required("bug.view_bug")
+@require_http_methods(["GET"])
 def list_bugs(request):
     """
     List all bug reports ordered by status.
@@ -53,6 +68,7 @@ def list_bugs(request):
 
 
 @permission_required("bug.view_bug")
+@require_http_methods(["GET"])
 def export_bugs(request):
     """
     Export all bugs and their observations as a ZIP file.
@@ -75,11 +91,11 @@ def export_bugs(request):
         _("Description"),
         _("Type"),
         _("Status"),
-        _("Date of report"),
+        DATE_OF_REPORT,
         _("Reporter"),
-        _("Update date"),
+        UPDATE_DATE,
         _("Observation"),
-        _("Answer date"),
+        ANSWER_DATE,
     ]
     rows = []
 
@@ -115,16 +131,16 @@ def export_bugs(request):
             _("Description"): str,
             _("Type"): int,
             _("Status"): int,
-            _("Date of report"): "datetime64[ns]",
+            DATE_OF_REPORT: DATETIME64,
             _("Reporter"): int,
-            _("Update date"): "datetime64[ns]",
+            UPDATE_DATE: DATETIME64,
             _("Observation"): str,
-            _("Answer date"): "datetime64[ns]",
+            ANSWER_DATE: DATETIME64,
         }
     )
-    df[_("Date of report")] = df[_("Date of report")].dt.tz_localize(None)
-    df[_("Update date")] = df[_("Update date")].dt.tz_localize(None)
-    df[_("Answer date")] = df[_("Answer date")].dt.tz_localize(None)
+    df[DATE_OF_REPORT] = df[DATE_OF_REPORT].dt.tz_localize(None)
+    df[UPDATE_DATE] = df[UPDATE_DATE].dt.tz_localize(None)
+    df[ANSWER_DATE] = df[ANSWER_DATE].dt.tz_localize(None)
 
     csv_file = BytesIO()
     df.to_csv(path_or_buf=csv_file, index=False)
@@ -147,6 +163,7 @@ def export_bugs(request):
 
 
 @permission_required("bug.view_bug")
+@require_http_methods(["GET"])
 def detail_bug(request, bug_id):
     """
     Display details for a single bug report.
@@ -177,14 +194,17 @@ def update_bug(request, bug_id):
             bug.update_date = datetime.datetime.today()
             bug.save()
             messages.success(request, _("Changes made successfully!"))
-            return redirect(reverse("bug:detail_bug", kwargs={"bug_id": bug_id}))
+            return redirect(reverse(URL_DETAIL_BUG, kwargs={"bug_id": bug_id}))
         else:
-            messages.error(request, _("Something went wrong!"))
+            messages.error(request, ERROR_MESSAGE)
     return render(
         request, "bug/update_bug.html", {"bug_form": bug_form, "bug_id": bug_id}
     )
 
 
+# ======================================================================================================================
+# OBSERVATIONS
+# ======================================================================================================================
 @permission_required("bug.add_observation")
 def add_observation(request, bug_id):
     """
@@ -200,10 +220,10 @@ def add_observation(request, bug_id):
             obs.save()
 
             messages.success(request, _("Answered successfully!"))
-            return redirect(reverse("bug:detail_bug", kwargs={"bug_id": bug_id}))
+            return redirect(reverse(URL_DETAIL_BUG, kwargs={"bug_id": bug_id}))
         else:
             obs_form = ObservationForm(request.POST)
-            messages.error(request, _("Something went wrong!"))
+            messages.error(request, ERROR_MESSAGE)
     else:
         if Observation.objects.filter(bug_report_id=bug_id).exists():
             return redirect(reverse("bug:edit_obs", kwargs={"bug_id": bug_id}))
@@ -232,10 +252,10 @@ def edit_observation(request, bug_id):
             obs.save()
             messages.success(request, _("Changes made successfully!"))
 
-            return redirect(reverse("bug:detail_bug", kwargs={"bug_id": bug_id}))
+            return redirect(reverse(URL_DETAIL_BUG, kwargs={"bug_id": bug_id}))
         else:
             obs_form = ObservationForm(instance=obs)
-            messages.error(request, _("Something went wrong!"))
+            messages.error(request, ERROR_MESSAGE)
     else:
         obs_form = ObservationForm(instance=obs)
     return render(

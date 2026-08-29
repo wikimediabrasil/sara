@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.shortcuts import redirect
+from django.views.decorators.http import require_http_methods
 
 
+@require_http_methods(["GET"])
 def show_strategy(request):
     """
     Redirects the user to the strategy page
