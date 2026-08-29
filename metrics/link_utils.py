@@ -1,5 +1,7 @@
 import re
 import urllib.parse as ur
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 AFFILIATES = {
     r"https://am.wikimedia.org/wiki/(.*)": "wmam",
@@ -55,11 +57,11 @@ ARTICLES = {
     r"https://diff.wikimedia.org/(.*)": "DiffBlog",
     r"https://doi.org/(.*)": "DOI",
     r"https://hdl.handle.net/(.*)": "hdl",
-    r"https://scholar.google.com/scholar?q=(.*)": "Scholar",
+    r"https://scholar.google.com/scholar\?q=(.*)": "Scholar",
     r"https://translatewiki.net/wiki/(.*)": "translatewiki",
     r"https://viaf.org/viaf/(.*)": "VIAF",
     r"https://wikiapiary.com/wiki/(.*)": "WikiApiary",
-    r"https://www.google.com/search?q=(.*)": "Google",
+    r"https://www.google.com/search\?q=(.*)": "Google",
     r"https://www.jstor.org/journals/(.*)": "JSTOR",
     r"https://pubmed.ncbi.nlm.nih.gov/(.*)": "PMID",
     r"https://www.worldcat.org/issn/(.*)": "ISSN",
@@ -74,7 +76,7 @@ FRIENDLY_PROJECTS = {
     r"https://lingualibre.org/wiki/(.*)": "LinguaLibre",
     r"https://wiki.openstreetmap.org/wiki/(.*)": "OSMwiki",
     r"https://www.flickr.com/people/(.*)": "FlickrUser",
-    r"https://www.flickr.com/photo.gne?id=(.*)": "FlickrPhoto",
+    r"https://www.flickr.com/photo.gne\?id=(.*)": "FlickrPhoto",
 }
 
 LANGUAGE_BASED_PROJECTS = {
@@ -286,6 +288,8 @@ INVERTED_PATTERNS = (
     | INVERTED_TOOLFORGE
 )
 
+META_PREFIXES = ["Media:", "Special:", "User:", "Project:", "File:", "MediaWiki:", "Template:", "Help:", "Category:"]
+
 
 def process_all_references(input_string):
     """
@@ -318,7 +322,7 @@ def unwikify_link(match, updated_references):
             ref_content
         )  # Process the ref tag inner part
         if "bulleted list" in updated_content:
-            bl_match = re.match(r"(.*)\{\{bulleted list\|(.*)\}\}(.*)", updated_content)
+            bl_match = re.match(r"([^{]*)\{\{bulleted list\|([^}]*)\}\}(.*)", updated_content)
             if bl_match:
                 bullet_items = bl_match.group(2).split("|")
                 # Make the concatenation of the bulleted list as an HTML element
@@ -329,11 +333,28 @@ def unwikify_link(match, updated_references):
                     + "\n</ul>"
                     + bl_match.group(3)
                 )
-        updated_link = f'<li id="sara-{ref_id}">{ref_id}. {updated_content}</li>'
+        updated_link = format_html(
+            '<li id="sara-{}">{}. {}</li>', ref_id, ref_id, mark_safe(updated_content)
+        )
 
         updated_references.append(updated_link)
         return updated_link
     return link
+
+
+def _parse_double_bracket_link(content):
+    if "|" not in content:
+        return content, content, True
+
+    link, friendly = content.split("|", 1)
+    meta = ":" not in link or any(link.startswith(item) for item in META_PREFIXES)
+    return link, friendly, meta
+
+
+def _parse_single_bracket_link(content):
+    if " " in content:
+        return content.split(" ", 1)
+    return content, content
 
 
 def replace_with_links(input_string):
@@ -342,41 +363,15 @@ def replace_with_links(input_string):
 
         if substring.startswith("[[") and substring.endswith("]]"):
             content = substring[2:-2]
-            meta = False
-            if "|" in content:
-                link, friendly = content.split("|", 1)
-                if ":" not in link:
-                    meta = True
-                elif any(
-                    link.startswith(item)
-                    for item in [
-                        "Media:",
-                        "Special:",
-                        "User:",
-                        "Project:",
-                        "File:",
-                        "MediaWiki:",
-                        "Template:",
-                        "Help:",
-                        "Category:",
-                    ]
-                ):
-                    meta = True
-            else:
-                link = friendly = content
-                meta = True
-
+            link, friendly, meta = _parse_double_bracket_link(content)
             link = ur.quote(dewikify_url(link.replace(" ", "_"), meta), safe=":/")
-            return f'<a target="_blank" href="{link}">{friendly}</a>'
-        elif substring.startswith("[") and substring.endswith("]"):
+            return format_html('<a target="_blank" href="{}">{}</a>', link, friendly)
+        if substring.startswith("[") and substring.endswith("]"):
             content = substring[1:-1]
-            if " " in content:
-                link, friendly = content.split(" ", 1)
-            else:
-                link = friendly = content
-            return f'<a target="_blank" href="{link}">{friendly}</a>'
+            link, friendly = _parse_single_bracket_link(content)
+            return format_html('<a target="_blank" href="{}">{}</a>', link, friendly)
 
-    result = re.sub(r"(\[\[.*?\]\]|\[.*?\])", replace, input_string)
+    result = re.sub(r"(\[\[[^\]]*\]\]|\[[^\]]*\])", replace, input_string)
     return result
 
 
@@ -411,6 +406,28 @@ def dewikify_url(link, meta=False):
 # 1. receive and wikify the links field (deal with external and internal links, including from mapped projects)
 # 2. create the reference text
 # ======================================================================================================================
+def _extract_project_lang_page(match):
+    number_of_groups = len(match.groups())
+    if number_of_groups == 3:
+        return match.group(1), "", match.group(3)
+    if number_of_groups == 2:
+        return "", match.group(1), match.group(2)
+    return "", "", match.group(1)
+
+
+def _clean_page_title(page, friendly_name):
+    if friendly_name:
+        return friendly_name
+    clean_page = page.replace("_", " ")
+    return clean_page[:-1] if clean_page.endswith("/") else clean_page
+
+
+def _format_wikified_link(prefix, project, lang, page, clean_page):
+    if project:
+        return f"[[{prefix}{project}/{page}|{clean_page}]]"
+    return f"[[{prefix}{lang}:{page}|{clean_page}]]"
+
+
 def wikify_link(link, friendly_name=None):
     """
     Receives a URL link and tries to wikify it, based on the patterns and correspondences.
@@ -418,37 +435,17 @@ def wikify_link(link, friendly_name=None):
     1. The link is a simple non-Wiki URL, in which case, it returns the link as an external wikitext link, i.e. [link]
     2. The link is a mapped URL and from a non-language based Wikimedia project, in which case, it returns the link as an internal wikitext link, i.e. [[project:page|page]]
     3. The link is a mapped URL and from a language based Wikimedia project, in which case, it returns the link as an internal wikitext link, i.e. [[project:language:page|page]]
-    4. The link is a mapped URL and from toolforge, in which case, it returns the link as an internal wikitext link, i.e. [[toolforge:project:page|page]]
+    4. The link is a mapped URL and from toolforge, in which case, it returns the link as an internal wikitext link, i.e. [[toolforge:project/page|page]]
     """
     for pattern, prefix in PATTERNS.items():
         match = re.match(pattern, link)
-        if match:
-            number_of_groups = len(match.groups())
-            project = ""
-            lang = ""
-            if number_of_groups == 3:
-                project = match.group(1)
-                page = match.group(3)
-            elif number_of_groups == 2:
-                lang = match.group(1)
-                page = match.group(2)
-            else:
-                page = match.group(1)
+        if not match:
+            continue
 
-            page = ur.unquote(page)
-
-            if friendly_name:
-                clean_page = friendly_name
-            else:
-                clean_page = page.replace("_", " ")
-                clean_page = clean_page[:-1] if clean_page.endswith("/") else clean_page
-
-            return (
-                f"[[{prefix}{project}/{page}|{clean_page}]]"
-                if project
-                else f"[[{prefix}{lang}:{page}|{clean_page}]]"
-            )
-
+        project, lang, page = _extract_project_lang_page(match)
+        page = ur.unquote(page)
+        clean_page = _clean_page_title(page, friendly_name)
+        return _format_wikified_link(prefix, project, lang, page, clean_page)
     return f"[{link}]" if link != "-" else ""
 
 
