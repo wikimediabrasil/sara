@@ -15,8 +15,10 @@
   - [Database Setup](#database-setup)
 - [Running the Project](#running-the-project)
 - [Tests](#tests)
+  - [JavaScript Tests](#javascript-tests)
 - [Internationalization (i18n)](#internationalization-i18n)
 - [Code Style & Quality](#code-style--quality)
+- [Managing Python Dependencies](#managing-python-dependencies)
 - [Deployment](#deployment)
 - [Common Commands](#common-commands)
 - [Troubleshooting](#troubleshooting)
@@ -55,6 +57,8 @@
   - isort
   - black
   - ruff
+  - jest
+  - jquery
 
 ---
 
@@ -112,6 +116,7 @@ Make sure you have installed:
 
 - Python >= 3.9.2
 - pip
+- Node.js (for the JS test suite) and npm
 - Virtualenv (recommended)
 - Database server (if not using SQLite)
 
@@ -139,6 +144,10 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+Install JavaScript dependencies (needed to run the JS test suite in `static/js/`):
+```bash
+npm ci
+```
 ---
 
 ### CONFIGURATION
@@ -169,6 +178,17 @@ Create a `settings_local.py` file based on `settings_local_example.py`:
   - `periods` — Date ranges as `((month, day), (month, day))`
   - `total` — Full date range
   - `labels` — Human-readable labels
+
+### JavaScript Tests
+Frontend JS (currently `static/js/report.js`) is tested with Jest.
+Run the full JS test suite:
+```bash
+npx jest
+```
+Run with a coverage report (written to `static/js/coverage/`):
+```bash
+npx jest --coverage
+```
 
 #### Internationalization (i18n)
 - `LANGUAGES` — Supported languages
@@ -292,6 +312,25 @@ black .
 isort .
 ruff check .
 ```
+
+---
+
+## Managing Python Dependencies
+
+`requirements.txt` is **generated, not hand-edited**. It's a fully resolved, hash-locked file, as per SonarQube recommendations — CI installs it with `--require-hashes`, which fails if any entry is missing a hash.
+
+To add, remove, or upgrade a dependency:
+1. Edit `requirements.in` (the actual source of top-level dependencies only).
+2. Regenerate the lockfile:
+
+```bash
+pip install pip-tools
+pip-compile --generate-hashes --allow-unsafe -o requirements.txt requirements.in
+```
+
+3. Commit both `requirements.in` and the regenerated `requirements.txt` together.
+
+Editing `requirements.txt` directly will work locally but will drift out of sync with `requirements.in` and likely fail CI's hash check on the next run.
 
 ---
 

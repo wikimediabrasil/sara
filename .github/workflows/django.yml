@@ -27,7 +27,7 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip==24.2
-        pip install -r requirements.txt
+        pip install --require-hashes --only-binary :all: --no-binary svglib -r requirements.txt
     - name: Create settings_local.py
       run: |
         cat > sara/settings_local.py <<'EOF'
@@ -45,7 +45,7 @@ jobs:
         EOF
     - name: Coverage report
       run: |
-        pip install coverage==7.6.1
+        pip install --only-binary :all: coverage==7.6.1
         coverage run manage.py test
         coverage xml
         coverage report
@@ -60,9 +60,9 @@ jobs:
       with:
         node-version: '20'
     - name: Install JS deps
-      run: npm ci
+      run: npm ci --ignore-scripts
     - name: Run Jest with coverage
-      run: npx jest --coverage
+      run: ./node_modules/.bin/jest --coverage
     - name: Debug JS coverage output
       run: |
         echo "--- pwd ---"
