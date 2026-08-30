@@ -1,0 +1,17 @@
+{
+  "name": "sara",
+  "version": "1.0.0",
+  "description": "> **S.A.R.A.** is an acronym for the Results and Learning Evaluation System (or _Sistema de Avaliação de Resultados e Aprendizados_ in Portuguese) and it is a software meant for recording and evaluating activities quantitative and qualitative metrics.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^30.5.0",
+    "jest-environment-jsdom": "^30.5.0",
+    "jquery": "^4.0.0"
+  }
+}

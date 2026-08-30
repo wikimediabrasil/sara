@@ -55,6 +55,21 @@ jobs:
       with:
         name: coverage-xml
         path: coverage.xml
+
+    - uses: actions/setup-node@v4
+    - with:
+        node-version: '20'
+    - name: Install JS deps
+      working-directory: static/js
+      run: npm ci
+    - name: Run Jest with coverage
+      working-directory: static/js
+      run: npx jest --coverage --coverageReporters=lcov --coverageReporters=text
+    - name: Upload JS coverage for Sonar
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-js
+        path: static/js/coverage/lcov.info
         
   sonarqube:
     name: SonarQube
@@ -64,10 +79,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Download coverage
+      - name: Download Python coverage
         uses: actions/download-artifact@v4
         with:
           name: coverage-xml
+      - name: Download JS coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-js
+          path: static/js/coverage
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v8.1.0
         env:
