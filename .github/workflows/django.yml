@@ -64,7 +64,7 @@ jobs:
       run: npm ci
     - name: Run Jest with coverage
       working-directory: static/js
-      run: npx jest --coverage --coverageReporters=lcov --coverageReporters=text
+      run: npx jest --coverage
     - name: Upload JS coverage for Sonar
       uses: actions/upload-artifact@v4
       with:
