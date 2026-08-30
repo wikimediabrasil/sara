@@ -11,3 +11,4 @@ fixtures/initial_data.json
 fixtures/users_data.json
 htmlReport/
 /node_modules/
+coverage/

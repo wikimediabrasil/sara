@@ -60,21 +60,18 @@ jobs:
       with:
         node-version: '20'
     - name: Install JS deps
-      working-directory: static/js
       run: npm ci
     - name: Run Jest with coverage
-      working-directory: static/js
       run: npx jest --coverage
     - name: Debug JS coverage output
-      working-directory: static/js
       run: |
         echo "--- pwd ---"
         pwd
-        echo "--- static/js contents ---"
+        echo "--- repo root contents ---"
         ls -la
         echo "--- coverage/ contents (if any) ---"
-        ls -la coverage || echo "no coverage directory here"
-        find . -iname "lcov.info" -not -path "*/node_modules/*" || echo "no lcov.info found anywhere under static/js"
+        ls -la static/js/coverage || echo "no coverage directory here"
+        find . -iname "lcov.info" -not -path "*/node_modules/*" || echo "no lcov.info found anywhere"
     - name: Upload JS coverage for Sonar
       uses: actions/upload-artifact@v4
       with:
