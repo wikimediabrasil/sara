@@ -541,7 +541,9 @@ class EventEmailTests(TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     @patch("agenda.management.commands.send_event_reports.send_event_reports")
-    def test_command_calls_service_and_outputs_success(self, mock_send):
+    @patch("agenda.management.commands.send_event_reports.datetime")
+    def test_command_calls_service_and_outputs_success(self, mock_datetime, mock_send):
+        mock_datetime.now.return_value.isocalendar.return_value.week = 11
         out = StringIO()
 
         call_command("send_event_reports", stdout=out)
