@@ -166,6 +166,7 @@ def export_report_instance(report_id=None, custom_query=Q()):
         "mediawiki",
         "wikifunctions",
         "incubator",
+        "metabase"
     ]
 
     rows = []
