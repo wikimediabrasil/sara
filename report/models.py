@@ -365,6 +365,18 @@ class Report(models.Model):
         default=0,
         help_text=_("Number of pages or materials edited on Wikimedia Incubator."),
     )
+    metabase_created = models.IntegerField(
+        _("Created in Metabase"),
+        null=True,
+        default=0,
+        help_text=_("Number of pages or materials created on Metabase."),
+    )
+    metabase_edited = models.IntegerField(
+        _("Edited in Metabase"),
+        null=True,
+        default=0,
+        help_text=_("Number of pages or materials edited on Metabase."),
+    )
 
     # Community metrics
     editors = models.ManyToManyField(

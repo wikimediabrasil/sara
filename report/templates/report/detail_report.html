@@ -377,6 +377,13 @@
                                 <div class="w3-third form-right">{{ data.incubator_edited }}</div>
                             </div>
                         {% endif %}
+                        {% if data.metabase_created or data.metabase_edited %}
+                            <div class="w3-row formfield view_field">
+                                <div class="w3-third field_title">{% trans "Metabase" %}</div>
+                                <div class="w3-third form-left">{{ data.metabase_created }}</div>
+                                <div class="w3-third form-right">{{ data.metabase_edited }}</div>
+                            </div>
+                        {% endif %}
                     </div>
                 {% endif %}
             {% endif %}

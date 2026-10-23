@@ -1,6 +1,6 @@
 import calendar
 import datetime
-from datetime import date, timedelta
+from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
@@ -13,7 +13,12 @@ from django.views.decorators.http import require_http_methods
 from agenda.forms import EventForm
 from agenda.models import Event
 from agenda.services import send_event_reports
-from agenda.utils import days_of_the_month, list_of_reports_of_area
+from agenda.utils import (
+    build_filled_days,
+    days_of_the_month,
+    events_by_date_map,
+    list_of_reports_of_area,
+)
 
 # ======================================================================================================================
 # UTILS
@@ -52,39 +57,12 @@ def show_specific_calendar_year(request, year):
     start = date(year, 1, 1)
     end = date(year, 12, 31)
 
-    all_events = (
-        Event.objects.filter(Q(initial_date__lte=end) & Q(end_date__gte=start))
-        .select_related("area_responsible")
-        .order_by("initial_date", "end_date")
-    )
-
-    events_by_date = {}
-    for event in all_events:
-        current = max(event.initial_date, start)
-        last = min(event.end_date, end)
-        while current <= last:
-            key = current.strftime("%Y-%m-%d")
-            events_by_date.setdefault(key, []).append(event)
-            current += timedelta(days=1)
+    events_by_date = events_by_date_map(start, end)
 
     for month in range(1, 13):
         month_name = _(calendar.month_name[int(month)])
         days_month = days_of_the_month(year, int(month))
-        filled_days = []
-        for week in days_month:
-            filled_week = []
-            for day in week:
-                if day:
-                    key = f"{year}-{month:02d}-{day:02d}"
-                    filled_week.append(
-                        {
-                            "day": day,
-                            "activities": events_by_date.get(key, []),
-                        }
-                    )
-                else:
-                    filled_week.append(None)
-            filled_days.append(filled_week)
+        filled_days = build_filled_days(days_month, year, int(month), events_by_date)
 
         days_year.append(
             {
@@ -134,36 +112,10 @@ def show_specific_calendar(request, year, month):
     last_day = calendar.monthrange(year, month)[1]
     end = date(year, month, last_day)
 
-    all_events = (
-        Event.objects.filter(Q(initial_date__lte=end) & Q(end_date__gte=start))
-        .select_related("area_responsible")
-        .order_by("initial_date", "end_date")
-    )
-    events_by_date = {}
-    for event in all_events:
-        current = max(event.initial_date, start)
-        last = min(event.end_date, end)
-        while current <= last:
-            key = current.strftime("%Y-%m-%d")
-            events_by_date.setdefault(key, []).append(event)
-            current += timedelta(days=1)
+    events_by_date = events_by_date_map(start, end)
 
     days_month = days_of_the_month(year, month)
-    filled_days = []
-    for week in days_month:
-        filled_week = []
-        for day in week:
-            if day:
-                key = f"{year}-{month:02d}-{day:02d}"
-                filled_week.append(
-                    {
-                        "day": day,
-                        "activities": events_by_date.get(key, []),
-                    }
-                )
-            else:
-                filled_week.append(None)
-        filled_days.append(filled_week)
+    filled_days = build_filled_days(days_month, year, month, events_by_date)
 
     month_name = _(calendar.month_name[month])
     context = {

@@ -390,6 +390,18 @@ class Metric(models.Model):
         default=0,
         help_text=_("Number of pages or materials edited on Wikifunctions."),
     )
+    metabase_created = models.IntegerField(
+        _("Created in Metabase"),
+        null=True,
+        default=0,
+        help_text=_("Number of items created on Metabase."),
+    )
+    metabase_edited = models.IntegerField(
+        _("Edited in Metabase"),
+        null=True,
+        default=0,
+        help_text=_("Number of items edited on Metabase."),
+    )
 
     # ==================================================================================================================
     # COMMUNITY METRICS

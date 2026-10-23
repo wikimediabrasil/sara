@@ -123,6 +123,8 @@ def export_report_instance(report_id=None, custom_query=Q()):
         _("# Wikifunctions edited"),
         _("# Incubator created"),
         _("# Incubator edited"),
+        _("# Metabase created"),
+        _("# Metabase edited"),
         _("Directions related"),
         _("Learning"),
         _("Learning questions related"),
@@ -317,6 +319,8 @@ def export_metrics(report_id=None, custom_query=Q()):
         _("# Wikifunctions edited"),
         _("# Incubator created"),
         _("# Incubator edited"),
+        _("# Metabase created"),
+        _("# Metabase edited"),
     ]
 
     if report_id:
@@ -374,6 +378,8 @@ def export_metrics(report_id=None, custom_query=Q()):
                         instance.wikifunctions_edited,
                         instance.incubator_created,
                         instance.incubator_edited,
+                        instance.metabase_created,
+                        instance.metabase_edited
                     ]
                 )
 

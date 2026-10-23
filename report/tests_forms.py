@@ -92,6 +92,8 @@ class NewReportFormTest(TestCase):
             "wikifunctions_edited": 0,
             "incubator_created": 0,
             "incubator_edited": 0,
+            "metabase_created": 0,
+            "metabase_edited": 0
         }
 
     def test_form_initialization_sets_area_responsible__if_user_has_current_position(

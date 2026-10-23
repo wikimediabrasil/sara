@@ -114,6 +114,8 @@ class NewReportForm(forms.ModelForm):
             "wikifunctions_edited",
             "incubator_created",
             "incubator_edited",
+            "metabase_created",
+            "metabase_edited",
             "editors",
             "participants",
             "organizers",
@@ -366,6 +368,7 @@ class NewReportForm(forms.ModelForm):
             ["mediawiki_created", "mediawiki_edited"],
             ["wikifunctions_created", "wikifunctions_edited"],
             ["incubator_created", "incubator_edited"],
+            ["metabase_created", "metabase_edited"],
             ["participants"],
             ["feedbacks"],
         ]

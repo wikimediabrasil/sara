@@ -216,6 +216,14 @@ Username 2 or name{% endblocktrans %}">{% if report_form.instance.id %}{% for or
                 <span class="toggle__fill"></span>
                 <span>{% translate "Incubator" %}</span>
             </label>
+            <label class="w3-third formfield toggle" for="metabase">
+                <input class="toggle__input wiki" type="checkbox" id="metabase" onclick="toggle_field(this.id)" onkeydown=""
+                       aria-expanded="{% if report_form.instance.metabase_created or report_form.instance.metabase_edited %}true{% else %}false{% endif %}"
+                       aria-controls="metabase_fields"
+                       {% if report_form.instance.metabase_created or report_form.instance.metabase_edited %}checked{% endif %}/>
+                <span class="toggle__fill"></span>
+                <span>{% translate "Metabase" %}</span>
+            </label>
         </div>
         <div class="w3-row invisible_field wikipedia">
             <div class="w3-third field_title">{% translate "Wikipedia" %}</div>
@@ -380,6 +388,17 @@ Username 2 or name{% endblocktrans %}">{% if report_form.instance.id %}{% for or
             <div class="w3-third formfield form-right">
                 <input id="incubator_edited" name="incubator_edited" type="number" min="0" value="{{ report_form.instance.incubator_edited }}"/>
                 <small><label for="incubator_edited">{% translate "Edited" %}</label></small>
+            </div>
+        </div>
+        <div class="w3-row invisible_field metabase">
+            <div class="w3-third field_title">{% translate "metabase" %}</div>
+            <div class="w3-third formfield form-left">
+                <input id="metabase_created" name="metabase_created" type="number" min="0" value="{{ report_form.instance.metabase_created }}"/>
+                <small><label for="metabase_created">{% translate "Created" %}</label></small>
+            </div>
+            <div class="w3-third formfield form-right">
+                <input id="metabase_edited" name="metabase_edited" type="number" min="0" value="{{ report_form.instance.metabase_edited }}"/>
+                <small><label for="metabase_edited">{% translate "Edited" %}</label></small>
             </div>
         </div>
     </div>

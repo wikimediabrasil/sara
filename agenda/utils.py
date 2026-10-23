@@ -20,6 +20,62 @@ def days_of_the_month(year, month):
     return calendar.monthcalendar(int(year), int(month))
 
 
+def events_by_date_map(start, end):
+    """
+    Builds a mapping of "YYYY-MM-DD" -> list of events that occur on that date,
+    for every event overlapping the [start, end] interval.
+
+    :param start: First date of the interval (inclusive).
+    :param end: Last date of the interval (inclusive).
+    :return: dict: Events grouped by the date (as string) they occur on.
+    """
+    all_events = (
+        Event.objects.filter(Q(initial_date__lte=end) & Q(end_date__gte=start))
+        .select_related("area_responsible")
+        .order_by("initial_date", "end_date")
+    )
+
+    events_by_date = {}
+    for event in all_events:
+        current = max(event.initial_date, start)
+        last = min(event.end_date, end)
+        while current <= last:
+            key = current.strftime("%Y-%m-%d")
+            events_by_date.setdefault(key, []).append(event)
+            current += timedelta(days=1)
+
+    return events_by_date
+
+
+def build_filled_days(days_month, year, month, events_by_date):
+    """
+    Fills each day of a month calendar grid with its scheduled activities.
+
+    :param days_month: Weeks/days grid, as returned by days_of_the_month.
+    :param year: Year of the calendar.
+    :param month: Month of the calendar.
+    :param events_by_date: Mapping of "YYYY-MM-DD" -> list of events, as returned by events_by_date_map.
+    :return: Array: The weeks/days grid, with each day replaced by its activities.
+    """
+    filled_days = []
+    for week in days_month:
+        filled_week = []
+        for day in week:
+            if day:
+                key = f"{year}-{month:02d}-{day:02d}"
+                filled_week.append(
+                    {
+                        "day": day,
+                        "activities": events_by_date.get(key, []),
+                    }
+                )
+            else:
+                filled_week.append(None)
+        filled_days.append(filled_week)
+
+    return filled_days
+
+
 def list_of_reports_of_area(code="", user=None):
     try:
         if code:

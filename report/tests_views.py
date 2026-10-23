@@ -151,6 +151,8 @@ class ReportAddViewTest(TestCase):
             "wikifunctions_edited": 0,
             "incubator_created": 0,
             "incubator_edited": 0,
+            "metabase_created": 0,
+            "metabase_edited": 0,
             "participants": 10,
             "resources": 0,
             "feedbacks": 0,
@@ -241,6 +243,8 @@ class ReportAddViewTest(TestCase):
             "wikifunctions_edited": 0,
             "incubator_created": 0,
             "incubator_edited": 0,
+            "metabase_created": 0,
+            "metabase_edited": 0,
             "participants": 0,
             "resources": 0,
             "feedbacks": 0,
@@ -373,6 +377,8 @@ class ReportAddViewTest(TestCase):
             "wikifunctions_edited": 0,
             "incubator_created": 0,
             "incubator_edited": 0,
+            "metabase_created": 0,
+            "metabase_edited": 0,
             "participants": 0,
             "resources": 0,
             "feedbacks": 0,
@@ -881,6 +887,8 @@ class ReportViewViewTest(TestCase):
             "wikifunctions_edited": 0,
             "incubator_created": 0,
             "incubator_edited": 0,
+            "metabase_created": 0,
+            "metabase_edited": 0,
             "number_of_people_reached_through_social_media": 0,
             "activity_associated": self.report_1.activity_associated.id,
             "area_responsible": self.report_1.area_responsible.id,
@@ -1197,6 +1205,8 @@ class ReportExportViewTest(TestCase):
             _("# Wikifunctions edited"),
             _("# Incubator created"),
             _("# Incubator edited"),
+            _("# Metabase created"),
+            _("# Metabase edited"),
             _("Directions related"),
             _("Learning"),
             _("Learning questions related"),
@@ -1289,6 +1299,8 @@ class ReportExportViewTest(TestCase):
             self.report_1.wikifunctions_edited,
             self.report_1.incubator_created,
             self.report_1.incubator_edited,
+            self.report_1.metabase_created,
+            self.report_1.metabase_edited,
             "; ".join(
                 map(str, self.report_1.directions_related.values_list("id", flat=True))
             ),
@@ -1374,6 +1386,8 @@ class ReportExportViewTest(TestCase):
             _("# Wikifunctions edited"),
             _("# Incubator created"),
             _("# Incubator edited"),
+            _("# Metabase created"),
+            _("# Metabase edited"),
             _("Directions related"),
             _("Learning"),
             _("Learning questions related"),
@@ -1478,6 +1492,8 @@ class ReportExportViewTest(TestCase):
             self.report_1.wikifunctions_edited,
             self.report_1.incubator_created,
             self.report_1.incubator_edited,
+            self.report_1.metabase_created,
+            self.report_1.metabase_edited,
             "; ".join(map(str, directions_related)),
             self.report_1.learning,
             "; ".join(map(str, learning_questions_related)),
@@ -1570,6 +1586,8 @@ class ReportExportViewTest(TestCase):
             self.report_1.wikifunctions_edited,
             self.report_1.incubator_created,
             self.report_1.incubator_edited,
+            self.report_1.metabase_created,
+            self.report_1.metabase_edited,
             "; ".join(map(str, directions_related)),
             self.report_2.learning,
             "; ".join(map(str, learning_questions_related)),
@@ -1640,6 +1658,8 @@ class ReportExportViewTest(TestCase):
             _("# Wikifunctions edited"),
             _("# Incubator created"),
             _("# Incubator edited"),
+            _("# Metabase created"),
+            _("# Metabase edited"),
             _("Directions related"),
             _("Learning"),
             _("Learning questions related"),
@@ -1705,6 +1725,8 @@ class ReportExportViewTest(TestCase):
             self.report_1.wikifunctions_edited,
             self.report_1.incubator_created,
             self.report_1.incubator_edited,
+            self.report_1.metabase_created,
+            self.report_1.metabase_edited,
             "",
             self.report_1.learning,
             "",
@@ -1761,6 +1783,8 @@ class ReportExportViewTest(TestCase):
             _("# Wikifunctions edited"),
             _("# Incubator created"),
             _("# Incubator edited"),
+            _("# Metabase created"),
+            _("# Metabase edited"),
         ]
 
         expected_row = [
@@ -1804,6 +1828,8 @@ class ReportExportViewTest(TestCase):
             self.metrics_related.wikifunctions_edited,
             self.metrics_related.incubator_created,
             self.metrics_related.incubator_edited,
+            self.metrics_related.metabase_created,
+            self.metrics_related.metabase_edited,
         ]
 
         result = export_metrics(report_id=self.report_1.id)
@@ -1856,6 +1882,8 @@ class ReportExportViewTest(TestCase):
             _("# Wikifunctions edited"),
             _("# Incubator created"),
             _("# Incubator edited"),
+            _("# Metabase created"),
+            _("# Metabase edited"),
         ]
 
         metric_2 = Metric.objects.create(
@@ -1902,6 +1930,8 @@ class ReportExportViewTest(TestCase):
             self.metrics_related.wikifunctions_edited,
             self.metrics_related.incubator_created,
             self.metrics_related.incubator_edited,
+            self.metrics_related.metabase_created,
+            self.metrics_related.metabase_edited,
         ]
         expected_row_2 = [
             metric_2.id,
@@ -1944,6 +1974,8 @@ class ReportExportViewTest(TestCase):
             metric_2.wikifunctions_edited,
             metric_2.incubator_created,
             metric_2.incubator_edited,
+            metric_2.metabase_created,
+            metric_2.metabase_edited,
         ]
 
         expected_rows = [expected_row_1, expected_row_2]

@@ -171,6 +171,8 @@ def get_done_for_report(reports, metric):
         wikifunctions_edited=Sum("wikifunctions_edited"),
         incubator_created=Sum("incubator_created"),
         incubator_edited=Sum("incubator_edited"),
+        metabase_created=Sum("metabase_created"),
+        metabase_edited=Sum("metabase_edited"),
         participants=Sum("participants"),
         feedbacks=Sum("feedbacks"),
         donors=Sum("donors"),
@@ -270,6 +272,8 @@ def get_done_for_report(reports, metric):
             reports_aggregations["incubator_created"]
         ),
         "Incubator (edited)": _value_or_zero(reports_aggregations["incubator_edited"]),
+        "Metabase (created)": _value_or_zero(reports_aggregations["metabase_created"]),
+        "Metabase (edited)": _value_or_zero(reports_aggregations["metabase_edited"]),
         # Financial metrics
         "Number of donors": _value_or_zero(reports_aggregations["donors"]),
         "Number of submissions": _value_or_zero(reports_aggregations["submissions"]),
@@ -410,6 +414,8 @@ def get_goal_for_metric(metric):
         "Wikifucntions (edited)": metric.wikifunctions_edited,
         "Incubator (created)": metric.incubator_created,
         "Incubator (edited)": metric.incubator_edited,
+        "Metabase (created)": metric.metabase_created,
+        "Metabase (edited)": metric.metabase_edited,
         # Community metrics
         "Number of participants": metric.number_of_participants,
         "Number of feedbacks": metric.number_of_feedbacks,
