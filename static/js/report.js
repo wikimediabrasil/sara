@@ -193,7 +193,7 @@ function show_metrics_options() {
       success: function (response) {
         let learning = $("#learning");
         let learning_container = $("#learning_container");
-        let inner_html = "<fieldset id='metrics_fieldset' class='sub_container'><div style='overflow-y:scroll; max-height:200px'>";
+        let inner_html = "<fieldset id='metrics_fieldset' class='sub_container' aria-labelledby='metrics_label' aria-describedby='metrics_help'><div style='overflow-y:scroll; max-height:200px'>";
 
         if (response["objects"]) {
           response["objects"].forEach(function (projectEl) {

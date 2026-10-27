@@ -77,6 +77,11 @@ def add_report(request):
             if request.method == "POST"
             else []
         ),
+        "metrics_set": (
+            [int(m) for m in request.POST.getlist("metrics_related") if m.isdigit()]
+            if request.method == "POST"
+            else []
+        ),
     }
 
     return render(request, "report/add_report.html", context)
@@ -228,6 +233,10 @@ def update_report(request, report_id):
 
             messages.success(request, _("Report updated successfully!"))
             return redirect(reverse(DETAIL_REPORT_URL, kwargs={"report_id": report.id}))
+
+        messages.error(request, _("Something went wrong!"))
+        for field, error in report_form.errors.items():
+            messages.error(request, f"{field}: {error[0]}")
     else:
         report_form = NewReportForm(instance=report, user=request.user, is_update=True)
         operation_metrics = OperationUpdateFormSet(prefix="Operation", instance=report)
@@ -242,7 +251,11 @@ def update_report(request, report_id):
         "learning_questions_related_set": list(
             report.learning_questions_related.values_list("id", flat=True)
         ),
-        "metrics_set": list(report.metrics_related.values_list("id", flat=True)),
+        "metrics_set": (
+            [int(m) for m in request.POST.getlist("metrics_related") if m.isdigit()]
+            if request.method == "POST"
+            else list(report.metrics_related.values_list("id", flat=True))
+        ),
         "title": _("Edit report %(report_id)s") % {"report_id": report.id},
         "partners_set": (
             request.POST.getlist("partners_activated")

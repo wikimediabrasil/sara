@@ -125,6 +125,7 @@ class NewReportForm(forms.ModelForm):
             "directions_related",
             "learning_questions_related",
             "learning",
+            "metrics_related",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -161,6 +162,8 @@ class NewReportForm(forms.ModelForm):
             self.fields["area_responsible"].initial = area_responsible_of_user(
                 self.user
             )
+
+        self.fields["metrics_related"].required = False
 
     def clean_partners_activated(self):
         if hasattr(self.data, "getlist"):
@@ -342,7 +345,7 @@ class NewReportForm(forms.ModelForm):
     def _fields_active(self, field_names):
         """It returns true if the user reported a nonzero value in any of these fields."""
         return any(
-            self.cleaned_data.get(field_name, 0) > 0 for field_name in field_names
+            (self.cleaned_data.get(field_name) or 0) > 0 for field_name in field_names
         )
 
     def _metrics_related(self):
